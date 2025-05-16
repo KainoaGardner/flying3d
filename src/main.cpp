@@ -8,6 +8,7 @@
 #include "../include/stb_image.h"
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <vector>
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void proccesInput(GLFWwindow *window);
@@ -47,7 +48,6 @@ int main() {
   }
 
   glfwMakeContextCurrent(window);
-  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   glfwSetCursorPosCallback(window, mouseInputCallback);
   glfwSetScrollCallback(window, scrollInputCallback);
@@ -60,11 +60,25 @@ int main() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+  glEnable(GL_DEPTH_TEST);
+
+  Shader shader("./assets/shaders/vertex.vert",
+                "./assets/shaders/fragment.frag");
+
+  shader.use();
+
+  // textures
   stbi_set_flip_vertically_on_load(true);
   int width, height, nrChannels;
+  // unsigned char *data =
+  //     stbi_load("./assets/imgs/spaceBox.jpg", &width, &height, &nrChannels,
+  //     0);
+
   unsigned char *data =
       stbi_load("./assets/imgs/spiral.jpg", &width, &height, &nrChannels, 0);
 
@@ -73,93 +87,31 @@ int main() {
     return -1;
   }
 
-  unsigned int texture0, texture1;
-  // unsigned int texture0;
+  unsigned int texture0;
   glGenTextures(1, &texture0);
 
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, texture0);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
                GL_UNSIGNED_BYTE, data);
-  glGenerateMipmap(GL_TEXTURE_2D);
 
   stbi_image_free(data);
-
-  data = stbi_load("./assets/imgs/smile.png", &width, &height, &nrChannels, 0);
-
-  if (!data) {
-    std::cout << "ERROR: image not loaded" << std::endl;
-    return -1;
-  }
-
-  glGenTextures(1, &texture1);
-
-  glActiveTexture(GL_TEXTURE1);
-  glBindTexture(GL_TEXTURE_2D, texture1);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
-               GL_UNSIGNED_BYTE, data);
-  glGenerateMipmap(GL_TEXTURE_2D);
-
-  stbi_image_free(data);
-
-  Shader shader("./assets/shaders/vertex.vert",
-                "./assets/shaders/fragment.frag");
-
-  unsigned int RECTANGLE_VAO;
-  glGenVertexArrays(1, &RECTANGLE_VAO);
-  glBindVertexArray(RECTANGLE_VAO);
-
-  unsigned int RECTANGLE_VBO;
-  glGenBuffers(1, &RECTANGLE_VBO);
-
-  glBindBuffer(GL_ARRAY_BUFFER, RECTANGLE_VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(RECTANGLE_VERTICES), RECTANGLE_VERTICES,
-               GL_STATIC_DRAW);
-
-  unsigned int RECTANGLE_EBO;
-  glGenBuffers(1, &RECTANGLE_EBO);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, RECTANGLE_EBO);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(RECTANGLE_INDICIES),
-               RECTANGLE_INDICIES, GL_STATIC_DRAW);
-
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
-  glEnableVertexAttribArray(0);
-
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-                        (void *)(3 * sizeof(float)));
-  glEnableVertexAttribArray(1);
-
-  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-                        (void *)(6 * sizeof(float)));
-  glEnableVertexAttribArray(2);
-
-  unsigned int TRIANGLE_COLOR_VAO;
-  glGenVertexArrays(1, &TRIANGLE_COLOR_VAO);
-  glBindVertexArray(TRIANGLE_COLOR_VAO);
-
-  unsigned int TRIANGLE_COLOR_VBO;
-  glGenBuffers(1, &TRIANGLE_COLOR_VBO);
-
-  glBindBuffer(GL_ARRAY_BUFFER, TRIANGLE_COLOR_VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(TRIANGLE_COLOR_VERTICES),
-               TRIANGLE_COLOR_VERTICES, GL_STATIC_DRAW);
-
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
-  glEnableVertexAttribArray(0);
-
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
-                        (void *)(3 * sizeof(float)));
-  glEnableVertexAttribArray(1);
 
   unsigned int CUBE_VAO;
   glGenVertexArrays(1, &CUBE_VAO);
   glBindVertexArray(CUBE_VAO);
 
-  unsigned int CUBE_VBO;
-  glGenBuffers(1, &CUBE_VBO);
+  unsigned int CUBE_VERTICES_VBO;
+  glGenBuffers(1, &CUBE_VERTICES_VBO);
 
-  glBindBuffer(GL_ARRAY_BUFFER, CUBE_VBO);
+  glBindBuffer(GL_ARRAY_BUFFER, CUBE_VERTICES_VBO);
   glBufferData(GL_ARRAY_BUFFER, sizeof(CUBE_VERTICES), CUBE_VERTICES,
+               GL_STATIC_DRAW);
+
+  unsigned int CUBE_INDICES_EBO;
+  glGenBuffers(1, &CUBE_INDICES_EBO);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, CUBE_INDICES_EBO);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(CUBE_INDICES), CUBE_INDICES,
                GL_STATIC_DRAW);
 
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
@@ -169,23 +121,14 @@ int main() {
                         (void *)(3 * sizeof(float)));
   glEnableVertexAttribArray(1);
 
-  shader.use();
-
   int texture0UniformLocation =
       glGetUniformLocation(shader.program, "uTexture0");
+  if (texture0UniformLocation < 0) {
+    std::cout << "cant find texture unfirom" << std::endl;
+  }
   glUniform1i(texture0UniformLocation, 0);
-  int texture1UniformLocation =
-      glGetUniformLocation(shader.program, "uTexture1");
-  glUniform1i(texture1UniformLocation, 1);
 
-  glEnable(GL_DEPTH_TEST);
-
-  glm::vec3 cubePositions[10] = {
-      glm::vec3(0.0f, 0.0f, 0.0f),    glm::vec3(2.0f, 5.0f, -15.0f),
-      glm::vec3(-1.5f, -2.2f, -2.5f), glm::vec3(-3.8f, -2.0f, -12.3f),
-      glm::vec3(2.4f, -0.4f, -3.5f),  glm::vec3(-1.7f, 3.0f, -7.5f),
-      glm::vec3(1.3f, -2.0f, -2.5f),  glm::vec3(1.5f, 2.0f, -2.5f),
-      glm::vec3(1.5f, 0.2f, -1.5f),   glm::vec3(-1.3f, 1.0f, -1.5f)};
+  std::vector<glm::vec3> objectsPositions = {glm::vec3(0.0f, 0.0f, 0.0f)};
 
   float startTime = glfwGetTime();
   while (!glfwWindowShouldClose(window)) {
@@ -195,7 +138,7 @@ int main() {
 
     proccesInput(window);
 
-    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     float timePassed = glfwGetTime() - startTime;
@@ -212,23 +155,24 @@ int main() {
     shader.setMatrix4fv("uProjection", projection);
 
     glBindVertexArray(CUBE_VAO);
-    for (unsigned int i = 0; i < 10; i++) {
-      glm::mat4 model = glm::mat4(1.0f);
-      model = glm::translate(model, cubePositions[i]);
-      float angle = (i + 1) * timePassed * 25.0f;
+    glm::mat4 model = glm::mat4(1.0f);
+    // model = glm::scale(model, glm::vec3(100.f, 100.f, 100.f));
+    shader.setMatrix4fv("uModel", model);
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+    // glDrawArrays(GL_TRIANGLES, 0, 36);
 
-      model =
-          glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+    // model = glm::mat4(1.0f);
+    // shader.setMatrix4fv("uModel", model);
+    // glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
-      shader.setMatrix4fv("uModel", model);
-      glDrawArrays(GL_TRIANGLES, 0, 36);
-    }
-
-    // glBindVertexArray(TRIANGLE_COLOR_VAO);
-    // glDrawArrays(GL_TRIANGLES, 0, 3);
-
-    // glBindVertexArray(RECTANGLE_VAO);
-    // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    // for (unsigned int i = 0; i < objectsPositions.size(); i++) {
+    //   glm::mat4 model = glm::mat4(1.0f);
+    //   model = glm::translate(model, ob[i]);
+    //   float angle = (i + 1) * timePassed * 25.0f;
+    //
+    //   shader.setMatrix4fv("uModel", model);
+    //   glDrawArrays(GL_TRIANGLES, 0, 36);
+    // }
 
     glfwSwapBuffers(window);
     glfwPollEvents();

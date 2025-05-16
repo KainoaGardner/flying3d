@@ -8,6 +8,7 @@ uniform float uTime;
 uniform sampler2D uTexture0;
 
 void main() {
+    // vec4 color0 = texture(uTexture0, vTexCoord) * vec4(vColor, 1.0);
     vec4 color = texture(uTexture0, vTexCoord);
     fragColor = color;
 }
