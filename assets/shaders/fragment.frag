@@ -1,7 +1,7 @@
 #version 330 core
+
 out vec4 fragColor;
 
-// in vec3 vColor;
 in vec2 vTexCoord;
 
 uniform float uTime;

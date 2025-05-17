@@ -48,6 +48,7 @@ int main() {
   }
 
   glfwMakeContextCurrent(window);
+  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   glfwSetCursorPosCallback(window, mouseInputCallback);
   glfwSetScrollCallback(window, scrollInputCallback);
@@ -59,13 +60,9 @@ int main() {
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-  // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                  GL_LINEAR_MIPMAP_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-  glEnable(GL_DEPTH_TEST);
 
   Shader shader("./assets/shaders/vertex.vert",
                 "./assets/shaders/fragment.frag");
@@ -75,17 +72,13 @@ int main() {
   // textures
   stbi_set_flip_vertically_on_load(true);
   int width, height, nrChannels;
-  // unsigned char *data =
-  //     stbi_load("./assets/imgs/spaceBox.jpg", &width, &height, &nrChannels,
-  //     0);
-
   unsigned char *data =
-      stbi_load("./assets/imgs/spiral.jpg", &width, &height, &nrChannels, 0);
+      stbi_load("./assets/imgs/spaceBox.jpg", &width, &height, &nrChannels, 0);
 
   if (!data) {
     std::cout << "ERROR: image not loaded" << std::endl;
     return -1;
-  }
+  };
 
   unsigned int texture0;
   glGenTextures(1, &texture0);
@@ -95,6 +88,8 @@ int main() {
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
                GL_UNSIGNED_BYTE, data);
 
+  glGenerateMipmap(GL_TEXTURE_2D);
+
   stbi_image_free(data);
 
   unsigned int CUBE_VAO;
@@ -103,7 +98,6 @@ int main() {
 
   unsigned int CUBE_VERTICES_VBO;
   glGenBuffers(1, &CUBE_VERTICES_VBO);
-
   glBindBuffer(GL_ARRAY_BUFFER, CUBE_VERTICES_VBO);
   glBufferData(GL_ARRAY_BUFFER, sizeof(CUBE_VERTICES), CUBE_VERTICES,
                GL_STATIC_DRAW);
@@ -128,7 +122,9 @@ int main() {
   }
   glUniform1i(texture0UniformLocation, 0);
 
-  std::vector<glm::vec3> objectsPositions = {glm::vec3(0.0f, 0.0f, 0.0f)};
+  // std::vector<glm::vec3> objectsPositions = {glm::vec3(0.0f, 0.0f, 0.0f)};
+
+  glEnable(GL_DEPTH_TEST);
 
   float startTime = glfwGetTime();
   while (!glfwWindowShouldClose(window)) {
@@ -158,8 +154,8 @@ int main() {
     glm::mat4 model = glm::mat4(1.0f);
     // model = glm::scale(model, glm::vec3(100.f, 100.f, 100.f));
     shader.setMatrix4fv("uModel", model);
+
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-    // glDrawArrays(GL_TRIANGLES, 0, 36);
 
     // model = glm::mat4(1.0f);
     // shader.setMatrix4fv("uModel", model);
