@@ -66,7 +66,6 @@ int main() {
 
   Shader shader("./assets/shaders/vertex.vert",
                 "./assets/shaders/fragment.frag");
-
   shader.use();
 
   // textures
@@ -152,7 +151,8 @@ int main() {
 
     glBindVertexArray(CUBE_VAO);
     glm::mat4 model = glm::mat4(1.0f);
-    // model = glm::scale(model, glm::vec3(100.f, 100.f, 100.f));
+    // model = glm::translate(model, camera.position);
+    model = glm::scale(model, glm::vec3(100.f, 100.f, 100.f));
     shader.setMatrix4fv("uModel", model);
 
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
