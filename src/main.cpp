@@ -28,7 +28,7 @@ bool firstMouseInput = true;
 
 const float sensitivity = 0.3f;
 
-Camera camera(CAMERA_POSITION, CAMERA_FRONT, CAMERA_UP, YAW, PITCH, SPEED,
+Camera camera(CAMERA_POSITION,  CAMERA_UP,CAMERA_FRONT,CAMERA_ORIENTATION,  SPEED, TURN_SPEED,
               SENSITIVITY, FOV);
 
 int main() {
@@ -50,7 +50,7 @@ int main() {
   glfwMakeContextCurrent(window);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-  glfwSetCursorPosCallback(window, mouseInputCallback);
+  // glfwSetCursorPosCallback(window, mouseInputCallback);
   glfwSetScrollCallback(window, scrollInputCallback);
 
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -136,6 +136,8 @@ int main() {
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    camera.updateCameraMovement(dt);
+
     float timePassed = glfwGetTime() - startTime;
     shader.setFloat("uTime", timePassed);
 
@@ -189,9 +191,6 @@ void proccesInput(GLFWwindow *window) {
   }
 
   bool sprint = false;
-  if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
-    sprint = true;
-  }
 
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
     camera.handleKeyboardInput(FORWARD, dt, sprint);
@@ -205,6 +204,12 @@ void proccesInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
     camera.handleKeyboardInput(RIGHT, dt, sprint);
   }
+
+  if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+    sprint = true;
+    camera.handleKeyboardInput(FORWARD, dt, sprint);
+  }
+
 }
 
 void mouseInputCallback(GLFWwindow *window, double mouseX, double mouseY) {

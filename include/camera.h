@@ -2,6 +2,7 @@
 #define CAMERA_H
 
 #include "../include/glm/glm.hpp"
+#include "../include/glm/gtc/quaternion.hpp"
 #include <string>
 
 enum moveDirection {
@@ -14,10 +15,10 @@ enum moveDirection {
 extern const glm::vec3 CAMERA_POSITION;
 extern const glm::vec3 CAMERA_FRONT;
 extern const glm::vec3 CAMERA_UP;
+extern const glm::quat CAMERA_ORIENTATION;
 
-extern const float YAW;
-extern const float PITCH;
 extern const float SPEED;
+extern const float TURN_SPEED;
 extern const float SENSITIVITY;
 extern const float FOV;
 
@@ -29,14 +30,15 @@ public:
   glm::vec3 right;
   glm::vec3 worldUp;
 
-  float yaw;
-  float pitch;
   float speed;
+  float turnSpeed;
   float sensitivity;
   float fov;
+  glm::quat orientation;
+  bool jets;
 
-  Camera(glm::vec3 positionIn, glm::vec3 frontIn, glm::vec3 upIn, float yawIn,
-         float pitchIn, float speedIn, float sensitivityIn, float fovIn);
+  Camera(glm::vec3 positionIn, glm::vec3 worldUpIn, 
+         glm::vec3 frontIn,glm::quat orientaionIn, float speedIn,float turnSpeedIn, float sensitivityIn, float fovIn);
 
   glm::mat4 getViewMatrix();
 
@@ -44,6 +46,8 @@ public:
                            bool shift = false);
   void handleMouseInput(float xOffset, float yOffset, bool constrain = true);
   void handleScrollInput(float yOffset, float minFov, float maxFov);
+
+  void updateCameraMovement(float dt);
 
 private:
   void updateCamera();
