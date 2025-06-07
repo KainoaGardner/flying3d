@@ -6,6 +6,7 @@
 #include "../include/glm/gtc/type_ptr.hpp"
 #include "../include/shader.h"
 #include "../include/stb_image.h"
+#include "../include/utils.h"
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <vector>
@@ -13,10 +14,10 @@
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void proccesInput(GLFWwindow *window);
 void mouseInputCallback(GLFWwindow *window, double mouseX, double mouseY);
-void scrollInputCallback(GLFWwindow *window, double xOffset, double yOffset);
+// void scrollInputCallback(GLFWwindow *window, double xOffset, double yOffset);
 
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 800;
+const unsigned int SCR_WIDTH = 1920;
+const unsigned int SCR_HEIGHT = 1080;
 
 float dt = 0.0f;
 float lastFrame = 0.0f;
@@ -28,8 +29,8 @@ bool firstMouseInput = true;
 
 const float sensitivity = 0.3f;
 
-Camera camera(CAMERA_POSITION,  CAMERA_UP,CAMERA_FRONT,CAMERA_ORIENTATION,  SPEED, TURN_SPEED,
-              SENSITIVITY, FOV);
+Camera camera(CAMERA_POSITION, CAMERA_UP, CAMERA_FRONT, CAMERA_ORIENTATION,
+              SPEED, MAX_SPEED, TURN_SPEED, SENSITIVITY, FOV);
 
 int main() {
   glfwInit();
@@ -51,7 +52,7 @@ int main() {
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   // glfwSetCursorPosCallback(window, mouseInputCallback);
-  glfwSetScrollCallback(window, scrollInputCallback);
+  // glfwSetScrollCallback(window, scrollInputCallback);
 
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
     std::cout << "Failed to initialize GLAD" << std::endl;
@@ -66,62 +67,30 @@ int main() {
 
   Shader shader("./assets/shaders/vertex.vert",
                 "./assets/shaders/fragment.frag");
+  Shader cubemapShader("./assets/shaders/cubemap.vert",
+                       "./assets/shaders/cubemap.frag");
+
   shader.use();
 
   // textures
   stbi_set_flip_vertically_on_load(true);
-  int width, height, nrChannels;
-  unsigned char *data =
-      stbi_load("./assets/imgs/spaceBox.jpg", &width, &height, &nrChannels, 0);
 
-  if (!data) {
-    std::cout << "ERROR: image not loaded" << std::endl;
-    return -1;
+  std::vector<std::string> skyboxTextures = {
+      "./assets/imgs/cubemaps/gray/right.png",
+      "./assets/imgs/cubemaps/gray/left.png",
+      "./assets/imgs/cubemaps/gray/top.png",
+      "./assets/imgs/cubemaps/gray/bottom.png",
+      "./assets/imgs/cubemaps/gray/front.png",
+      "./assets/imgs/cubemaps/gray/back.png",
   };
 
-  unsigned int texture0;
-  glGenTextures(1, &texture0);
+  stbi_set_flip_vertically_on_load(false);
+  unsigned int skyboxTexture = loadCubemap(skyboxTextures);
 
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, texture0);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
-               GL_UNSIGNED_BYTE, data);
 
-  glGenerateMipmap(GL_TEXTURE_2D);
-
-  stbi_image_free(data);
-
-  unsigned int CUBE_VAO;
-  glGenVertexArrays(1, &CUBE_VAO);
-  glBindVertexArray(CUBE_VAO);
-
-  unsigned int CUBE_VERTICES_VBO;
-  glGenBuffers(1, &CUBE_VERTICES_VBO);
-  glBindBuffer(GL_ARRAY_BUFFER, CUBE_VERTICES_VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(CUBE_VERTICES), CUBE_VERTICES,
-               GL_STATIC_DRAW);
-
-  unsigned int CUBE_INDICES_EBO;
-  glGenBuffers(1, &CUBE_INDICES_EBO);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, CUBE_INDICES_EBO);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(CUBE_INDICES), CUBE_INDICES,
-               GL_STATIC_DRAW);
-
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
-  glEnableVertexAttribArray(0);
-
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                        (void *)(3 * sizeof(float)));
-  glEnableVertexAttribArray(1);
-
-  int texture0UniformLocation =
-      glGetUniformLocation(shader.program, "uTexture0");
-  if (texture0UniformLocation < 0) {
-    std::cout << "cant find texture unfirom" << std::endl;
-  }
-  glUniform1i(texture0UniformLocation, 0);
-
-  // std::vector<glm::vec3> objectsPositions = {glm::vec3(0.0f, 0.0f, 0.0f)};
+  Geometry cube = createCube();
+  Geometry skybox = createCubemap();
 
   glEnable(GL_DEPTH_TEST);
 
@@ -143,34 +112,42 @@ int main() {
 
     glm::mat4 view = glm::mat4(1.0f);
     view = camera.getViewMatrix();
-    shader.setMatrix4fv("uView", view);
 
     glm::mat4 projection;
     projection =
         glm::perspective(glm::radians(camera.fov),
-                         (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-    shader.setMatrix4fv("uProjection", projection);
+                         (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 10000.0f);
 
-    glBindVertexArray(CUBE_VAO);
+    glDepthFunc(GL_LEQUAL);
+    glDepthMask(GL_FALSE);
+
+    glBindVertexArray(skybox.vao);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTexture);
+
+    cubemapShader.use();
+    cubemapShader.setMatrix4fv("uProjection", projection);
+    glm::mat4 noTranslateView = glm::mat4(glm::mat3(view));
+
+    cubemapShader.setMatrix4fv("uView", noTranslateView);
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+
+    glBindVertexArray(cube.vao);
+    glDepthMask(GL_TRUE);
+    glDepthFunc(GL_LESS);
+
     glm::mat4 model = glm::mat4(1.0f);
-    // model = glm::translate(model, camera.position);
-    model = glm::scale(model, glm::vec3(100.f, 100.f, 100.f));
+    // model = glm::translate(model, glm::vec3(0.0f, -1.0f, 0.0f));
+    // model = glm::rotate(model, timePassed * 3.0f,
+    //                     glm::normalize(glm::vec3(2.0f, 0.0f, 1.0)));
+    model = glm::scale(model, glm::vec3(5.0f, 5.0f, 5.0f));
+
+    shader.use();
+    shader.setMatrix4fv("uView", view);
+    shader.setMatrix4fv("uProjection", projection);
     shader.setMatrix4fv("uModel", model);
 
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-
-    // model = glm::mat4(1.0f);
-    // shader.setMatrix4fv("uModel", model);
-    // glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-
-    // for (unsigned int i = 0; i < objectsPositions.size(); i++) {
-    //   glm::mat4 model = glm::mat4(1.0f);
-    //   model = glm::translate(model, ob[i]);
-    //   float angle = (i + 1) * timePassed * 25.0f;
-    //
-    //   shader.setMatrix4fv("uModel", model);
-    //   glDrawArrays(GL_TRIANGLES, 0, 36);
-    // }
 
     glfwSwapBuffers(window);
     glfwPollEvents();
@@ -185,31 +162,10 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
 }
 
 void proccesInput(GLFWwindow *window) {
-  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS ||
-      glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
+  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, true);
   }
-
-  bool sprint = false;
-
-  if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-    camera.handleKeyboardInput(FORWARD, dt, sprint);
-  }
-  if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-    camera.handleKeyboardInput(BACKWARD, dt, sprint);
-  }
-  if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-    camera.handleKeyboardInput(LEFT, dt, sprint);
-  }
-  if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-    camera.handleKeyboardInput(RIGHT, dt, sprint);
-  }
-
-  if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
-    sprint = true;
-    camera.handleKeyboardInput(FORWARD, dt, sprint);
-  }
-
+  camera.handleKeyboardInput(window, dt);
 }
 
 void mouseInputCallback(GLFWwindow *window, double mouseX, double mouseY) {
@@ -228,6 +184,7 @@ void mouseInputCallback(GLFWwindow *window, double mouseX, double mouseY) {
   camera.handleMouseInput(xOffset, yOffset);
 }
 
-void scrollInputCallback(GLFWwindow *window, double xOffset, double yOffset) {
-  camera.handleScrollInput(yOffset, 10.0f, 45.0f);
-}
+// void scrollInputCallback(GLFWwindow *window, double xOffset, double yOffset)
+// {
+//   camera.handleScrollInput(yOffset, 10.0f, 45.0f);
+// }

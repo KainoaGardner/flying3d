@@ -1,8 +1,10 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
+#include "../include/glad/glad.h"
 #include "../include/glm/glm.hpp"
 #include "../include/glm/gtc/quaternion.hpp"
+#include <GLFW/glfw3.h>
 #include <string>
 
 enum moveDirection {
@@ -18,6 +20,7 @@ extern const glm::vec3 CAMERA_UP;
 extern const glm::quat CAMERA_ORIENTATION;
 
 extern const float SPEED;
+extern const float MAX_SPEED;
 extern const float TURN_SPEED;
 extern const float SENSITIVITY;
 extern const float FOV;
@@ -31,19 +34,20 @@ public:
   glm::vec3 worldUp;
 
   float speed;
+  float maxSpeed;
   float turnSpeed;
   float sensitivity;
   float fov;
   glm::quat orientation;
   bool jets;
 
-  Camera(glm::vec3 positionIn, glm::vec3 worldUpIn, 
-         glm::vec3 frontIn,glm::quat orientaionIn, float speedIn,float turnSpeedIn, float sensitivityIn, float fovIn);
+  Camera(glm::vec3 positionIn, glm::vec3 worldUpIn, glm::vec3 frontIn,
+         glm::quat orientaionIn, float speedIn, float maxSpeedIn,
+         float turnSpeedIn, float sensitivityIn, float fovIn);
 
   glm::mat4 getViewMatrix();
 
-  void handleKeyboardInput(moveDirection direction, float dt,
-                           bool shift = false);
+  void handleKeyboardInput(GLFWwindow *window, float dt);
   void handleMouseInput(float xOffset, float yOffset, bool constrain = true);
   void handleScrollInput(float yOffset, float minFov, float maxFov);
 
@@ -51,6 +55,12 @@ public:
 
 private:
   void updateCamera();
+
+  float addSpeed(float currentSpeed, float maxSpeed, float acceleration,
+                 float dt);
+  float subtractSpeed(float currentSpeed, float brakeStrength, float dt);
+
+  float applyDrag(float currentSpeed, float dragRate, float dt);
 };
 
 #endif

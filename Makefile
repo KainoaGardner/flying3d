@@ -14,6 +14,7 @@ SRCS := $(SRC_DIR)/main.cpp \
 				$(SRC_DIR)/geometry.cpp \
 				$(SRC_DIR)/shader.cpp \
 				$(SRC_DIR)/camera.cpp \
+				$(SRC_DIR)/utils.cpp \
 				$(LIB_DIR)/glad.c \
 				$(LIB_DIR)/stb_image.cpp
 
@@ -21,6 +22,7 @@ OBJS := $(OBJ_DIR)/main.o \
 				$(OBJ_DIR)/geometry.o \
 				$(OBJ_DIR)/shader.o \
 				$(OBJ_DIR)/camera.o \
+				$(OBJ_DIR)/utils.o \
 				$(OBJ_DIR)/glad.o \
 				$(OBJ_DIR)/stb_image.o
 
