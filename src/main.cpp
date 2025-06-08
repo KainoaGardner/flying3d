@@ -1,3 +1,5 @@
+
+#include "../include/bullet.h"
 #include "../include/camera.h"
 #include "../include/geomety.h"
 #include "../include/glad/glad.h"
@@ -16,8 +18,13 @@ void proccesInput(GLFWwindow *window);
 void mouseInputCallback(GLFWwindow *window, double mouseX, double mouseY);
 // void scrollInputCallback(GLFWwindow *window, double xOffset, double yOffset);
 
-const unsigned int SCR_WIDTH = 1920;
-const unsigned int SCR_HEIGHT = 1080;
+// const unsigned int SCR_WIDTH = 1920;
+// const unsigned int SCR_HEIGHT = 1080;
+const unsigned int SCR_WIDTH = 1280;
+const unsigned int SCR_HEIGHT = 720;
+
+// const unsigned int SCR_WIDTH = 640;
+// const unsigned int SCR_HEIGHT = 360;
 
 float dt = 0.0f;
 float lastFrame = 0.0f;
@@ -94,6 +101,8 @@ int main() {
 
   glEnable(GL_DEPTH_TEST);
 
+  float bossShootCooldown = 0.05f;
+  float bossShootCounter = 0.0f;
   float startTime = glfwGetTime();
   while (!glfwWindowShouldClose(window)) {
     float currFrame = glfwGetTime();
@@ -105,7 +114,22 @@ int main() {
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    camera.updateCameraMovement(dt);
+    camera.update(dt);
+    // camera.updateCameraMovement(dt);
+
+    bossShootCounter += dt;
+    if (bossShootCounter >= bossShootCooldown) {
+      glm::vec3 bossPos = glm::vec3(0.0f);
+      glm::vec3 toPlayer = glm::normalize(camera.position - bossPos);
+      toPlayer.x += ((float(rand() % 100) / 100.0) - 0.5) / 2.0;
+      toPlayer.y += ((float(rand() % 100) / 100.0) - 0.5) / 2.0;
+      toPlayer.z += ((float(rand() % 100) / 100.0) - 0.5) / 2.0;
+
+      Bullet bullet =
+          Bullet(bossPos, toPlayer, toPlayer, glm::vec3(2.0f), 0.5f, 1.0f);
+      bullets.push_back(bullet);
+      bossShootCounter = 0.0f;
+    }
 
     float timePassed = glfwGetTime() - startTime;
     shader.setFloat("uTime", timePassed);
@@ -140,7 +164,7 @@ int main() {
     // model = glm::translate(model, glm::vec3(0.0f, -1.0f, 0.0f));
     // model = glm::rotate(model, timePassed * 3.0f,
     //                     glm::normalize(glm::vec3(2.0f, 0.0f, 1.0)));
-    model = glm::scale(model, glm::vec3(5.0f, 5.0f, 5.0f));
+    model = glm::scale(model, glm::vec3(50.0f));
 
     shader.use();
     shader.setMatrix4fv("uView", view);
@@ -148,6 +172,26 @@ int main() {
     shader.setMatrix4fv("uModel", model);
 
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+
+    for (unsigned int i = 0; i < bullets.size(); i++) {
+      Bullet &bullet = bullets[i];
+      bullet.update(dt);
+      bullet.killBullet(camera.position);
+      if (!bullet.alive) {
+        bullets.erase(bullets.begin() + i);
+        continue;
+      };
+
+      model = glm::mat4(1.0f);
+      model = glm::translate(model, bullet.position);
+      model = glm::rotate(model, timePassed * 25.0f,
+                          glm::normalize(bullet.rotation));
+      model = glm::scale(model, bullet.scale);
+
+      shader.setMatrix4fv("uModel", model);
+
+      glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+    }
 
     glfwSwapBuffers(window);
     glfwPollEvents();

@@ -1,6 +1,9 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include "../include/camera.h"
+#include "../include/bullet.h"
 #include "../include/glm/gtx/quaternion.hpp"
+#include "../include/glm/gtx/string_cast.hpp"
+#include "../include/key.h"
 #include <iostream>
 
 const glm::vec3 CAMERA_POSITION = glm::vec3(0.0f, 0.0f, 3.0f);
@@ -9,10 +12,13 @@ const glm::vec3 CAMERA_UP = glm::vec3(0.0f, 1.0f, 0.0f);
 const glm::vec3 CAMERA_RIGHT = glm::vec3(1.0f, 0.0f, 0.0f);
 
 const float SPEED = 1.0f;
-const float MAX_SPEED = 50.0f;
+const float MAX_SPEED = 100.0f;
 const float TURN_SPEED = 100.0f;
 const float SENSITIVITY = 0.2f;
 const float FOV = 45.0f;
+
+const float DRAG_RATE = 0.2f;
+const float BRAKE_STRENGTH = 0.5f;
 
 const glm::quat CAMERA_ORIENTATION = glm::quat(1, 0, 0, 0);
 
@@ -27,15 +33,33 @@ Camera::Camera(glm::vec3 positionIn, glm::vec3 worldUpIn, glm::vec3 frontIn,
   maxSpeed = maxSpeedIn;
   turnSpeed = turnSpeedIn;
   sensitivity = sensitivityIn;
+
+  shootCooldown = 0.05f;
+
   fov = fovIn;
-  jets = false;
+  viewDirection = 1;
 
   updateCamera();
 }
 
 glm::mat4 Camera::getViewMatrix() {
   glm::mat4 view = glm::mat4_cast(glm::conjugate(orientation));
+  // model = glm::rotate(model, timePassed * 3.0f,
+  //                     glm::normalize(glm::vec3(2.0f, 0.0f, 1.0)));
+
+  glm::vec3 cameraUp = glm::normalize(orientation * CAMERA_UP);
+  if (viewDirection == 2) {
+    view = glm::rotate(view, float(M_PI), cameraUp);
+  }
+  if (viewDirection == 3) {
+    view = glm::rotate(view, float(M_PI / 2), cameraUp);
+  }
+  if (viewDirection == 4) {
+    view = glm::rotate(view, float(-M_PI / 2), cameraUp);
+  }
+
   view = glm::translate(view, -position);
+
   return view;
 }
 
@@ -46,35 +70,50 @@ void Camera::handleKeyboardInput(GLFWwindow *window, float dt) {
   float yOffset = 0.0f;
   float zOffset = 0.0f;
 
-  if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+  if (glfwGetKey(window, FORWARD_KEY) == GLFW_PRESS) {
     speed += addSpeed(speed, maxSpeed, 0.5f, dt);
   }
-  if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-    speed += subtractSpeed(speed, 0.75f, dt);
+
+  if (glfwGetKey(window, BACKWARD_KEY) == GLFW_PRESS) {
+    speed += subtractSpeed(speed, BRAKE_STRENGTH, dt);
     if (speed < 0.0f) {
       speed = 0.0f;
     }
   }
 
-  if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+  if (glfwGetKey(window, PITCH_UP_KEY) == GLFW_PRESS) {
     yOffset += cameraSpeed;
   }
-  if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+  if (glfwGetKey(window, PITCH_DOWN_KEY) == GLFW_PRESS) {
     yOffset -= cameraSpeed;
   }
 
-  if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
+  if (glfwGetKey(window, ROLL_RIGHT_KEY) == GLFW_PRESS) {
     zOffset += cameraSpeed;
   }
-  if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
+  if (glfwGetKey(window, ROLL_LEFT_KEY) == GLFW_PRESS) {
     zOffset -= cameraSpeed;
   }
 
-  if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+  if (glfwGetKey(window, YAW_LEFT_KEY) == GLFW_PRESS) {
     xOffset -= cameraSpeed * 0.5f;
   }
-  if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+  if (glfwGetKey(window, YAW_RIGHT_KEY) == GLFW_PRESS) {
     xOffset += cameraSpeed * 0.5f;
+  }
+
+  if (glfwGetKey(window, SHOOT_KEY) == GLFW_PRESS) {
+    shootBullet();
+  }
+
+  if (glfwGetKey(window, CAMERA_BACK_KEY) == GLFW_PRESS) {
+    viewDirection = 2;
+  } else if (glfwGetKey(window, CAMERA_RIGHT_KEY) == GLFW_PRESS) {
+    viewDirection = 3;
+  } else if (glfwGetKey(window, CAMERA_LEFT_KEY) == GLFW_PRESS) {
+    viewDirection = 4;
+  } else {
+    viewDirection = 1;
   }
 
   float yawAngle = -xOffset * cameraSpeed;
@@ -110,15 +149,20 @@ void Camera::handleMouseInput(float xOffset, float yOffset, bool constrain) {
   // updateCamera();
 }
 
-void Camera::handleScrollInput(float yOffset, float minFov, float maxFov) {
-  fov -= yOffset;
+// void Camera::handleScrollInput(float yOffset, float minFov, float maxFov) {
+//   fov -= yOffset;
+//
+//   if (fov > maxFov) {
+//     fov = maxFov;
+//   }
+//   if (fov < minFov) {
+//     fov = minFov;
+//   }
+// }
 
-  if (fov > maxFov) {
-    fov = maxFov;
-  }
-  if (fov < minFov) {
-    fov = minFov;
-  }
+void Camera::update(float dt) {
+  updateCameraMovement(dt);
+  shootCounter += dt;
 }
 
 void Camera::updateCamera() {
@@ -130,15 +174,11 @@ void Camera::updateCamera() {
 void Camera::updateCameraMovement(float dt) {
   front = glm::normalize(orientation * CAMERA_FRONT);
 
-  speed += applyDrag(speed, 0.1f, dt);
+  speed += applyDrag(speed, DRAG_RATE, dt);
 
   fov = 45.0f + (speed / maxSpeed) * 20.0f;
 
   float vel = speed;
-  if (jets) {
-    vel *= 2.0f;
-    jets = false;
-  }
 
   position += front * dt * vel;
 }
@@ -155,4 +195,34 @@ float Camera::subtractSpeed(float currentSpeed, float brakeStrength, float dt) {
 
 float Camera::applyDrag(float currentSpeed, float dragRate, float dt) {
   return -dragRate * currentSpeed * dt;
+}
+
+void Camera::shootBullet() {
+  if (shootCounter < shootCooldown) {
+    return;
+  }
+
+  shootCounter = 0.0f;
+
+  glm::vec3 cameraUp = glm::normalize(orientation * CAMERA_UP);
+  glm::vec3 cameraRight = glm::normalize(orientation * CAMERA_RIGHT);
+
+  glm::vec3 direction = glm::normalize(orientation * CAMERA_FRONT);
+  direction.x += ((float(rand() % 100) / 100.0) - 0.5) / 50.0;
+  direction.y += ((float(rand() % 100) / 100.0) - 0.5) / 50.0;
+  direction.z += ((float(rand() % 100) / 100.0) - 0.5) / 50.0;
+  glm::vec3 scale = glm::vec3(0.25f);
+
+  if (leftGun) {
+    leftGun = false;
+    Bullet bullet = Bullet(position + cameraUp * -2.0f + cameraRight * -1.0f,
+                           direction, direction, scale, 1.0f, 1.0f);
+    bullets.push_back(bullet);
+
+  } else {
+    leftGun = true;
+    Bullet bullet = Bullet(position + cameraUp * -2.0f + cameraRight * 1.0f,
+                           -direction, direction, scale, 1.0f, 1.0f);
+    bullets.push_back(bullet);
+  }
 }
