@@ -22,8 +22,6 @@ unsigned int SHOOT_KEY = GLFW_KEY_SPACE;
 
 unsigned int CAMERA_FRONT_KEY = GLFW_KEY_1;
 unsigned int CAMERA_BACK_KEY = GLFW_KEY_2;
-unsigned int CAMERA_LEFT_KEY = GLFW_KEY_3;
-unsigned int CAMERA_RIGHT_KEY = GLFW_KEY_4;
+unsigned int CAMERA_BOSS_KEY = GLFW_KEY_3;
 
-// unsigned int CAMERA_BOSS_KEY = GLFW_KEY_3;
 // unsigned int CAMERA_FREE_KEY = GLFW_KEY_4;

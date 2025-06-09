@@ -16,7 +16,6 @@ extern unsigned int SHOOT_KEY;
 
 extern unsigned int CAMERA_FRONT_KEY;
 extern unsigned int CAMERA_BACK_KEY;
-extern unsigned int CAMERA_LEFT_KEY;
-extern unsigned int CAMERA_RIGHT_KEY;
+extern unsigned int CAMERA_BOSS_KEY;
 
 #endif

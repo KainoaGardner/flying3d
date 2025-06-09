@@ -1,12 +1,14 @@
 #include "../include/bullet.h"
 Bullet::Bullet(glm::vec3 positionIn, glm::vec3 rotationIn,
-               glm::vec3 directionIn, glm::vec3 scaleIn, float speedIn,
-               float damageIn) {
+               glm::vec3 directionIn, glm::vec3 scaleIn, glm::vec3 colorIn,
+               float speedIn, float damageIn) {
   position = positionIn;
 
   direction = glm::normalize(directionIn);
   scale = scaleIn;
   speed = speedIn;
+
+  color = colorIn;
 
   damage = damageIn;
 

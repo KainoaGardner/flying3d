@@ -43,7 +43,7 @@ public:
          glm::quat orientaionIn, float speedIn, float maxSpeedIn,
          float turnSpeedIn, float sensitivityIn, float fovIn);
 
-  glm::mat4 getViewMatrix();
+  glm::mat4 getViewMatrix(glm::vec3 bossPosition);
 
   void handleKeyboardInput(GLFWwindow *window, float dt);
   void handleMouseInput(float xOffset, float yOffset, bool constrain = true);

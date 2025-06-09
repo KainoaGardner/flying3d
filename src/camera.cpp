@@ -12,13 +12,14 @@ const glm::vec3 CAMERA_UP = glm::vec3(0.0f, 1.0f, 0.0f);
 const glm::vec3 CAMERA_RIGHT = glm::vec3(1.0f, 0.0f, 0.0f);
 
 const float SPEED = 1.0f;
-const float MAX_SPEED = 100.0f;
+const float MAX_SPEED = 300.0f;
 const float TURN_SPEED = 100.0f;
 const float SENSITIVITY = 0.2f;
 const float FOV = 45.0f;
 
 const float DRAG_RATE = 0.2f;
-const float BRAKE_STRENGTH = 0.5f;
+const float BRAKE_STRENGTH = 0.2f;
+const float ACCELERATION = 0.2f;
 
 const glm::quat CAMERA_ORIENTATION = glm::quat(1, 0, 0, 0);
 
@@ -42,7 +43,7 @@ Camera::Camera(glm::vec3 positionIn, glm::vec3 worldUpIn, glm::vec3 frontIn,
   updateCamera();
 }
 
-glm::mat4 Camera::getViewMatrix() {
+glm::mat4 Camera::getViewMatrix(glm::vec3 bossPosition) {
   glm::mat4 view = glm::mat4_cast(glm::conjugate(orientation));
   // model = glm::rotate(model, timePassed * 3.0f,
   //                     glm::normalize(glm::vec3(2.0f, 0.0f, 1.0)));
@@ -52,13 +53,11 @@ glm::mat4 Camera::getViewMatrix() {
     view = glm::rotate(view, float(M_PI), cameraUp);
   }
   if (viewDirection == 3) {
-    view = glm::rotate(view, float(M_PI / 2), cameraUp);
-  }
-  if (viewDirection == 4) {
-    view = glm::rotate(view, float(-M_PI / 2), cameraUp);
+    view = glm::lookAt(position, bossPosition, cameraUp);
   }
 
-  view = glm::translate(view, -position);
+  if (viewDirection != 3)
+    view = glm::translate(view, -position);
 
   return view;
 }
@@ -71,7 +70,7 @@ void Camera::handleKeyboardInput(GLFWwindow *window, float dt) {
   float zOffset = 0.0f;
 
   if (glfwGetKey(window, FORWARD_KEY) == GLFW_PRESS) {
-    speed += addSpeed(speed, maxSpeed, 0.5f, dt);
+    speed += addSpeed(speed, maxSpeed, ACCELERATION, dt);
   }
 
   if (glfwGetKey(window, BACKWARD_KEY) == GLFW_PRESS) {
@@ -89,10 +88,10 @@ void Camera::handleKeyboardInput(GLFWwindow *window, float dt) {
   }
 
   if (glfwGetKey(window, ROLL_RIGHT_KEY) == GLFW_PRESS) {
-    zOffset += cameraSpeed;
+    zOffset += cameraSpeed * 1.5f;
   }
   if (glfwGetKey(window, ROLL_LEFT_KEY) == GLFW_PRESS) {
-    zOffset -= cameraSpeed;
+    zOffset -= cameraSpeed * 1.53;
   }
 
   if (glfwGetKey(window, YAW_LEFT_KEY) == GLFW_PRESS) {
@@ -108,10 +107,8 @@ void Camera::handleKeyboardInput(GLFWwindow *window, float dt) {
 
   if (glfwGetKey(window, CAMERA_BACK_KEY) == GLFW_PRESS) {
     viewDirection = 2;
-  } else if (glfwGetKey(window, CAMERA_RIGHT_KEY) == GLFW_PRESS) {
+  } else if (glfwGetKey(window, CAMERA_BOSS_KEY) == GLFW_PRESS) {
     viewDirection = 3;
-  } else if (glfwGetKey(window, CAMERA_LEFT_KEY) == GLFW_PRESS) {
-    viewDirection = 4;
   } else {
     viewDirection = 1;
   }
@@ -212,17 +209,20 @@ void Camera::shootBullet() {
   direction.y += ((float(rand() % 100) / 100.0) - 0.5) / 50.0;
   direction.z += ((float(rand() % 100) / 100.0) - 0.5) / 50.0;
   glm::vec3 scale = glm::vec3(0.25f);
+  glm::vec3 color = glm::vec3(1.0f);
+
+  glm::vec3 bulletPosition = glm::vec3(0.0f);
 
   if (leftGun) {
+    bulletPosition = position + cameraUp * -2.0f + cameraRight * -1.0f;
     leftGun = false;
-    Bullet bullet = Bullet(position + cameraUp * -2.0f + cameraRight * -1.0f,
-                           direction, direction, scale, 1.0f, 1.0f);
-    bullets.push_back(bullet);
 
   } else {
+    bulletPosition = position + cameraUp * -2.0f + cameraRight * 1.0f;
     leftGun = true;
-    Bullet bullet = Bullet(position + cameraUp * -2.0f + cameraRight * 1.0f,
-                           -direction, direction, scale, 1.0f, 1.0f);
-    bullets.push_back(bullet);
   }
+
+  Bullet bullet =
+      Bullet(bulletPosition, -direction, direction, scale, color, 5.0f, 1.0f);
+  bullets.push_back(bullet);
 }

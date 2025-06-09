@@ -14,6 +14,8 @@ public:
   glm::vec3 scale;
   glm::vec3 direction;
 
+  glm::vec3 color;
+
   float speed;
   float damage;
 
@@ -21,7 +23,7 @@ public:
   unsigned int viewDirection;
 
   Bullet(glm::vec3 positionIn, glm::vec3 rotationIn, glm::vec3 directionIn,
-         glm::vec3 scaleIn, float speedIn, float damageIn);
+         glm::vec3 scaleIn, glm::vec3 colorIn, float speedIn, float damageIn);
   void update(float dt);
 
   void killBullet(glm::vec3 playerPosition);

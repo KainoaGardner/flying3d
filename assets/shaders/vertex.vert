@@ -4,9 +4,12 @@ layout(location = 1) in vec2 aTexCoord;
 
 out vec2 vTexCoord;
 
+layout(std140) uniform Matrices {
+    uniform mat4 uView;
+    uniform mat4 uProjection;
+};
+
 uniform mat4 uModel;
-uniform mat4 uView;
-uniform mat4 uProjection;
 
 void main() {
     vTexCoord = aTexCoord;

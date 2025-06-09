@@ -15,5 +15,6 @@ struct Geometry {
 
 Geometry createCube();
 Geometry createCubemap();
+Geometry createScreen();
 
 #endif
