@@ -1,27 +1,22 @@
 #include "../include/key.h"
 
-// unsigned int FORWARD_KEY = GLFW_KEY_LEFT_SHIFT;
-// unsigned int BACKWARD_KEY = GLFW_KEY_LEFT_CONTROL;
-// unsigned int PITCH_UP_KEY = GLFW_KEY_W;
-// unsigned int PITCH_DOWN_KEY = GLFW_KEY_S;
-// unsigned int YAW_RIGHT_KEY = GLFW_KEY_D;
-// unsigned int YAW_LEFT_KEY = GLFW_KEY_A;
-// unsigned int ROLL_RIGHT_KEY = GLFW_KEY_Q;
-// unsigned int ROLL_LEFT_KEY = GLFW_KEY_E;
+const unsigned int FORWARD_KEY = GLFW_KEY_W;
+const unsigned int BACKWARD_KEY = GLFW_KEY_S;
+const unsigned int PITCH_UP_KEY = GLFW_KEY_I;
+const unsigned int PITCH_DOWN_KEY = GLFW_KEY_K;
+const unsigned int YAW_RIGHT_KEY = GLFW_KEY_D;
+const unsigned int YAW_LEFT_KEY = GLFW_KEY_A;
+const unsigned int ROLL_RIGHT_KEY = GLFW_KEY_L;
+const unsigned int ROLL_LEFT_KEY = GLFW_KEY_J;
 
-unsigned int FORWARD_KEY = GLFW_KEY_W;
-unsigned int BACKWARD_KEY = GLFW_KEY_S;
-unsigned int PITCH_UP_KEY = GLFW_KEY_I;
-unsigned int PITCH_DOWN_KEY = GLFW_KEY_K;
-unsigned int YAW_RIGHT_KEY = GLFW_KEY_D;
-unsigned int YAW_LEFT_KEY = GLFW_KEY_A;
-unsigned int ROLL_RIGHT_KEY = GLFW_KEY_L;
-unsigned int ROLL_LEFT_KEY = GLFW_KEY_J;
+const unsigned int SHOOT_KEY = GLFW_KEY_SPACE;
 
-unsigned int SHOOT_KEY = GLFW_KEY_SPACE;
+const unsigned int CAMERA_FRONT_KEY = GLFW_KEY_1;
+const unsigned int CAMERA_BACK_KEY = GLFW_KEY_2;
+const unsigned int CAMERA_BOSS_KEY = GLFW_KEY_3;
 
-unsigned int CAMERA_FRONT_KEY = GLFW_KEY_1;
-unsigned int CAMERA_BACK_KEY = GLFW_KEY_2;
-unsigned int CAMERA_BOSS_KEY = GLFW_KEY_3;
-
-// unsigned int CAMERA_FREE_KEY = GLFW_KEY_4;
+const unsigned int MACHINE_GUN_KEY = GLFW_KEY_4;
+const unsigned int SHOTGUN_KEY = GLFW_KEY_5;
+const unsigned int HOMING_MISSILE_KEY = GLFW_KEY_6;
+const unsigned int BOMB_LAUNCHER_KEY = GLFW_KEY_7;
+const unsigned int CHARGE_RIFLE_KEY = GLFW_KEY_8;

@@ -1,11 +1,25 @@
-#ifndef CAMERA_H
-#define CAMERA_H
+#ifndef PLAYER_H
+#define PLAYER_H
 
 #include "../include/glad/glad.h"
 #include "../include/glm/glm.hpp"
 #include "../include/glm/gtc/quaternion.hpp"
 #include <GLFW/glfw3.h>
 #include <string>
+
+enum Weapons {
+  machineGun,
+  shotGun,
+  homingMissile,
+  bombLauncher,
+  chargeRifle,
+};
+
+struct ShootArgs {
+  glm::vec3 bulletPosition;
+  glm::vec3 direction;
+  float spin;
+};
 
 extern const glm::vec3 CAMERA_POSITION;
 extern const glm::vec3 CAMERA_FRONT;
@@ -18,7 +32,7 @@ extern const float TURN_SPEED;
 extern const float SENSITIVITY;
 extern const float FOV;
 
-class Camera {
+class Player {
 public:
   glm::vec3 position;
   glm::vec3 front;
@@ -27,11 +41,12 @@ public:
   glm::vec3 worldUp;
   bool leftGun = false;
 
+  // int weapon = machineGun;
+  int weapon = shotGun;
   float speed;
   float maxSpeed;
   float turnSpeed;
   float sensitivity;
-  float shootCooldown;
   float shootCounter = 0.0f;
 
   float fov;
@@ -39,7 +54,7 @@ public:
   glm::quat orientation;
   unsigned int viewDirection;
 
-  Camera(glm::vec3 positionIn, glm::vec3 worldUpIn, glm::vec3 frontIn,
+  Player(glm::vec3 positionIn, glm::vec3 worldUpIn, glm::vec3 frontIn,
          glm::quat orientaionIn, float speedIn, float maxSpeedIn,
          float turnSpeedIn, float sensitivityIn, float fovIn);
 
@@ -52,8 +67,9 @@ public:
   void update(float dt);
 
 private:
-  void updateCamera();
+  bool shooting = false;
 
+  void updateCamera();
   void updateCameraMovement(float dt);
 
   float addSpeed(float currentSpeed, float maxSpeed, float acceleration,
@@ -61,7 +77,14 @@ private:
   float subtractSpeed(float currentSpeed, float brakeStrength, float dt);
   float applyDrag(float currentSpeed, float dragRate, float dt);
 
+  ShootArgs getShootArgs(float bulletSpread);
+
   void shootBullet();
+  void shootMachineGun();
+  void shootShotGun();
+  void shootHomingMissile();
+  void shootBombLauncher();
+  void shootChargeRifle();
 };
 
 #endif

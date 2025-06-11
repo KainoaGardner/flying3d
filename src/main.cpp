@@ -1,11 +1,11 @@
 
 #include "../include/bullet.h"
-#include "../include/camera.h"
 #include "../include/geomety.h"
 #include "../include/glad/glad.h"
 #include "../include/glm/glm.hpp"
 #include "../include/glm/gtc/matrix_transform.hpp"
 #include "../include/glm/gtc/type_ptr.hpp"
+#include "../include/player.h"
 #include "../include/shader.h"
 #include "../include/stb_image.h"
 #include "../include/utils.h"
@@ -15,7 +15,7 @@
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void proccesInput(GLFWwindow *window);
-void mouseInputCallback(GLFWwindow *window, double mouseX, double mouseY);
+// void mouseInputCallback(GLFWwindow *window, double mouseX, double mouseY);
 // void scrollInputCallback(GLFWwindow *window, double xOffset, double yOffset);
 
 // const unsigned int SCR_WIDTH = 1920;
@@ -36,7 +36,7 @@ bool firstMouseInput = true;
 
 const float sensitivity = 0.3f;
 
-Camera camera(CAMERA_POSITION, CAMERA_UP, CAMERA_FRONT, CAMERA_ORIENTATION,
+Player player(CAMERA_POSITION, CAMERA_UP, CAMERA_FRONT, CAMERA_ORIENTATION,
               SPEED, MAX_SPEED, TURN_SPEED, SENSITIVITY, FOV);
 
 int main() {
@@ -177,20 +177,22 @@ int main() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
 
-    camera.update(dt);
+    player.update(dt);
     // camera.updateCameraMovement(dt);
 
     glm::vec3 bossPos = glm::vec3(0.0f);
     bossShootCounter += dt;
     if (bossShootCounter >= bossShootCooldown) {
-      glm::vec3 toPlayer = glm::normalize(camera.position - bossPos);
+      glm::vec3 toPlayer = glm::normalize(player.position - bossPos);
       toPlayer.x += ((float(rand() % 100) / 100.0) - 0.5) / 5.0;
       toPlayer.y += ((float(rand() % 100) / 100.0) - 0.5) / 5.0;
       toPlayer.z += ((float(rand() % 100) / 100.0) - 0.5) / 5.0;
 
-      Bullet bullet = Bullet(bossPos, toPlayer, toPlayer, glm::vec3(5.0f),
-                             glm::vec3(1.0f, 0.0f, 0.0f), 0.5f, 1.0f);
-      bullets.push_back(bullet);
+      Projectile projectile;
+      projectile.bullet = std::make_unique<Bullet>(
+          bossPos, toPlayer, toPlayer, CAMERA_ORIENTATION, glm::vec3(5.0f),
+          glm::vec3(1.0f, 0.0f, 0.0f), 0.5f, 1.0f);
+      projectiles.push_back(std::move(projectile));
       bossShootCounter = 0.0f;
     }
 
@@ -198,11 +200,11 @@ int main() {
     shader.setFloat("uTime", timePassed);
 
     glm::mat4 view = glm::mat4(1.0f);
-    view = camera.getViewMatrix(bossPos);
+    view = player.getViewMatrix(bossPos);
 
     glm::mat4 projection;
     projection =
-        glm::perspective(glm::radians(camera.fov),
+        glm::perspective(glm::radians(player.fov),
                          (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 10000.0f);
 
     glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
@@ -247,25 +249,26 @@ int main() {
 
     bulletShader.use();
 
-    for (unsigned int i = 0; i < bullets.size(); i++) {
-      Bullet &bullet = bullets[i];
-      bullet.update(dt);
-      bullet.killBullet(camera.position);
-      if (!bullet.alive) {
-        bullets.erase(bullets.begin() + i);
-        continue;
-      };
-
-      model = glm::mat4(1.0f);
-      model = glm::translate(model, bullet.position);
-      model = glm::rotate(model, timePassed * 25.0f,
-                          glm::normalize(bullet.rotation));
-      model = glm::scale(model, bullet.scale);
-
-      bulletShader.setMatrix4fv("uModel", model);
-      bulletShader.setVec3f("uColor", bullet.color);
-
-      glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+    for (unsigned int i = 0; i < projectiles.size(); i++) {
+      Projectile &projectile = projectiles[i];
+      if (projectile.bullet) {
+        projectile.bullet->update(dt);
+        projectile.bullet->killBullet(player.position);
+        if (!projectile.bullet->alive) {
+          projectiles.erase(projectiles.begin() + i);
+          continue;
+        };
+        projectile.bullet->draw(bulletShader, timePassed);
+      }
+      if (projectile.bombBullet) {
+        projectile.bombBullet->update(dt);
+        projectile.bombBullet->killBullet(player.position);
+        if (!projectile.bombBullet->alive) {
+          projectiles.erase(projectiles.begin() + i);
+          continue;
+        };
+        projectile.bombBullet->draw(bulletShader, timePassed);
+      }
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -287,7 +290,7 @@ int main() {
                     bossClip.y >= -1.0f && bossClip.y <= 1.0f &&
                     bossClip.z >= -1.0f && bossClip.z <= 1.0f;
 
-    glm::vec3 toBoss = bossPos - camera.position;
+    glm::vec3 toBoss = bossPos - player.position;
     glm::vec3 bossDirView = glm::mat3(view) * toBoss;
 
     glm::vec2 arrowDir = glm::normalize(glm::vec2(bossDirView));
@@ -316,24 +319,24 @@ void proccesInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, true);
   }
-  camera.handleKeyboardInput(window, dt);
+  player.handleKeyboardInput(window, dt);
 }
 
-void mouseInputCallback(GLFWwindow *window, double mouseX, double mouseY) {
-
-  if (firstMouseInput) {
-    lastMouseX = mouseX;
-    lastMouseY = mouseY;
-    firstMouseInput = false;
-  }
-
-  float xOffset = mouseX - lastMouseX;
-  float yOffset = lastMouseY - mouseY;
-  lastMouseX = mouseX;
-  lastMouseY = mouseY;
-
-  camera.handleMouseInput(xOffset, yOffset);
-}
+// void mouseInputCallback(GLFWwindow *window, double mouseX, double mouseY) {
+//
+//   if (firstMouseInput) {
+//     lastMouseX = mouseX;
+//     lastMouseY = mouseY;
+//     firstMouseInput = false;
+//   }
+//
+//   float xOffset = mouseX - lastMouseX;
+//   float yOffset = lastMouseY - mouseY;
+//   lastMouseX = mouseX;
+//   lastMouseY = mouseY;
+//
+//   player.handleMouseInput(xOffset, yOffset);
+// }
 
 // void scrollInputCallback(GLFWwindow *window, double xOffset, double
 // yOffset)
