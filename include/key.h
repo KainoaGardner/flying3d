@@ -14,14 +14,12 @@ extern const unsigned int ROLL_LEFT_KEY;
 
 extern const unsigned int SHOOT_KEY;
 
-extern const unsigned int CAMERA_FRONT_KEY;
+// extern const unsigned int CAMERA_FRONT_KEY;
 extern const unsigned int CAMERA_BACK_KEY;
 extern const unsigned int CAMERA_BOSS_KEY;
 
-extern const unsigned int MACHINE_GUN_KEY;
-extern const unsigned int SHOTGUN_KEY;
-extern const unsigned int HOMING_MISSILE_KEY;
-extern const unsigned int BOMB_LAUNCHER_KEY;
-extern const unsigned int CHARGE_RIFLE_KEY;
+extern const unsigned int SWITCH_WEAPON;
+extern const unsigned int ABILITY_KEY;
+extern const unsigned int ULTIMATE_KEY;
 
 #endif

@@ -11,12 +11,10 @@ const unsigned int ROLL_LEFT_KEY = GLFW_KEY_J;
 
 const unsigned int SHOOT_KEY = GLFW_KEY_SPACE;
 
-const unsigned int CAMERA_FRONT_KEY = GLFW_KEY_1;
-const unsigned int CAMERA_BACK_KEY = GLFW_KEY_2;
-const unsigned int CAMERA_BOSS_KEY = GLFW_KEY_3;
+const unsigned int CAMERA_BACK_KEY = GLFW_KEY_1;
+const unsigned int CAMERA_BOSS_KEY = GLFW_KEY_2;
 
-const unsigned int MACHINE_GUN_KEY = GLFW_KEY_4;
-const unsigned int SHOTGUN_KEY = GLFW_KEY_5;
-const unsigned int HOMING_MISSILE_KEY = GLFW_KEY_6;
-const unsigned int BOMB_LAUNCHER_KEY = GLFW_KEY_7;
-const unsigned int CHARGE_RIFLE_KEY = GLFW_KEY_8;
+const unsigned int SWITCH_WEAPON = GLFW_KEY_TAB;
+
+const unsigned int ABILITY_KEY = GLFW_KEY_Q;
+const unsigned int ULTIMATE_KEY = GLFW_KEY_E;

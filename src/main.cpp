@@ -1,10 +1,11 @@
-
-#include "../include/bullet.h"
-#include "../include/geomety.h"
 #include "../include/glad/glad.h"
 #include "../include/glm/glm.hpp"
 #include "../include/glm/gtc/matrix_transform.hpp"
+
+#include "../include/bullet.h"
+#include "../include/geomety.h"
 #include "../include/glm/gtc/type_ptr.hpp"
+#include "../include/particle.h"
 #include "../include/player.h"
 #include "../include/shader.h"
 #include "../include/stb_image.h"
@@ -14,7 +15,7 @@
 #include <vector>
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
-void proccesInput(GLFWwindow *window);
+void processInput(GLFWwindow *window, Player *player);
 // void mouseInputCallback(GLFWwindow *window, double mouseX, double mouseY);
 // void scrollInputCallback(GLFWwindow *window, double xOffset, double yOffset);
 
@@ -36,15 +37,17 @@ bool firstMouseInput = true;
 
 const float sensitivity = 0.3f;
 
-Player player(CAMERA_POSITION, CAMERA_UP, CAMERA_FRONT, CAMERA_ORIENTATION,
-              SPEED, MAX_SPEED, TURN_SPEED, SENSITIVITY, FOV);
-
 int main() {
   glfwInit();
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+
+  // unsigned int weapons[2] = {machineGun, shotGun};
+  unsigned int weapons[2] = {homingMissile, bombLauncher};
+  Player player(CAMERA_POSITION, CAMERA_UP, CAMERA_FRONT, CAMERA_ORIENTATION,
+                normalShip, weapons);
 
   GLFWwindow *window =
       glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Learn Opengl", NULL, NULL);
@@ -170,7 +173,7 @@ int main() {
     dt = currFrame - lastFrame;
     lastFrame = currFrame;
 
-    proccesInput(window);
+    processInput(window, &player);
 
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -269,6 +272,27 @@ int main() {
         };
         projectile.bombBullet->draw(bulletShader, timePassed);
       }
+      if (projectile.homingMissile) {
+        projectile.homingMissile->update(dt);
+        projectile.homingMissile->killBullet(player.position);
+        if (!projectile.homingMissile->alive) {
+          projectiles.erase(projectiles.begin() + i);
+          continue;
+        };
+        projectile.homingMissile->draw(bulletShader, timePassed);
+      }
+    }
+
+    for (unsigned int i = 0; i < particles.size(); i++) {
+      Particle &particle = particles[i];
+      if (particle.explosion) {
+        particle.explosion->update(dt);
+        if (!particle.explosion->alive) {
+          particles.erase(particles.begin() + i);
+          continue;
+        };
+        particle.explosion->draw(bulletShader);
+      }
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -315,11 +339,11 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
   glViewport(0, 0, width, height);
 }
 
-void proccesInput(GLFWwindow *window) {
+void processInput(GLFWwindow *window, Player *player) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, true);
   }
-  player.handleKeyboardInput(window, dt);
+  player->handleKeyboardInput(window, dt);
 }
 
 // void mouseInputCallback(GLFWwindow *window, double mouseX, double mouseY) {

@@ -3,6 +3,7 @@
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include "../include/glm/gtx/quaternion.hpp"
+#include "../include/particle.h"
 #include "../include/shader.h"
 #include <GLFW/glfw3.h>
 #include <memory>
@@ -21,6 +22,7 @@ extern const float SHOTGUN_DAMAGE;
 
 extern const float HOMING_MISSILE_COOLDOWN;
 extern const float HOMING_MISSILE_SPEED;
+extern const float HOMING_MISSILE_TURN_SPEED;
 extern const float HOMING_MISSILE_SPREAD;
 extern const float HOMING_MISSILE_BULLET_SIZE;
 extern const float HOMING_MISSILE_DAMAGE;
@@ -80,28 +82,14 @@ public:
 private:
 };
 
-class HomingMissile {
+class HomingMissile : public Bullet {
 public:
-  glm::vec3 position;
-  glm::vec3 rotation;
-  glm::vec3 scale;
-  glm::vec3 direction;
-
-  glm::vec3 color;
-
-  float speed;
-  float damage;
-
-  bool alive = true;
-
   HomingMissile(glm::vec3 positionIn, glm::vec3 rotationIn,
                 glm::vec3 directionIn, glm::quat orientationIn,
                 glm::vec3 scaleIn, glm::vec3 colorIn, float speedIn,
                 float damageIn);
 
-  void update(float dt);
-
-  void killBullet(glm::vec3 playerPosition);
+  void update(float dt) override;
 
 private:
 };

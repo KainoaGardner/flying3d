@@ -13,7 +13,8 @@ const float SHOTGUN_BULLET_SIZE = 1.0f;
 const float SHOTGUN_DAMAGE = 0.5f;
 
 const float HOMING_MISSILE_COOLDOWN = 0.2f;
-const float HOMING_MISSILE_SPEED = 1.0f;
+const float HOMING_MISSILE_SPEED = 2.0f;
+const float HOMING_MISSILE_TURN_SPEED = 2.0f;
 const float HOMING_MISSILE_SPREAD = 10.0f;
 const float HOMING_MISSILE_BULLET_SIZE = 0.75f;
 const float HOMING_MISSILE_DAMAGE = 5.0f;
@@ -92,6 +93,30 @@ void BombBullet::update(float dt) {
   }
 }
 
-void BombBullet::explode() { alive = false; }
+void BombBullet::explode() {
+  alive = false;
+  Particle particle;
+  particle.explosion = std::make_unique<Explosion>(
+      position, orientation, EXPLOSION_SIZE, EXPLOSION_TIMER);
+  particles.push_back(std::move(particle));
+}
+
+HomingMissile::HomingMissile(glm::vec3 positionIn, glm::vec3 rotationIn,
+                             glm::vec3 directionIn, glm::quat orientationIn,
+                             glm::vec3 scaleIn, glm::vec3 colorIn,
+                             float speedIn, float damageIn)
+    : Bullet(positionIn, rotationIn, directionIn, orientationIn, scaleIn,
+             colorIn, speedIn, damageIn) {}
+
+void HomingMissile::update(float dt) {
+  // change to closest target pos
+  glm::vec3 closestTargetPos = glm::vec3(0.0f);
+
+  glm::vec3 targetDirection = glm::normalize(closestTargetPos - position);
+  direction = glm::normalize(
+      glm::mix(direction, targetDirection, HOMING_MISSILE_TURN_SPEED * dt));
+
+  Bullet::update(dt);
+}
 
 std::vector<Projectile> projectiles;

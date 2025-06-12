@@ -4,37 +4,30 @@
 #include "../include/glm/gtx/quaternion.hpp"
 #include "../include/glm/gtx/string_cast.hpp"
 #include "../include/key.h"
+#include "../include/ships.h"
+
+const float MAX_COUNTER = std::numeric_limits<float>::max();
 
 const glm::vec3 CAMERA_POSITION = glm::vec3(0.0f, 0.0f, 3.0f);
 const glm::vec3 CAMERA_FRONT = glm::vec3(0.0f, 0.0f, -1.0f);
 const glm::vec3 CAMERA_UP = glm::vec3(0.0f, 1.0f, 0.0f);
 const glm::vec3 CAMERA_RIGHT = glm::vec3(1.0f, 0.0f, 0.0f);
 
-const float SPEED = 1.0f;
-const float MAX_SPEED = 300.0f;
-const float TURN_SPEED = 100.0f;
-const float SENSITIVITY = 0.2f;
 const float FOV = 45.0f;
-
-const float DRAG_RATE = 0.2f;
-const float BRAKE_STRENGTH = 0.2f;
-const float ACCELERATION = 0.2f;
 
 const glm::quat CAMERA_ORIENTATION = glm::quat(1, 0, 0, 0);
 
 Player::Player(glm::vec3 positionIn, glm::vec3 worldUpIn, glm::vec3 frontIn,
-               glm::quat orientationIn, float speedIn, float maxSpeedIn,
-               float turnSpeedIn, float sensitivityIn, float fovIn) {
+               glm::quat orientationIn, unsigned int shipIn,
+               unsigned int weaponsIn[2]) {
   position = positionIn;
   worldUp = worldUpIn;
   front = frontIn;
   orientation = orientationIn;
-  speed = speedIn;
-  maxSpeed = maxSpeedIn;
-  turnSpeed = turnSpeedIn;
-  sensitivity = sensitivityIn;
+  weapons[0] = weaponsIn[0];
+  weapons[1] = weaponsIn[1];
+  ship = shipIn;
 
-  fov = fovIn;
   viewDirection = 1;
 
   updateCamera();
@@ -61,20 +54,19 @@ glm::mat4 Player::getViewMatrix(glm::vec3 bossPosition) {
 
 void Player::handleKeyboardInput(GLFWwindow *window, float dt) {
 
-  float cameraSpeed = turnSpeed * dt;
+  float cameraSpeed = shipTurnSpeed[ship] * dt;
   float xOffset = 0.0f;
   float yOffset = 0.0f;
   float zOffset = 0.0f;
 
   if (glfwGetKey(window, FORWARD_KEY) == GLFW_PRESS) {
-    speed += addSpeed(speed, maxSpeed, ACCELERATION, dt);
+    speed += addSpeed(speed, shipMaxSpeed[ship], shipAcceleration[ship], dt);
   }
 
   if (glfwGetKey(window, BACKWARD_KEY) == GLFW_PRESS) {
-    speed += subtractSpeed(speed, BRAKE_STRENGTH, dt);
-    if (speed < 0.0f) {
+    speed += subtractSpeed(speed, shipBreakStrength[ship], dt);
+    if (speed < 0.0f)
       speed = 0.0f;
-    }
   }
 
   if (glfwGetKey(window, PITCH_UP_KEY) == GLFW_PRESS) {
@@ -101,11 +93,12 @@ void Player::handleKeyboardInput(GLFWwindow *window, float dt) {
   if (glfwGetKey(window, SHOOT_KEY) == GLFW_PRESS) {
     shootBullet();
 
-    if (weapon == chargeRifle) {
-      shootCounter += dt;
+    if (weapons[weaponIndex] == chargeRifle) {
+      if (shootCounter < MAX_COUNTER)
+        shootCounter += dt * shootSpeedBoost;
     }
   } else {
-    if (weapon == chargeRifle)
+    if (weapons[weaponIndex] == chargeRifle)
       shootChargeRifle();
   }
 
@@ -117,16 +110,21 @@ void Player::handleKeyboardInput(GLFWwindow *window, float dt) {
     viewDirection = 1;
   }
 
-  if (glfwGetKey(window, MACHINE_GUN_KEY) == GLFW_PRESS) {
-    weapon = machineGun;
-  } else if (glfwGetKey(window, SHOTGUN_KEY) == GLFW_PRESS) {
-    weapon = shotGun;
-  } else if (glfwGetKey(window, HOMING_MISSILE_KEY) == GLFW_PRESS) {
-    weapon = homingMissile;
-  } else if (glfwGetKey(window, BOMB_LAUNCHER_KEY) == GLFW_PRESS) {
-    weapon = bombLauncher;
-  } else if (glfwGetKey(window, CHARGE_RIFLE_KEY) == GLFW_PRESS) {
-    weapon = chargeRifle;
+  if (glfwGetKey(window, SWITCH_WEAPON) == GLFW_PRESS && canWeaponSwap) {
+    weaponIndex = (weaponIndex + 1) % 2;
+    canWeaponSwap = false;
+    shootCounter = 0.0f;
+  }
+  if (glfwGetKey(window, SWITCH_WEAPON) != GLFW_PRESS) {
+    canWeaponSwap = true;
+  }
+
+  if (glfwGetKey(window, ABILITY_KEY) == GLFW_PRESS) {
+    useShipAbility();
+  }
+
+  if (glfwGetKey(window, ULTIMATE_KEY) == GLFW_PRESS) {
+    useShipUltimate();
   }
 
   float yawAngle = -xOffset * cameraSpeed;
@@ -146,38 +144,12 @@ void Player::handleKeyboardInput(GLFWwindow *window, float dt) {
   updateCamera();
 }
 
-// void Player::handleMouseInput(float xOffset, float yOffset, bool constrain) {
-// float yawAngle = -xOffset * sensitivity;
-//
-// float pitchAngle = yOffset * sensitivity;
-//
-// glm::quat qYaw = glm::angleAxis(glm::radians(yawAngle), worldUp);
-// glm::vec3 cameraFront = glm::rotate(orientation, CAMERA_FRONT);
-// glm::vec3 cameraRight =
-//     glm::normalize(glm::cross(cameraFront, worldUp));
-//
-// glm::quat qPitch = glm::angleAxis(glm::radians(pitchAngle),cameraRight);
-//
-// orientation = glm::normalize(qYaw * qPitch * orientation);
-//
-// updateCamera();
-// }
-
-// void Camera::handleScrollInput(float yOffset, float minFov, float maxFov) {
-//   fov -= yOffset;
-//
-//   if (fov > maxFov) {
-//     fov = maxFov;
-//   }
-//   if (fov < minFov) {
-//     fov = minFov;
-//   }
-// }
-
 void Player::update(float dt) {
   updateCameraMovement(dt);
-  if (weapon != chargeRifle)
-    shootCounter += dt;
+  if (weapons[weaponIndex] != chargeRifle && shootCounter < MAX_COUNTER)
+    shootCounter += dt * shootSpeedBoost;
+
+  shipUpdate(dt);
 }
 
 void Player::updateCamera() {
@@ -189,9 +161,9 @@ void Player::updateCamera() {
 void Player::updateCameraMovement(float dt) {
   front = glm::normalize(orientation * CAMERA_FRONT);
 
-  speed += applyDrag(speed, DRAG_RATE, dt);
+  speed += applyDrag(speed, shipDragStrength[ship], dt);
 
-  fov = 45.0f + (speed / maxSpeed) * 20.0f;
+  fov = 45.0f + (speed / shipMaxSpeed[ship]) * 20.0f;
 
   float vel = speed;
 
@@ -213,7 +185,7 @@ float Player::applyDrag(float currentSpeed, float dragRate, float dt) {
 }
 
 void Player::shootBullet() {
-  switch (weapon) {
+  switch (weapons[weaponIndex]) {
   case machineGun:
     shootMachineGun();
     break;
@@ -221,6 +193,7 @@ void Player::shootBullet() {
     shootShotGun();
     break;
   case homingMissile:
+    shootHomingMissile();
     break;
   case bombLauncher:
     shootBombLauncher();
@@ -296,6 +269,24 @@ void Player::shootShotGun() {
   }
 }
 
+void Player::shootHomingMissile() {
+  if (shootCounter < HOMING_MISSILE_COOLDOWN)
+    return;
+  shootCounter = 0.0f;
+
+  glm::vec3 scale = glm::vec3(HOMING_MISSILE_BULLET_SIZE);
+  glm::vec3 color = glm::vec3(1.0f);
+
+  ShootArgs shootArgs = getShootArgs(HOMING_MISSILE_SPREAD);
+
+  Projectile projectile;
+  projectile.homingMissile = std::make_unique<HomingMissile>(
+      shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
+      shootArgs.direction, orientation, scale, color, HOMING_MISSILE_SPEED,
+      HOMING_MISSILE_DAMAGE);
+  projectiles.push_back(std::move(projectile));
+}
+
 void Player::shootBombLauncher() {
   if (shootCounter < BOMB_LAUNCHER_COOLDOWN)
     return;
@@ -356,4 +347,114 @@ void Player::shootChargeRifle() {
       std::make_unique<Bullet>(bulletPosition, cameraRight, direction,
                                orientation, scale, color, speed, damage);
   projectiles.push_back(std::move(projectile));
+}
+
+void Player::shipUpdate(float dt) {
+  switch (ship) {
+  case normalShip:
+    normalShipUpdate(dt);
+    break;
+  case tankShip:
+    break;
+  case timeShip:
+    break;
+  case vampireShip:
+    break;
+  case speedShip:
+    break;
+  case parryShip:
+    break;
+  }
+}
+
+void Player::useShipAbility() {
+  switch (ship) {
+  case normalShip:
+    normalShipAbility();
+    break;
+  case tankShip:
+    break;
+  case timeShip:
+    break;
+  case vampireShip:
+    break;
+  case speedShip:
+    break;
+  case parryShip:
+    break;
+  }
+}
+
+void Player::useShipUltimate() {
+  switch (ship) {
+  case normalShip:
+    normalShipUltimate();
+    break;
+  case tankShip:
+    break;
+  case timeShip:
+    break;
+  case vampireShip:
+    break;
+  case speedShip:
+    break;
+  case parryShip:
+    break;
+  }
+}
+
+void Player::normalShipUpdate(float dt) {
+  if (abilityCounter < MAX_COUNTER) {
+    abilityCounter += dt;
+  }
+  if (ultimateCounter < MAX_COUNTER) {
+    ultimateCounter += dt;
+  }
+
+  if (abilityTimer > 0.0f) {
+    float percent = (NORMAL_SHIP_ABILITY_LENGTH - abilityTimer) /
+                    NORMAL_SHIP_ABILITY_LENGTH;
+    float y = exp(-NORMAL_SHIP_ABILITY_STRENGTH * percent);
+
+    speed = NORMAL_SHIP_ABILITY_SPEED * y + beforeDashSpeed;
+    abilityTimer -= dt;
+  }
+
+  if (ultimateTimer > 0.0f) {
+    ultimateTimer -= dt;
+  }
+
+  if (notHitCounter < MAX_COUNTER) {
+    notHitCounter += dt;
+  }
+
+  float x = notHitCounter / NORMAL_SHIP_MAX_PASSIVE_TIME;
+
+  float num = 1 - exp(-NORMAL_SHIP_PASSIVE_STRENGTH * x);
+  float denom = 1 - exp(-NORMAL_SHIP_PASSIVE_STRENGTH);
+  float y = (NORMAL_SHIP_MAX_PASSIVE_BOOST - 1.0f) * (num / denom) + 1.0f;
+
+  damageBoost = glm::clamp(y, 1.0f, NORMAL_SHIP_MAX_PASSIVE_BOOST);
+  shootSpeedBoost = glm::clamp(y, 1.0f, NORMAL_SHIP_MAX_PASSIVE_BOOST);
+  if (ultimateTimer > 0.0f) {
+    shootSpeedBoost *= NORMAL_SHIP_ULTIMATE_BOOST;
+  }
+  std::cout << ultimateCounter << std::endl;
+}
+void Player::normalShipAbility() {
+  if (abilityCounter < NORMAL_SHIP_ABILITY_COOLDOWN)
+    return;
+
+  beforeDashSpeed = speed;
+  speed = NORMAL_SHIP_ABILITY_SPEED;
+  abilityCounter = 0;
+  abilityTimer = NORMAL_SHIP_ABILITY_LENGTH;
+}
+
+void Player::normalShipUltimate() {
+  if (ultimateCounter < NORMAL_SHIP_ULTIMATE_COOLDOWN)
+    return;
+
+  ultimateCounter = 0;
+  ultimateTimer = NORMAL_SHIP_ULTIMATE_LENGTH;
 }
