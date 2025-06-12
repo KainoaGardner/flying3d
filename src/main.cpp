@@ -44,8 +44,7 @@ int main() {
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-  // unsigned int weapons[2] = {machineGun, shotGun};
-  unsigned int weapons[2] = {homingMissile, bombLauncher};
+  unsigned int weapons[2] = {zapRifle, shotGun};
   Player player(CAMERA_POSITION, CAMERA_UP, CAMERA_FRONT, CAMERA_ORIENTATION,
                 normalShip, weapons);
 

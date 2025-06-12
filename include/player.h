@@ -14,6 +14,10 @@ enum Weapons {
   homingMissile,
   bombLauncher,
   chargeRifle,
+  zapRifle,
+  cannon,
+  laser,
+  blade,
 };
 
 enum Ships {
@@ -98,7 +102,7 @@ private:
   float subtractSpeed(float currentSpeed, float brakeStrength, float dt);
   float applyDrag(float currentSpeed, float dragRate, float dt);
 
-  ShootArgs getShootArgs(float bulletSpread);
+  ShootArgs getShootArgs(float yOffset, float xOffset, float bulletSpread);
 
   void shootBullet();
   void shootMachineGun();
@@ -106,6 +110,10 @@ private:
   void shootHomingMissile();
   void shootBombLauncher();
   void shootChargeRifle();
+  void shootZapRifle();
+  void shootCannon();
+  void shootLaser();
+  void shootBlade();
 
   void shipUpdate(float dt);
 

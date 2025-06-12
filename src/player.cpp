@@ -198,10 +198,23 @@ void Player::shootBullet() {
   case bombLauncher:
     shootBombLauncher();
     break;
+  case zapRifle:
+    shootZapRifle();
+    break;
+  case cannon:
+    shootCannon();
+    break;
+  case laser:
+    shootLaser();
+    break;
+  case blade:
+    shootBlade();
+    break;
   }
 }
 
-ShootArgs Player::getShootArgs(float bulletSpread) {
+ShootArgs Player::getShootArgs(float yOffset, float xOffset,
+                               float bulletSpread) {
   ShootArgs shootArgs;
 
   glm::vec3 cameraUp = glm::normalize(orientation * CAMERA_UP);
@@ -216,12 +229,12 @@ ShootArgs Player::getShootArgs(float bulletSpread) {
   float spin = -1.0f;
 
   if (leftGun) {
-    bulletPosition = position + cameraUp * -2.0f + cameraRight * -1.0f;
+    bulletPosition = position + cameraUp * yOffset + cameraRight * -xOffset;
     spin = 1.0;
     leftGun = false;
 
   } else {
-    bulletPosition = position + cameraUp * -2.0f + cameraRight * 1.0f;
+    bulletPosition = position + cameraUp * yOffset + cameraRight * xOffset;
     leftGun = true;
   }
 
@@ -240,7 +253,7 @@ void Player::shootMachineGun() {
   glm::vec3 scale = glm::vec3(MACHINE_GUN_BULLET_SIZE);
   glm::vec3 color = glm::vec3(1.0f);
 
-  ShootArgs shootArgs = getShootArgs(MACHINE_GUN_SPREAD);
+  ShootArgs shootArgs = getShootArgs(-2.0f, 1.0f, MACHINE_GUN_SPREAD);
 
   Projectile projectile;
   projectile.bullet = std::make_unique<Bullet>(
@@ -259,7 +272,7 @@ void Player::shootShotGun() {
   glm::vec3 color = glm::vec3(1.0f);
 
   for (unsigned int i = 0; i < 25; i++) {
-    ShootArgs shootArgs = getShootArgs(SHOTGUN_SPREAD);
+    ShootArgs shootArgs = getShootArgs(-2.0f, 1.0f, SHOTGUN_SPREAD);
     Projectile projectile;
     projectile.bullet = std::make_unique<Bullet>(
         shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
@@ -277,7 +290,7 @@ void Player::shootHomingMissile() {
   glm::vec3 scale = glm::vec3(HOMING_MISSILE_BULLET_SIZE);
   glm::vec3 color = glm::vec3(1.0f);
 
-  ShootArgs shootArgs = getShootArgs(HOMING_MISSILE_SPREAD);
+  ShootArgs shootArgs = getShootArgs(-1.0f, 1.0f, HOMING_MISSILE_SPREAD);
 
   Projectile projectile;
   projectile.homingMissile = std::make_unique<HomingMissile>(
@@ -296,7 +309,7 @@ void Player::shootBombLauncher() {
   glm::vec3 scale = glm::vec3(BOMB_LAUNCHER_BULLET_SIZE);
   glm::vec3 color = glm::vec3(1.0f);
 
-  ShootArgs shootArgs = getShootArgs(BOMB_LAUNCHER_SPREAD);
+  ShootArgs shootArgs = getShootArgs(-2.0f, 1.0f, BOMB_LAUNCHER_SPREAD);
 
   Projectile projectile;
   projectile.bombBullet = std::make_unique<BombBullet>(
@@ -347,6 +360,78 @@ void Player::shootChargeRifle() {
       std::make_unique<Bullet>(bulletPosition, cameraRight, direction,
                                orientation, scale, color, speed, damage);
   projectiles.push_back(std::move(projectile));
+}
+
+void Player::shootZapRifle() {
+  if (shootCounter < ZAP_RIFLE_COOLDOWN)
+    return;
+  shootCounter = 0.0f;
+
+  glm::vec3 scale = glm::vec3(ZAP_RIFLE_BULLET_SIZE);
+  glm::vec3 color = glm::vec3(1.0f);
+
+  ShootArgs shootArgs = getShootArgs(0.0f, 1.0f, ZAP_RIFLE_SPREAD);
+
+  Projectile projectile;
+  projectile.bullet = std::make_unique<Bullet>(
+      shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
+      shootArgs.direction, orientation, scale, color, ZAP_RIFLE_SPEED,
+      ZAP_RIFLE_DAMAGE);
+  projectiles.push_back(std::move(projectile));
+}
+
+void Player::shootCannon() {
+  // if (shootCounter < ZAP_RIFLE_COOLDOWN)
+  //   return;
+  // shootCounter = 0.0f;
+  //
+  // glm::vec3 scale = glm::vec3(ZAP_RIFLE_BULLET_SIZE);
+  // glm::vec3 color = glm::vec3(1.0f);
+  //
+  // ShootArgs shootArgs = getShootArgs(ZAP_RIFLE_SPREAD);
+  //
+  // Projectile projectile;
+  // projectile.bullet = std::make_unique<Bullet>(
+  //     shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
+  //     shootArgs.direction, orientation, scale, color, ZAP_RIFLE_SPEED,
+  //     ZAP_RIFLE_DAMAGE);
+  // projectiles.push_back(std::move(projectile));
+}
+
+void Player::shootLaser() {
+  // if (shootCounter < ZAP_RIFLE_COOLDOWN)
+  //   return;
+  // shootCounter = 0.0f;
+  //
+  // glm::vec3 scale = glm::vec3(ZAP_RIFLE_BULLET_SIZE);
+  // glm::vec3 color = glm::vec3(1.0f);
+  //
+  // ShootArgs shootArgs = getShootArgs(ZAP_RIFLE_SPREAD);
+  //
+  // Projectile projectile;
+  // projectile.bullet = std::make_unique<Bullet>(
+  //     shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
+  //     shootArgs.direction, orientation, scale, color, ZAP_RIFLE_SPEED,
+  //     ZAP_RIFLE_DAMAGE);
+  // projectiles.push_back(std::move(projectile));
+}
+
+void Player::shootBlade() {
+  // if (shootCounter < ZAP_RIFLE_COOLDOWN)
+  //   return;
+  // shootCounter = 0.0f;
+  //
+  // glm::vec3 scale = glm::vec3(ZAP_RIFLE_BULLET_SIZE);
+  // glm::vec3 color = glm::vec3(1.0f);
+  //
+  // ShootArgs shootArgs = getShootArgs(ZAP_RIFLE_SPREAD);
+  //
+  // Projectile projectile;
+  // projectile.bullet = std::make_unique<Bullet>(
+  //     shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
+  //     shootArgs.direction, orientation, scale, color, ZAP_RIFLE_SPEED,
+  //     ZAP_RIFLE_DAMAGE);
+  // projectiles.push_back(std::move(projectile));
 }
 
 void Player::shipUpdate(float dt) {
@@ -439,7 +524,6 @@ void Player::normalShipUpdate(float dt) {
   if (ultimateTimer > 0.0f) {
     shootSpeedBoost *= NORMAL_SHIP_ULTIMATE_BOOST;
   }
-  std::cout << ultimateCounter << std::endl;
 }
 void Player::normalShipAbility() {
   if (abilityCounter < NORMAL_SHIP_ABILITY_COOLDOWN)

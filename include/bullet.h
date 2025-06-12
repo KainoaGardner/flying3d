@@ -40,6 +40,18 @@ extern const float CHARGE_RIFLE_SPREAD;
 extern const float CHARGE_RIFLE_BULLET_SIZE;
 extern const float CHARGE_RIFLE_DAMAGE;
 
+extern const float ZAP_RIFLE_COOLDOWN;
+extern const float ZAP_RIFLE_SPEED;
+extern const float ZAP_RIFLE_SPREAD;
+extern const float ZAP_RIFLE_BULLET_SIZE;
+extern const float ZAP_RIFLE_DAMAGE;
+
+extern const float CANNON_COOLDOWN;
+extern const float CANNON_SPEED;
+extern const float CANNON_SPREAD;
+extern const float CANNON_BULLET_SIZE;
+extern const float CANNON_DAMAGE;
+
 class Bullet {
 public:
   glm::vec3 position;

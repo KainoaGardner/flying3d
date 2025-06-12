@@ -32,6 +32,18 @@ const float CHARGE_RIFLE_SPREAD = 100.0f;
 const float CHARGE_RIFLE_BULLET_SIZE = 5.0f;
 const float CHARGE_RIFLE_DAMAGE = 30.0f;
 
+const float ZAP_RIFLE_COOLDOWN = 1.0f;
+const float ZAP_RIFLE_SPEED = 1.0f;
+const float ZAP_RIFLE_SPREAD = 30.0f;
+const float ZAP_RIFLE_BULLET_SIZE = 1.0f;
+const float ZAP_RIFLE_DAMAGE = 1.0f;
+
+const float CANNON_COOLDOWN = 3.0f;
+const float CANNON_SPEED = 3.0f;
+const float CANNON_SPREAD = 50.0f;
+const float CANNON_BULLET_SIZE = 10.0f;
+const float CANNON_DAMAGE = 50.0f;
+
 Bullet::Bullet(glm::vec3 positionIn, glm::vec3 rotationIn,
                glm::vec3 directionIn, glm::quat orientationIn,
                glm::vec3 scaleIn, glm::vec3 colorIn, float speedIn,
