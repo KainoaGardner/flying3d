@@ -100,6 +100,12 @@ void Player::handleKeyboardInput(GLFWwindow *window, float dt) {
   } else {
     if (weapons[weaponIndex] == chargeRifle)
       shootChargeRifle();
+
+    laser->on = false;
+  }
+
+  if (weapons[weaponIndex] != laserCannon) {
+    laser->on = false;
   }
 
   if (glfwGetKey(window, CAMERA_BACK_KEY) == GLFW_PRESS) {
@@ -150,6 +156,26 @@ void Player::update(float dt) {
     shootCounter += dt * shootSpeedBoost;
 
   shipUpdate(dt);
+
+  if (weapons[weaponIndex] == laserCannon) {
+    float downOffset = 1.0f;
+    float dPitch = -std::asin(downOffset / LASER_LENGTH);
+    std::cout << glm::degrees(dPitch) << std::endl;
+
+    // float dPitch = glm::radians(-9.2069);
+
+    glm::quat laserOrientation =
+        glm::rotate(orientation, dPitch, glm::vec3(1.0f, 0.0f, 0.0f));
+
+    // glm::vec3 laserFront = glm::normalize(orientation * CAMERA_FRONT);
+
+    ShootArgs shootArgs = getShootArgs(-1.0f, 0.0f, 0.0f);
+    // laser->update(dt,
+    // shootArgs.bulletPosition + laserFront * LASER_LENGTH / 2.0f,
+    // orientation, shootArgs.direction);
+    laser->update(dt, shootArgs.bulletPosition, laserOrientation,
+                  shootArgs.direction);
+  }
 }
 
 void Player::updateCamera() {
@@ -201,13 +227,13 @@ void Player::shootBullet() {
   case zapRifle:
     shootZapRifle();
     break;
-  case cannon:
+  case cannonBall:
     shootCannon();
     break;
-  case laser:
+  case laserCannon:
     shootLaser();
     break;
-  case blade:
+  case swingBlade:
     shootBlade();
     break;
   }
@@ -293,7 +319,7 @@ void Player::shootHomingMissile() {
   ShootArgs shootArgs = getShootArgs(-1.0f, 1.0f, HOMING_MISSILE_SPREAD);
 
   Projectile projectile;
-  projectile.homingMissile = std::make_unique<HomingMissile>(
+  projectile.bullet = std::make_unique<HomingMissile>(
       shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
       shootArgs.direction, orientation, scale, color, HOMING_MISSILE_SPEED,
       HOMING_MISSILE_DAMAGE);
@@ -312,7 +338,7 @@ void Player::shootBombLauncher() {
   ShootArgs shootArgs = getShootArgs(-2.0f, 1.0f, BOMB_LAUNCHER_SPREAD);
 
   Projectile projectile;
-  projectile.bombBullet = std::make_unique<BombBullet>(
+  projectile.bullet = std::make_unique<BombBullet>(
       shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
       shootArgs.direction, orientation, scale, color, BOMB_LAUNCHER_SPEED,
       BOMB_LAUNCHER_DAMAGE, BOMB_LAUNCHER_EXPLOSION_TIMER);
@@ -373,7 +399,7 @@ void Player::shootZapRifle() {
   ShootArgs shootArgs = getShootArgs(0.0f, 1.0f, ZAP_RIFLE_SPREAD);
 
   Projectile projectile;
-  projectile.bullet = std::make_unique<Bullet>(
+  projectile.bullet = std::make_unique<ZapBullet>(
       shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
       shootArgs.direction, orientation, scale, color, ZAP_RIFLE_SPEED,
       ZAP_RIFLE_DAMAGE);
@@ -381,40 +407,24 @@ void Player::shootZapRifle() {
 }
 
 void Player::shootCannon() {
-  // if (shootCounter < ZAP_RIFLE_COOLDOWN)
-  //   return;
-  // shootCounter = 0.0f;
-  //
-  // glm::vec3 scale = glm::vec3(ZAP_RIFLE_BULLET_SIZE);
-  // glm::vec3 color = glm::vec3(1.0f);
-  //
-  // ShootArgs shootArgs = getShootArgs(ZAP_RIFLE_SPREAD);
-  //
-  // Projectile projectile;
-  // projectile.bullet = std::make_unique<Bullet>(
-  //     shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
-  //     shootArgs.direction, orientation, scale, color, ZAP_RIFLE_SPEED,
-  //     ZAP_RIFLE_DAMAGE);
-  // projectiles.push_back(std::move(projectile));
+  if (shootCounter < CANNON_COOLDOWN)
+    return;
+  shootCounter = 0.0f;
+
+  glm::vec3 scale = glm::vec3(CANNON_BULLET_SIZE);
+  glm::vec3 color = glm::vec3(1.0f);
+
+  ShootArgs shootArgs = getShootArgs(-1.0f, 0.0f, CANNON_SPREAD);
+
+  Projectile projectile;
+  projectile.bullet = std::make_unique<Bullet>(
+      shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
+      shootArgs.direction, orientation, scale, color, CANNON_SPEED,
+      CANNON_DAMAGE);
+  projectiles.push_back(std::move(projectile));
 }
 
-void Player::shootLaser() {
-  // if (shootCounter < ZAP_RIFLE_COOLDOWN)
-  //   return;
-  // shootCounter = 0.0f;
-  //
-  // glm::vec3 scale = glm::vec3(ZAP_RIFLE_BULLET_SIZE);
-  // glm::vec3 color = glm::vec3(1.0f);
-  //
-  // ShootArgs shootArgs = getShootArgs(ZAP_RIFLE_SPREAD);
-  //
-  // Projectile projectile;
-  // projectile.bullet = std::make_unique<Bullet>(
-  //     shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
-  //     shootArgs.direction, orientation, scale, color, ZAP_RIFLE_SPEED,
-  //     ZAP_RIFLE_DAMAGE);
-  // projectiles.push_back(std::move(projectile));
-}
+void Player::shootLaser() { laser->on = true; }
 
 void Player::shootBlade() {
   // if (shootCounter < ZAP_RIFLE_COOLDOWN)

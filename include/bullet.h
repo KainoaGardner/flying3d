@@ -45,12 +45,19 @@ extern const float ZAP_RIFLE_SPEED;
 extern const float ZAP_RIFLE_SPREAD;
 extern const float ZAP_RIFLE_BULLET_SIZE;
 extern const float ZAP_RIFLE_DAMAGE;
+extern const float ZAP_RIFLE_ZAP_COOLDOWN;
+extern const float ZAP_RIFLE_ZAP_RANGE;
 
 extern const float CANNON_COOLDOWN;
 extern const float CANNON_SPEED;
 extern const float CANNON_SPREAD;
 extern const float CANNON_BULLET_SIZE;
 extern const float CANNON_DAMAGE;
+
+extern const float LASER_COOLDOWN;
+extern const float LASER_SIZE;
+extern const float LASER_LENGTH;
+extern const float LASER_DAMAGE;
 
 class Bullet {
 public:
@@ -106,10 +113,49 @@ public:
 private:
 };
 
+class ZapBullet : public Bullet {
+public:
+  ZapBullet(glm::vec3 positionIn, glm::vec3 rotationIn, glm::vec3 directionIn,
+            glm::quat orientationIn, glm::vec3 scaleIn, glm::vec3 colorIn,
+            float speedIn, float damageIn);
+
+  void update(float dt) override;
+
+private:
+  float zapCounter = 0.0f;
+};
+
+// struct Projectile {
+//   std::unique_ptr<Bullet> bullet;
+//   std::unique_ptr<HomingMissile> homingMissile;
+//   std::unique_ptr<BombBullet> bombBullet;
+//   std::unique_ptr<ZapBullet> zapBullet;
+// };
+
+class Laser {
+public:
+  glm::vec3 position;
+  glm::vec3 rotation;
+  glm::vec3 scale;
+  glm::quat orientation;
+
+  glm::vec3 color;
+
+  float damage;
+  bool on = false;
+
+  Laser(glm::vec3 scaleIn, glm::vec3 colorIn, float damageIn);
+
+  void update(float dt, glm::vec3 playerPos, glm::quat playerOrientation,
+              glm::vec3 playerRotation);
+
+  void draw(Shader shader, float timePassed);
+
+private:
+};
+
 struct Projectile {
   std::unique_ptr<Bullet> bullet;
-  std::unique_ptr<HomingMissile> homingMissile;
-  std::unique_ptr<BombBullet> bombBullet;
 };
 
 extern std::vector<Projectile> projectiles;

@@ -1,11 +1,17 @@
 #ifndef GEOMETRY_H
 #define GEOMETRY_H
 
+#include "../include/bullet.h"
 #include "../include/glad/glad.h"
 
 extern float CUBE_VERTICES[120];
 extern float CUBE_MAP_VERTICES[72];
+extern float BEAM_VERTICES[120];
+
+extern float SCREEN_VERTICES[20];
+
 extern unsigned int CUBE_INDICES[36];
+extern unsigned int SCREEN_INDICES[6];
 
 struct Geometry {
   GLuint vao;
@@ -16,5 +22,6 @@ struct Geometry {
 Geometry createCube();
 Geometry createCubemap();
 Geometry createScreen();
+Geometry createBeam();
 
 #endif

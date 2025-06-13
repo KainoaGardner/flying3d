@@ -1,6 +1,7 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
+#include "../include/bullet.h"
 #include "../include/glad/glad.h"
 #include "../include/glm/glm.hpp"
 #include "../include/glm/gtc/quaternion.hpp"
@@ -15,9 +16,9 @@ enum Weapons {
   bombLauncher,
   chargeRifle,
   zapRifle,
-  cannon,
-  laser,
-  blade,
+  cannonBall,
+  laserCannon,
+  swingBlade,
 };
 
 enum Ships {
@@ -62,6 +63,9 @@ public:
   float damageBoost = 1.0;
   float speedBoost = 1.0;
   float shootSpeedBoost = 1.0;
+
+  Laser *laser =
+      new Laser(glm::vec3(LASER_SIZE), glm::vec3(1.0f), LASER_DAMAGE);
 
   glm::quat orientation;
   unsigned int viewDirection;

@@ -37,12 +37,19 @@ const float ZAP_RIFLE_SPEED = 1.0f;
 const float ZAP_RIFLE_SPREAD = 30.0f;
 const float ZAP_RIFLE_BULLET_SIZE = 1.0f;
 const float ZAP_RIFLE_DAMAGE = 1.0f;
+const float ZAP_RIFLE_ZAP_COOLDOWN = 0.5f;
+const float ZAP_RIFLE_ZAP_RANGE = 10.0f;
 
 const float CANNON_COOLDOWN = 3.0f;
 const float CANNON_SPEED = 3.0f;
 const float CANNON_SPREAD = 50.0f;
 const float CANNON_BULLET_SIZE = 10.0f;
 const float CANNON_DAMAGE = 50.0f;
+
+const float LASER_COOLDOWN = 0.1f;
+const float LASER_SIZE = 1.0f;
+const float LASER_LENGTH = 100.0f;
+const float LASER_DAMAGE = 2.0f;
 
 Bullet::Bullet(glm::vec3 positionIn, glm::vec3 rotationIn,
                glm::vec3 directionIn, glm::quat orientationIn,
@@ -129,6 +136,69 @@ void HomingMissile::update(float dt) {
       glm::mix(direction, targetDirection, HOMING_MISSILE_TURN_SPEED * dt));
 
   Bullet::update(dt);
+}
+
+ZapBullet::ZapBullet(glm::vec3 positionIn, glm::vec3 rotationIn,
+                     glm::vec3 directionIn, glm::quat orientationIn,
+                     glm::vec3 scaleIn, glm::vec3 colorIn, float speedIn,
+                     float damageIn)
+    : Bullet(positionIn, rotationIn, directionIn, orientationIn, scaleIn,
+             colorIn, speedIn, damageIn) {}
+
+void ZapBullet::update(float dt) {
+  zapCounter += dt;
+
+  bool zap = false;
+  if (zapCounter > ZAP_RIFLE_ZAP_COOLDOWN) {
+    // for close zap
+    // if ZAP_RIFLE_ZAP_RANGE
+    // zap = true;
+  }
+  if (zap) {
+    zapCounter = 0.0f;
+  }
+
+  Bullet::update(dt);
+}
+
+Laser::Laser(glm::vec3 scaleIn, glm::vec3 colorIn, float damageIn) {
+  scale = scaleIn;
+  color = colorIn;
+}
+
+void Laser::update(float dt, glm::vec3 playerPos, glm::quat playerOrientation,
+                   glm::vec3 playerRotation) {
+  if (!on)
+    return;
+  position = playerPos;
+  orientation = playerOrientation;
+  rotation = playerRotation;
+
+  // check hit do damage
+}
+
+void Laser::draw(Shader shader, float timePassed) {
+  if (!on)
+    return;
+
+  glm::mat4 model = glm::mat4(1.0f);
+
+  model = glm::translate(model, position);
+  glm::vec3 pitchAxis = glm::rotate(orientation, glm::vec3(0.0f, 0.0f, 1.0f));
+  glm::quat spinQuat =
+      glm::angleAxis(timePassed * 100.0f, glm::normalize(pitchAxis));
+
+  spinQuat = spinQuat * orientation;
+
+  // model *= glm::mat4_cast(orientation);
+  model *= glm::mat4_cast(spinQuat);
+
+  model = glm::scale(model, scale);
+
+  shader.setMatrix4fv("uModel", model);
+  shader.setVec3f("uColor", color);
+
+  glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 }
 
 std::vector<Projectile> projectiles;

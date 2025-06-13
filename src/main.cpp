@@ -44,7 +44,7 @@ int main() {
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-  unsigned int weapons[2] = {zapRifle, shotGun};
+  unsigned int weapons[2] = {laserCannon, cannonBall};
   Player player(CAMERA_POSITION, CAMERA_UP, CAMERA_FRONT, CAMERA_ORIENTATION,
                 normalShip, weapons);
 
@@ -109,6 +109,7 @@ int main() {
   glActiveTexture(GL_TEXTURE0);
 
   Geometry cubeGeometry = createCube();
+  Geometry beamGeometry = createBeam();
   Geometry skyboxGeometry = createCubemap();
   Geometry screenGeometry = createScreen();
 
@@ -262,24 +263,6 @@ int main() {
         };
         projectile.bullet->draw(bulletShader, timePassed);
       }
-      if (projectile.bombBullet) {
-        projectile.bombBullet->update(dt);
-        projectile.bombBullet->killBullet(player.position);
-        if (!projectile.bombBullet->alive) {
-          projectiles.erase(projectiles.begin() + i);
-          continue;
-        };
-        projectile.bombBullet->draw(bulletShader, timePassed);
-      }
-      if (projectile.homingMissile) {
-        projectile.homingMissile->update(dt);
-        projectile.homingMissile->killBullet(player.position);
-        if (!projectile.homingMissile->alive) {
-          projectiles.erase(projectiles.begin() + i);
-          continue;
-        };
-        projectile.homingMissile->draw(bulletShader, timePassed);
-      }
     }
 
     for (unsigned int i = 0; i < particles.size(); i++) {
@@ -293,6 +276,9 @@ int main() {
         particle.explosion->draw(bulletShader);
       }
     }
+
+    glBindVertexArray(beamGeometry.vao);
+    player.laser->draw(bulletShader, timePassed);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
