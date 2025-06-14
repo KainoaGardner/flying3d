@@ -64,8 +64,9 @@ public:
   float speedBoost = 1.0;
   float shootSpeedBoost = 1.0;
 
-  Laser *laser =
-      new Laser(glm::vec3(LASER_SIZE), glm::vec3(1.0f), LASER_DAMAGE);
+  Laser *laser = new Laser(glm::vec3(1.0f), LASER_DAMAGE);
+  Blade *blade =
+      new Blade(glm::vec3(BLADE_SIZE), glm::vec3(1.0f), LASER_DAMAGE);
 
   glm::quat orientation;
   unsigned int viewDirection;

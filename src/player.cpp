@@ -157,10 +157,11 @@ void Player::update(float dt) {
 
   shipUpdate(dt);
 
+  blade->update(dt, position, orientation);
+
   if (weapons[weaponIndex] == laserCannon) {
     float downOffset = 1.0f;
     float dPitch = -std::asin(downOffset / LASER_LENGTH);
-    std::cout << glm::degrees(dPitch) << std::endl;
 
     // float dPitch = glm::radians(-9.2069);
 
@@ -173,8 +174,13 @@ void Player::update(float dt) {
     // laser->update(dt,
     // shootArgs.bulletPosition + laserFront * LASER_LENGTH / 2.0f,
     // orientation, shootArgs.direction);
-    laser->update(dt, shootArgs.bulletPosition, laserOrientation,
-                  shootArgs.direction);
+    laser->update(dt, shootArgs.bulletPosition, laserOrientation);
+  }
+
+  if (weapons[weaponIndex] == swingBlade) {
+    if (blade->spinCounter >= 0.0f) {
+      blade->spinCounter -= dt * shootSpeedBoost;
+    }
   }
 }
 
@@ -427,21 +433,9 @@ void Player::shootCannon() {
 void Player::shootLaser() { laser->on = true; }
 
 void Player::shootBlade() {
-  // if (shootCounter < ZAP_RIFLE_COOLDOWN)
-  //   return;
-  // shootCounter = 0.0f;
-  //
-  // glm::vec3 scale = glm::vec3(ZAP_RIFLE_BULLET_SIZE);
-  // glm::vec3 color = glm::vec3(1.0f);
-  //
-  // ShootArgs shootArgs = getShootArgs(ZAP_RIFLE_SPREAD);
-  //
-  // Projectile projectile;
-  // projectile.bullet = std::make_unique<Bullet>(
-  //     shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
-  //     shootArgs.direction, orientation, scale, color, ZAP_RIFLE_SPEED,
-  //     ZAP_RIFLE_DAMAGE);
-  // projectiles.push_back(std::move(projectile));
+  if (blade->spinCounter < 0.0f) {
+    blade->spinCounter = BLADE_SPIN_TIME;
+  }
 }
 
 void Player::shipUpdate(float dt) {

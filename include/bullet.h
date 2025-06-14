@@ -58,6 +58,12 @@ extern const float LASER_COOLDOWN;
 extern const float LASER_SIZE;
 extern const float LASER_LENGTH;
 extern const float LASER_DAMAGE;
+extern const float LASER_SPIN_UP_TIME;
+extern const float LASER_SPIN_STRENGTH;
+extern const float LASER_MAX_SPIN_SPEED;
+
+extern const float BLADE_SPIN_TIME;
+extern const float BLADE_SIZE;
 
 class Bullet {
 public:
@@ -135,7 +141,6 @@ private:
 class Laser {
 public:
   glm::vec3 position;
-  glm::vec3 rotation;
   glm::vec3 scale;
   glm::quat orientation;
 
@@ -144,11 +149,31 @@ public:
   float damage;
   bool on = false;
 
-  Laser(glm::vec3 scaleIn, glm::vec3 colorIn, float damageIn);
+  Laser(glm::vec3 colorIn, float damageIn);
 
-  void update(float dt, glm::vec3 playerPos, glm::quat playerOrientation,
-              glm::vec3 playerRotation);
+  void update(float dt, glm::vec3 playerPos, glm::quat playerOrientation);
 
+  void draw(Shader shader, float timePassed);
+
+private:
+  float spinCounter = 0.0f;
+  float spinSpeed = 0.0f;
+};
+
+class Blade {
+public:
+  glm::vec3 position;
+  glm::vec3 scale;
+  glm::quat orientation;
+
+  glm::vec3 color;
+
+  float damage;
+  float spinCounter = 0.0f;
+
+  Blade(glm::vec3 scaleIn, glm::vec3 colorIn, float damageIn);
+
+  void update(float dt, glm::vec3 playerPos, glm::quat playerOrientation);
   void draw(Shader shader, float timePassed);
 
 private:

@@ -44,7 +44,7 @@ int main() {
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-  unsigned int weapons[2] = {laserCannon, cannonBall};
+  unsigned int weapons[2] = {machineGun, swingBlade};
   Player player(CAMERA_POSITION, CAMERA_UP, CAMERA_FRONT, CAMERA_ORIENTATION,
                 normalShip, weapons);
 
@@ -279,6 +279,8 @@ int main() {
 
     glBindVertexArray(beamGeometry.vao);
     player.laser->draw(bulletShader, timePassed);
+
+    player.blade->draw(bulletShader, timePassed);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);

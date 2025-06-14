@@ -1,4 +1,5 @@
 #include "../include/bullet.h"
+#include <iostream>
 
 const float MACHINE_GUN_COOLDOWN = 0.05f;
 const float MACHINE_GUN_SPEED = 5.0f;
@@ -50,6 +51,12 @@ const float LASER_COOLDOWN = 0.1f;
 const float LASER_SIZE = 1.0f;
 const float LASER_LENGTH = 100.0f;
 const float LASER_DAMAGE = 2.0f;
+const float LASER_SPIN_UP_TIME = 10.0f;
+const float LASER_SPIN_STRENGTH = 10.0f;
+const float LASER_MAX_SPIN_SPEED = 50.0f;
+
+const float BLADE_SPIN_TIME = 0.5f;
+const float BLADE_SIZE = 0.05f;
 
 Bullet::Bullet(glm::vec3 positionIn, glm::vec3 rotationIn,
                glm::vec3 directionIn, glm::quat orientationIn,
@@ -161,18 +168,33 @@ void ZapBullet::update(float dt) {
   Bullet::update(dt);
 }
 
-Laser::Laser(glm::vec3 scaleIn, glm::vec3 colorIn, float damageIn) {
-  scale = scaleIn;
+Laser::Laser(glm::vec3 colorIn, float damageIn) {
   color = colorIn;
+  damage = damageIn;
 }
 
-void Laser::update(float dt, glm::vec3 playerPos, glm::quat playerOrientation,
-                   glm::vec3 playerRotation) {
-  if (!on)
+void Laser::update(float dt, glm::vec3 playerPos, glm::quat playerOrientation) {
+  if (!on) {
+    spinCounter = 0.0f;
     return;
+  }
+
+  if (spinCounter < 100.f) {
+    spinCounter += dt;
+  }
+
+  float x = spinCounter / LASER_SPIN_UP_TIME;
+  float num = 1 - exp(-LASER_SPIN_STRENGTH * x);
+  float denom = 1 - exp(-LASER_SPIN_STRENGTH);
+  float y = LASER_SIZE * (num / denom);
+  float ySpin = LASER_MAX_SPIN_SPEED * (num / denom);
+  spinSpeed = ySpin;
+
+  float size = glm::clamp(y, 0.0f, LASER_SIZE);
+
+  scale = glm::vec3(size);
   position = playerPos;
   orientation = playerOrientation;
-  rotation = playerRotation;
 
   // check hit do damage
 }
@@ -182,15 +204,79 @@ void Laser::draw(Shader shader, float timePassed) {
     return;
 
   glm::mat4 model = glm::mat4(1.0f);
-
   model = glm::translate(model, position);
   glm::vec3 pitchAxis = glm::rotate(orientation, glm::vec3(0.0f, 0.0f, 1.0f));
   glm::quat spinQuat =
-      glm::angleAxis(timePassed * 100.0f, glm::normalize(pitchAxis));
+      glm::angleAxis(timePassed * spinSpeed, glm::normalize(pitchAxis));
 
   spinQuat = spinQuat * orientation;
 
   // model *= glm::mat4_cast(orientation);
+  model *= glm::mat4_cast(spinQuat);
+
+  model = glm::scale(model, scale);
+
+  shader.setMatrix4fv("uModel", model);
+  shader.setVec3f("uColor", color);
+
+  glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+}
+
+Blade::Blade(glm::vec3 scaleIn, glm::vec3 colorIn, float damageIn) {
+  scale = scaleIn;
+  color = colorIn;
+  damage = damageIn;
+}
+
+void Blade::update(float dt, glm::vec3 playerPos, glm::quat playerOrientation) {
+  if (spinCounter < 0.0f) {
+    return;
+  }
+
+  position = playerPos;
+  orientation = playerOrientation;
+
+  // check hit do damage
+}
+
+void Blade::draw(Shader shader, float timePassed) {
+  if (spinCounter <= 0.0f) {
+    return;
+  }
+
+  glm::vec3 cameraUp =
+      glm::normalize(orientation * glm::vec3(0.0f, 1.0f, 0.0f));
+
+  glm::vec3 cameraRight =
+      glm::normalize(orientation * glm::vec3(1.0f, 0.0f, 0.0f));
+  glm::vec3 xOffset = cameraRight * 0.3f;
+  ;
+
+  glm::mat4 model = glm::mat4(1.0f);
+  model = glm::translate(model, position + xOffset);
+  glm::vec3 pitchAxis = glm::rotate(orientation, glm::vec3(1.0f, 0.0f, 0.0f));
+
+  float angle = 2 * M_PI * (spinCounter / BLADE_SPIN_TIME);
+
+  glm::quat spinQuat = glm::angleAxis(angle, glm::normalize(pitchAxis));
+  spinQuat = spinQuat * orientation;
+
+  // model *= glm::mat4_cast(orientation);
+  model *= glm::mat4_cast(spinQuat);
+
+  model = glm::scale(model, scale);
+
+  shader.setMatrix4fv("uModel", model);
+  shader.setVec3f("uColor", color);
+
+  glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+
+  model = glm::mat4(1.0f);
+  model = glm::translate(model, position - xOffset);
+  pitchAxis = glm::rotate(orientation, glm::vec3(1.0f, 0.0f, 0.0f));
+
+  spinQuat = glm::angleAxis(angle, glm::normalize(pitchAxis));
+  spinQuat = spinQuat * orientation;
   model *= glm::mat4_cast(spinQuat);
 
   model = glm::scale(model, scale);
