@@ -69,8 +69,7 @@ unsigned int CUBE_INDICES[36] = {
     // bottom and top
     16, 17, 18, 18, 19, 16, 20, 21, 22, 22, 23, 20};
 
-float bHalf = LASER_LENGTH / 2.0f;
-float b = LASER_LENGTH;
+float b = bullet::laser.length;
 float BEAM_VERTICES[120] = {
     // front back
     -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, // A 0

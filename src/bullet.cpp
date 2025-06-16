@@ -1,62 +1,16 @@
 #include "../include/bullet.h"
-#include <iostream>
 
-const float MACHINE_GUN_COOLDOWN = 0.05f;
-const float MACHINE_GUN_SPEED = 5.0f;
-const float MACHINE_GUN_SPREAD = 50.0f;
-const float MACHINE_GUN_BULLET_SIZE = 0.5f;
-const float MACHINE_GUN_DAMAGE = 1.0f;
-
-const float SHOTGUN_COOLDOWN = 0.5f;
-const float SHOTGUN_SPEED = 3.0f;
-const float SHOTGUN_SPREAD = 5.0f;
-const float SHOTGUN_BULLET_SIZE = 1.0f;
-const float SHOTGUN_DAMAGE = 0.5f;
-
-const float HOMING_MISSILE_COOLDOWN = 0.2f;
-const float HOMING_MISSILE_SPEED = 2.0f;
-const float HOMING_MISSILE_TURN_SPEED = 2.0f;
-const float HOMING_MISSILE_SPREAD = 10.0f;
-const float HOMING_MISSILE_BULLET_SIZE = 0.75f;
-const float HOMING_MISSILE_DAMAGE = 5.0f;
-
-const float BOMB_LAUNCHER_COOLDOWN = 0.75f;
-const float BOMB_LAUNCHER_SPEED = 2.0f;
-const float BOMB_LAUNCHER_SPREAD = 20.0f;
-const float BOMB_LAUNCHER_BULLET_SIZE = 3.0f;
-const float BOMB_LAUNCHER_DAMAGE = 10.0f;
-const float BOMB_LAUNCHER_EXPLOSION_TIMER = 2.0f;
-
-const float CHARGE_RIFLE_COOLDOWN = 1.0f;
-const float CHARGE_RIFLE_SPEED = 3.0f;
-const float CHARGE_RIFLE_SPREAD = 100.0f;
-const float CHARGE_RIFLE_BULLET_SIZE = 5.0f;
-const float CHARGE_RIFLE_DAMAGE = 30.0f;
-
-const float ZAP_RIFLE_COOLDOWN = 1.0f;
-const float ZAP_RIFLE_SPEED = 1.0f;
-const float ZAP_RIFLE_SPREAD = 30.0f;
-const float ZAP_RIFLE_BULLET_SIZE = 1.0f;
-const float ZAP_RIFLE_DAMAGE = 1.0f;
-const float ZAP_RIFLE_ZAP_COOLDOWN = 0.5f;
-const float ZAP_RIFLE_ZAP_RANGE = 10.0f;
-
-const float CANNON_COOLDOWN = 3.0f;
-const float CANNON_SPEED = 3.0f;
-const float CANNON_SPREAD = 50.0f;
-const float CANNON_BULLET_SIZE = 10.0f;
-const float CANNON_DAMAGE = 50.0f;
-
-const float LASER_COOLDOWN = 0.1f;
-const float LASER_SIZE = 1.0f;
-const float LASER_LENGTH = 100.0f;
-const float LASER_DAMAGE = 2.0f;
-const float LASER_SPIN_UP_TIME = 10.0f;
-const float LASER_SPIN_STRENGTH = 10.0f;
-const float LASER_MAX_SPIN_SPEED = 50.0f;
-
-const float BLADE_SPIN_TIME = 0.5f;
-const float BLADE_SIZE = 0.05f;
+namespace bullet {
+MachineGun machineGun;
+Shotgun shotgun;
+HomingMissile homingMissile;
+BombLauncher bombLauncher;
+ChargeRifle chargeRifle;
+ZapRifle zapRifle;
+Cannon cannon;
+Laser laser;
+Blade blade;
+} // namespace bullet
 
 Bullet::Bullet(glm::vec3 positionIn, glm::vec3 rotationIn,
                glm::vec3 directionIn, glm::quat orientationIn,
@@ -122,8 +76,9 @@ void BombBullet::update(float dt) {
 void BombBullet::explode() {
   alive = false;
   Particle particle;
-  particle.explosion = std::make_unique<Explosion>(
-      position, orientation, EXPLOSION_SIZE, EXPLOSION_TIMER);
+  particle.explosion = std::make_unique<Explosion>(position, orientation,
+                                                   particle::explosion.size,
+                                                   particle::explosion.timer);
   particles.push_back(std::move(particle));
 }
 
@@ -139,8 +94,8 @@ void HomingMissile::update(float dt) {
   glm::vec3 closestTargetPos = glm::vec3(0.0f);
 
   glm::vec3 targetDirection = glm::normalize(closestTargetPos - position);
-  direction = glm::normalize(
-      glm::mix(direction, targetDirection, HOMING_MISSILE_TURN_SPEED * dt));
+  direction = glm::normalize(glm::mix(direction, targetDirection,
+                                      bullet::homingMissile.turnSpeed * dt));
 
   Bullet::update(dt);
 }
@@ -156,7 +111,7 @@ void ZapBullet::update(float dt) {
   zapCounter += dt;
 
   bool zap = false;
-  if (zapCounter > ZAP_RIFLE_ZAP_COOLDOWN) {
+  if (zapCounter > bullet::zapRifle.cooldown) {
     // for close zap
     // if ZAP_RIFLE_ZAP_RANGE
     // zap = true;
@@ -183,14 +138,14 @@ void Laser::update(float dt, glm::vec3 playerPos, glm::quat playerOrientation) {
     spinCounter += dt;
   }
 
-  float x = spinCounter / LASER_SPIN_UP_TIME;
-  float num = 1 - exp(-LASER_SPIN_STRENGTH * x);
-  float denom = 1 - exp(-LASER_SPIN_STRENGTH);
-  float y = LASER_SIZE * (num / denom);
-  float ySpin = LASER_MAX_SPIN_SPEED * (num / denom);
+  float x = spinCounter / bullet::laser.spinUpTime;
+  float num = 1 - exp(-bullet::laser.spinStrength * x);
+  float denom = 1 - exp(-bullet::laser.spinStrength);
+  float y = bullet::laser.size * (num / denom);
+  float ySpin = bullet::laser.maxSpinSpeed * (num / denom);
   spinSpeed = ySpin;
 
-  float size = glm::clamp(y, 0.0f, LASER_SIZE);
+  float size = glm::clamp(y, 0.0f, bullet::laser.size);
 
   scale = glm::vec3(size);
   position = playerPos;
@@ -244,8 +199,8 @@ void Blade::draw(Shader shader, float timePassed) {
     return;
   }
 
-  glm::vec3 cameraUp =
-      glm::normalize(orientation * glm::vec3(0.0f, 1.0f, 0.0f));
+  // glm::vec3 cameraUp =
+  //     glm::normalize(orientation * glm::vec3(0.0f, 1.0f, 0.0f));
 
   glm::vec3 cameraRight =
       glm::normalize(orientation * glm::vec3(1.0f, 0.0f, 0.0f));
@@ -256,7 +211,7 @@ void Blade::draw(Shader shader, float timePassed) {
   model = glm::translate(model, position + xOffset);
   glm::vec3 pitchAxis = glm::rotate(orientation, glm::vec3(1.0f, 0.0f, 0.0f));
 
-  float angle = 2 * M_PI * (spinCounter / BLADE_SPIN_TIME);
+  float angle = 2 * M_PI * (spinCounter / bullet::blade.spinTime) + M_PI / 2.0;
 
   glm::quat spinQuat = glm::angleAxis(angle, glm::normalize(pitchAxis));
   spinQuat = spinQuat * orientation;

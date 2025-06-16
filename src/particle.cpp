@@ -1,7 +1,8 @@
 #include "../include/particle.h"
 
-const float EXPLOSION_TIMER = 1.0f;
-const float EXPLOSION_SIZE = 30.0f;
+namespace particle {
+Explosion explosion;
+}
 
 Explosion::Explosion(glm::vec3 positionIn, glm::quat orientationIn,
                      float maxScaleIn, float explosionTimerIn) {

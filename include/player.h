@@ -2,13 +2,14 @@
 #define PLAYER_H
 
 #include "../include/bullet.h"
+#include "../include/config.h"
 #include "../include/glad/glad.h"
 #include "../include/glm/glm.hpp"
-#include "../include/glm/gtc/quaternion.hpp"
 #include "../include/ships.h"
 #include <GLFW/glfw3.h>
 #include <string>
 
+namespace player {
 enum Weapons {
   machineGun,
   shotGun,
@@ -37,14 +38,7 @@ struct ShootArgs {
   float spin;
 };
 
-extern const glm::vec3 CAMERA_POSITION;
-extern const glm::vec3 CAMERA_FRONT;
-extern const glm::vec3 CAMERA_UP;
-extern const glm::quat CAMERA_ORIENTATION;
-
-extern const float FOV;
-
-extern const float MAX_COUNTER;
+} // namespace player
 
 class Player {
 public:
@@ -64,12 +58,12 @@ public:
   float speedBoost = 1.0;
   float shootSpeedBoost = 1.0;
 
-  Laser *laser = new Laser(glm::vec3(1.0f), LASER_DAMAGE);
-  Blade *blade =
-      new Blade(glm::vec3(BLADE_SIZE), glm::vec3(1.0f), LASER_DAMAGE);
+  Laser *laser = new Laser(glm::vec3(1.0f), bullet::laser.damage);
+  Blade *blade = new Blade(glm::vec3(bullet::blade.size), glm::vec3(1.0f),
+                           bullet::blade.damage);
 
   glm::quat orientation;
-  unsigned int viewDirection;
+  unsigned int viewDirection = 1;
 
   Player(glm::vec3 positionIn, glm::vec3 worldUpIn, glm::vec3 frontIn,
          glm::quat orientaionIn, unsigned int shipIn, unsigned int weapons[2]);
@@ -87,7 +81,7 @@ private:
   bool canWeaponSwap = true;
 
   float shootCounter = 0.0f;
-  float abilityCounter = MAX_COUNTER;
+  float abilityCounter = global::maxCounter;
   float ultimateCounter = 0.0f;
 
   float abilityTimer = 0.0f;
@@ -107,7 +101,8 @@ private:
   float subtractSpeed(float currentSpeed, float brakeStrength, float dt);
   float applyDrag(float currentSpeed, float dragRate, float dt);
 
-  ShootArgs getShootArgs(float yOffset, float xOffset, float bulletSpread);
+  player::ShootArgs getShootArgs(float yOffset, float xOffset,
+                                 float bulletSpread);
 
   void shootBullet();
   void shootMachineGun();

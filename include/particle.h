@@ -2,16 +2,20 @@
 #define PARTICLE_H
 
 #define GLM_ENABLE_EXPERIMENTAL
-#include "../include/glad/glad.h"
-#include "../include/glm/glm.hpp"
 #include "../include/glm/gtx/quaternion.hpp"
 
 #include "../include/shader.h"
 #include <GLFW/glfw3.h>
 #include <memory>
 
-extern const float EXPLOSION_TIMER;
-extern const float EXPLOSION_SIZE;
+namespace particle {
+struct Explosion {
+  const float timer = 1.0f;
+  const float size = 30.0f;
+};
+
+extern Explosion explosion;
+} // namespace particle
 
 class Explosion {
 public:

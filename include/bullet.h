@@ -2,68 +2,102 @@
 #define BULLET_H
 
 #define GLM_ENABLE_EXPERIMENTAL
+#include "../include/glad/glad.h"
 #include "../include/glm/gtx/quaternion.hpp"
 #include "../include/particle.h"
 #include "../include/shader.h"
 #include <GLFW/glfw3.h>
 #include <memory>
 
-extern const float MACHINE_GUN_COOLDOWN;
-extern const float MACHINE_GUN_SPEED;
-extern const float MACHINE_GUN_SPREAD;
-extern const float MACHINE_GUN_BULLET_SIZE;
-extern const float MACHINE_GUN_DAMAGE;
+namespace bullet {
+struct MachineGun {
+  const float cooldown = 0.05f;
+  const float speed = 5.0f;
+  const float spread = 50.0f;
+  const float bulletSize = 0.5f;
+  const float damage = 1.0f;
+};
 
-extern const float SHOTGUN_COOLDOWN;
-extern const float SHOTGUN_SPEED;
-extern const float SHOTGUN_SPREAD;
-extern const float SHOTGUN_BULLET_SIZE;
-extern const float SHOTGUN_DAMAGE;
+struct Shotgun {
+  const float cooldown = 0.5f;
+  const float speed = 3.0f;
+  const float spread = 5.0f;
+  const float bulletSize = 1.0f;
+  const float damage = 0.5f;
+};
 
-extern const float HOMING_MISSILE_COOLDOWN;
-extern const float HOMING_MISSILE_SPEED;
-extern const float HOMING_MISSILE_TURN_SPEED;
-extern const float HOMING_MISSILE_SPREAD;
-extern const float HOMING_MISSILE_BULLET_SIZE;
-extern const float HOMING_MISSILE_DAMAGE;
+struct HomingMissile {
+  const float cooldown = 0.2f;
+  const float speed = 2.0f;
+  const float turnSpeed = 2.0f;
+  const float spread = 10.0f;
+  const float bulletSize = 0.75f;
+  const float damage = 5.0f;
+};
 
-extern const float BOMB_LAUNCHER_COOLDOWN;
-extern const float BOMB_LAUNCHER_SPEED;
-extern const float BOMB_LAUNCHER_SPREAD;
-extern const float BOMB_LAUNCHER_BULLET_SIZE;
-extern const float BOMB_LAUNCHER_DAMAGE;
-extern const float BOMB_LAUNCHER_EXPLOSION_TIMER;
+struct BombLauncher {
+  const float cooldown = 0.75f;
+  const float speed = 2.0f;
+  const float spread = 20.0f;
+  const float bulletSize = 3.0f;
+  const float damage = 10.0f;
+  const float explosionTimer = 2.0f;
+};
 
-extern const float CHARGE_RIFLE_COOLDOWN;
-extern const float CHARGE_RIFLE_SPEED;
-extern const float CHARGE_RIFLE_SPREAD;
-extern const float CHARGE_RIFLE_BULLET_SIZE;
-extern const float CHARGE_RIFLE_DAMAGE;
+struct ChargeRifle {
+  const float cooldown = 1.0f;
+  const float speed = 3.0f;
+  const float spread = 100.0f;
+  const float bulletSize = 5.0f;
+  const float damage = 30.0f;
+  const float strength = 4.0f;
+};
 
-extern const float ZAP_RIFLE_COOLDOWN;
-extern const float ZAP_RIFLE_SPEED;
-extern const float ZAP_RIFLE_SPREAD;
-extern const float ZAP_RIFLE_BULLET_SIZE;
-extern const float ZAP_RIFLE_DAMAGE;
-extern const float ZAP_RIFLE_ZAP_COOLDOWN;
-extern const float ZAP_RIFLE_ZAP_RANGE;
+struct ZapRifle {
+  const float cooldown = 1.0f;
+  const float speed = 1.0f;
+  const float spread = 30.0f;
+  const float bulletSize = 1.0f;
+  const float damage = 1.0f;
+  const float zapCooldown = 0.5f;
+  const float zapRange = 10.0f;
+};
 
-extern const float CANNON_COOLDOWN;
-extern const float CANNON_SPEED;
-extern const float CANNON_SPREAD;
-extern const float CANNON_BULLET_SIZE;
-extern const float CANNON_DAMAGE;
+struct Cannon {
+  const float cooldown = 3.0f;
+  const float speed = 3.0f;
+  const float spread = 50.0f;
+  const float bulletSize = 10.0f;
+  const float damage = 50.0f;
+};
 
-extern const float LASER_COOLDOWN;
-extern const float LASER_SIZE;
-extern const float LASER_LENGTH;
-extern const float LASER_DAMAGE;
-extern const float LASER_SPIN_UP_TIME;
-extern const float LASER_SPIN_STRENGTH;
-extern const float LASER_MAX_SPIN_SPEED;
+struct Laser {
+  const float cooldown = 0.1f;
+  const float size = 1.0f;
+  const float length = 100.0f;
+  const float damage = 2.0f;
+  const float spinUpTime = 10.0f;
+  const float spinStrength = 10.0f;
+  const float maxSpinSpeed = 50.0f;
+};
 
-extern const float BLADE_SPIN_TIME;
-extern const float BLADE_SIZE;
+struct Blade {
+  const float spinTime = 0.5f;
+  const float size = 0.05f;
+  const float length = 100.0f;
+  const float damage = 30.0f;
+};
+
+extern MachineGun machineGun;
+extern Shotgun shotgun;
+extern HomingMissile homingMissile;
+extern BombLauncher bombLauncher;
+extern ChargeRifle chargeRifle;
+extern ZapRifle zapRifle;
+extern Cannon cannon;
+extern Laser laser;
+extern Blade blade;
+} // namespace bullet
 
 class Bullet {
 public:

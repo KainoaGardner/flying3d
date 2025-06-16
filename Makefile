@@ -8,7 +8,7 @@ OBJ_DIR := obj
 BIN_DIR := bin
 LIB_DIR := lib
 
-EXEC := $(BIN_DIR)/opengl
+EXEC := $(BIN_DIR)/run
 
 SRCS := $(SRC_DIR)/main.cpp \
 				$(SRC_DIR)/geometry.cpp \
@@ -19,6 +19,7 @@ SRCS := $(SRC_DIR)/main.cpp \
 				$(SRC_DIR)/bullet.cpp \
 				$(SRC_DIR)/particle.cpp \
 				$(SRC_DIR)/ships.cpp \
+				$(SRC_DIR)/config.cpp \
 				$(LIB_DIR)/glad.c \
 				$(LIB_DIR)/stb_image.cpp
 
@@ -29,6 +30,7 @@ OBJS := $(OBJ_DIR)/main.o \
 				$(OBJ_DIR)/utils.o \
 				$(OBJ_DIR)/key.o \
 				$(OBJ_DIR)/bullet.o \
+				$(OBJ_DIR)/config.o \
 				$(OBJ_DIR)/particle.o \
 				$(OBJ_DIR)/ships.o \
 				$(OBJ_DIR)/glad.o \

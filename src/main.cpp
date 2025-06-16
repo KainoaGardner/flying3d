@@ -3,6 +3,7 @@
 #include "../include/glm/gtc/matrix_transform.hpp"
 
 #include "../include/bullet.h"
+#include "../include/config.h"
 #include "../include/geomety.h"
 #include "../include/glm/gtc/type_ptr.hpp"
 #include "../include/particle.h"
@@ -16,26 +17,9 @@
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window, Player *player);
-// void mouseInputCallback(GLFWwindow *window, double mouseX, double mouseY);
-// void scrollInputCallback(GLFWwindow *window, double xOffset, double yOffset);
-
-// const unsigned int SCR_WIDTH = 1920;
-// const unsigned int SCR_HEIGHT = 1080;
-const unsigned int SCR_WIDTH = 1280;
-const unsigned int SCR_HEIGHT = 720;
-
-// const unsigned int SCR_WIDTH = 640;
-// const unsigned int SCR_HEIGHT = 360;
 
 float dt = 0.0f;
 float lastFrame = 0.0f;
-
-float lastMouseX = SCR_WIDTH / 2.0f;
-float lastMouseY = SCR_HEIGHT / 2.0f;
-
-bool firstMouseInput = true;
-
-const float sensitivity = 0.3f;
 
 int main() {
   glfwInit();
@@ -44,12 +28,14 @@ int main() {
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-  unsigned int weapons[2] = {machineGun, swingBlade};
-  Player player(CAMERA_POSITION, CAMERA_UP, CAMERA_FRONT, CAMERA_ORIENTATION,
-                normalShip, weapons);
+  unsigned int weapons[2] = {player::machineGun, player::laserCannon};
+  Player player(glm::vec3(0.0f, 10.0f, 0.0f), global::cameraUp,
+                global::cameraFront, global::cameraOrientation,
+                player::normalShip, weapons);
 
   GLFWwindow *window =
-      glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Learn Opengl", NULL, NULL);
+      glfwCreateWindow(config::gameConfig.width, config::gameConfig.height,
+                       "Learn Opengl", NULL, NULL);
 
   if (window == NULL) {
     std::cout << "Failed to create GLFW window" << std::endl;
@@ -138,8 +124,8 @@ int main() {
   unsigned int textureColorBuffer;
   glGenTextures(1, &textureColorBuffer);
   glBindTexture(GL_TEXTURE_2D, textureColorBuffer);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB,
-               GL_UNSIGNED_BYTE, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, config::gameConfig.width,
+               config::gameConfig.height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glBindTexture(GL_TEXTURE_2D, 0);
@@ -147,8 +133,8 @@ int main() {
   unsigned int rbo;
   glGenRenderbuffers(1, &rbo);
   glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCR_WIDTH,
-                        SCR_HEIGHT);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8,
+                        config::gameConfig.width, config::gameConfig.height);
   glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
@@ -193,8 +179,8 @@ int main() {
 
       Projectile projectile;
       projectile.bullet = std::make_unique<Bullet>(
-          bossPos, toPlayer, toPlayer, CAMERA_ORIENTATION, glm::vec3(5.0f),
-          glm::vec3(1.0f, 0.0f, 0.0f), 0.5f, 1.0f);
+          bossPos, toPlayer, toPlayer, global::cameraOrientation,
+          glm::vec3(5.0f), glm::vec3(1.0f, 0.0f, 0.0f), 0.5f, 1.0f);
       projectiles.push_back(std::move(projectile));
       bossShootCounter = 0.0f;
     }
@@ -206,9 +192,10 @@ int main() {
     view = player.getViewMatrix(bossPos);
 
     glm::mat4 projection;
-    projection =
-        glm::perspective(glm::radians(player.fov),
-                         (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 10000.0f);
+    projection = glm::perspective(glm::radians(player.fov),
+                                  (float)config::gameConfig.width /
+                                      (float)config::gameConfig.height,
+                                  0.1f, 10000.0f);
 
     glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4),
@@ -309,7 +296,8 @@ int main() {
     if (!onScreen) {
       arrowShader.use();
       arrowShader.setVec2f("uArrowPos", arrowDir);
-      arrowShader.setVec2f("uResolution", glm::vec2(SCR_WIDTH, SCR_HEIGHT));
+      arrowShader.setVec2f("uResolution", glm::vec2(config::gameConfig.width,
+                                                    config::gameConfig.height));
 
       glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
     }
@@ -332,25 +320,3 @@ void processInput(GLFWwindow *window, Player *player) {
   }
   player->handleKeyboardInput(window, dt);
 }
-
-// void mouseInputCallback(GLFWwindow *window, double mouseX, double mouseY) {
-//
-//   if (firstMouseInput) {
-//     lastMouseX = mouseX;
-//     lastMouseY = mouseY;
-//     firstMouseInput = false;
-//   }
-//
-//   float xOffset = mouseX - lastMouseX;
-//   float yOffset = lastMouseY - mouseY;
-//   lastMouseX = mouseX;
-//   lastMouseY = mouseY;
-//
-//   player.handleMouseInput(xOffset, yOffset);
-// }
-
-// void scrollInputCallback(GLFWwindow *window, double xOffset, double
-// yOffset)
-// {
-//   camera.handleScrollInput(yOffset, 10.0f, 45.0f);
-// }

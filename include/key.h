@@ -3,23 +3,32 @@
 
 #include <GLFW/glfw3.h>
 
-extern const unsigned int FORWARD_KEY;
-extern const unsigned int BACKWARD_KEY;
-extern const unsigned int PITCH_UP_KEY;
-extern const unsigned int PITCH_DOWN_KEY;
-extern const unsigned int YAW_RIGHT_KEY;
-extern const unsigned int YAW_LEFT_KEY;
-extern const unsigned int ROLL_RIGHT_KEY;
-extern const unsigned int ROLL_LEFT_KEY;
+namespace keys {
+struct Gameplay {
+  unsigned int forward;
+  unsigned int backward;
+  unsigned int pitchUp;
+  unsigned int pitchDown;
+  unsigned int yawRight;
+  unsigned int yawLeft;
+  unsigned int rollRight;
+  unsigned int rollLeft;
 
-extern const unsigned int SHOOT_KEY;
+  unsigned int shoot;
+  unsigned int switchWeapon;
+  unsigned int ability;
+  unsigned int ultimate;
+};
 
-// extern const unsigned int CAMERA_FRONT_KEY;
-extern const unsigned int CAMERA_BACK_KEY;
-extern const unsigned int CAMERA_BOSS_KEY;
+struct Camera {
+  unsigned int back;
+  unsigned int thirdPerson;
+  unsigned int boss;
+};
 
-extern const unsigned int SWITCH_WEAPON;
-extern const unsigned int ABILITY_KEY;
-extern const unsigned int ULTIMATE_KEY;
+extern Gameplay gameplay;
+extern Camera camera;
+
+} // namespace keys
 
 #endif

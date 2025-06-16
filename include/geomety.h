@@ -2,7 +2,6 @@
 #define GEOMETRY_H
 
 #include "../include/bullet.h"
-#include "../include/glad/glad.h"
 
 extern float CUBE_VERTICES[120];
 extern float CUBE_MAP_VERTICES[72];

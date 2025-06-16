@@ -6,17 +6,6 @@
 #include "../include/key.h"
 #include "../include/ships.h"
 
-const float MAX_COUNTER = std::numeric_limits<float>::max();
-
-const glm::vec3 CAMERA_POSITION = glm::vec3(0.0f, 0.0f, 3.0f);
-const glm::vec3 CAMERA_FRONT = glm::vec3(0.0f, 0.0f, -1.0f);
-const glm::vec3 CAMERA_UP = glm::vec3(0.0f, 1.0f, 0.0f);
-const glm::vec3 CAMERA_RIGHT = glm::vec3(1.0f, 0.0f, 0.0f);
-
-const float FOV = 45.0f;
-
-const glm::quat CAMERA_ORIENTATION = glm::quat(1, 0, 0, 0);
-
 Player::Player(glm::vec3 positionIn, glm::vec3 worldUpIn, glm::vec3 frontIn,
                glm::quat orientationIn, unsigned int shipIn,
                unsigned int weaponsIn[2]) {
@@ -28,8 +17,6 @@ Player::Player(glm::vec3 positionIn, glm::vec3 worldUpIn, glm::vec3 frontIn,
   weapons[1] = weaponsIn[1];
   ship = shipIn;
 
-  viewDirection = 1;
-
   updateCamera();
 }
 
@@ -38,98 +25,111 @@ glm::mat4 Player::getViewMatrix(glm::vec3 bossPosition) {
   // model = glm::rotate(model, timePassed * 3.0f,
   //                     glm::normalize(glm::vec3(2.0f, 0.0f, 1.0)));
 
-  glm::vec3 cameraUp = glm::normalize(orientation * CAMERA_UP);
-  if (viewDirection == 2) {
-    view = glm::rotate(view, float(M_PI), cameraUp);
-  }
-  if (viewDirection == 3) {
-    view = glm::lookAt(position, bossPosition, cameraUp);
-  }
-
-  if (viewDirection != 3)
+  glm::vec3 cameraUp = glm::normalize(orientation * global::cameraUp);
+  switch (viewDirection) {
+  case 1:
     view = glm::translate(view, -position);
+    break;
+  case 2:
+    view = glm::rotate(view, float(M_PI), cameraUp);
+    view = glm::translate(view, -position);
+    break;
+  case 3:
+    view = glm::lookAt(position, bossPosition, cameraUp);
+    break;
+  case 4:
+    glm::vec3 cameraFront = glm::normalize(orientation * global::cameraFront);
+    glm::vec3 thirdPerson = -position + cameraFront * 10.0f - cameraUp * 2.0f;
+    view = glm::translate(view, thirdPerson);
+    break;
+  }
 
   return view;
 }
 
 void Player::handleKeyboardInput(GLFWwindow *window, float dt) {
 
-  float cameraSpeed = shipTurnSpeed[ship] * dt;
+  float cameraSpeed = ship::shipTurnSpeed[ship] * dt;
   float xOffset = 0.0f;
   float yOffset = 0.0f;
   float zOffset = 0.0f;
 
-  if (glfwGetKey(window, FORWARD_KEY) == GLFW_PRESS) {
-    speed += addSpeed(speed, shipMaxSpeed[ship], shipAcceleration[ship], dt);
+  if (glfwGetKey(window, keys::gameplay.forward) == GLFW_PRESS) {
+    speed += addSpeed(speed, ship::shipMaxSpeed[ship],
+                      ship::shipAcceleration[ship], dt);
   }
 
-  if (glfwGetKey(window, BACKWARD_KEY) == GLFW_PRESS) {
-    speed += subtractSpeed(speed, shipBreakStrength[ship], dt);
+  if (glfwGetKey(window, keys::gameplay.backward) == GLFW_PRESS) {
+    speed += subtractSpeed(speed, ship::shipBreakStrength[ship], dt);
     if (speed < 0.0f)
       speed = 0.0f;
   }
 
-  if (glfwGetKey(window, PITCH_UP_KEY) == GLFW_PRESS) {
+  if (glfwGetKey(window, keys::gameplay.pitchUp) == GLFW_PRESS) {
     yOffset += cameraSpeed;
   }
-  if (glfwGetKey(window, PITCH_DOWN_KEY) == GLFW_PRESS) {
+  if (glfwGetKey(window, keys::gameplay.pitchDown) == GLFW_PRESS) {
     yOffset -= cameraSpeed;
   }
 
-  if (glfwGetKey(window, ROLL_RIGHT_KEY) == GLFW_PRESS) {
+  if (glfwGetKey(window, keys::gameplay.rollRight) == GLFW_PRESS) {
     zOffset += cameraSpeed * 1.5f;
   }
-  if (glfwGetKey(window, ROLL_LEFT_KEY) == GLFW_PRESS) {
+  if (glfwGetKey(window, keys::gameplay.rollLeft) == GLFW_PRESS) {
     zOffset -= cameraSpeed * 1.53;
   }
 
-  if (glfwGetKey(window, YAW_LEFT_KEY) == GLFW_PRESS) {
+  if (glfwGetKey(window, keys::gameplay.yawLeft) == GLFW_PRESS) {
     xOffset -= cameraSpeed * 0.5f;
   }
-  if (glfwGetKey(window, YAW_RIGHT_KEY) == GLFW_PRESS) {
+  if (glfwGetKey(window, keys::gameplay.yawRight) == GLFW_PRESS) {
     xOffset += cameraSpeed * 0.5f;
   }
 
-  if (glfwGetKey(window, SHOOT_KEY) == GLFW_PRESS) {
+  if (glfwGetKey(window, keys::gameplay.shoot) == GLFW_PRESS) {
     shootBullet();
 
-    if (weapons[weaponIndex] == chargeRifle) {
-      if (shootCounter < MAX_COUNTER)
+    if (weapons[weaponIndex] == player::chargeRifle) {
+      if (shootCounter < global::maxCounter)
         shootCounter += dt * shootSpeedBoost;
     }
   } else {
-    if (weapons[weaponIndex] == chargeRifle)
+    if (weapons[weaponIndex] == player::chargeRifle)
       shootChargeRifle();
 
     laser->on = false;
   }
 
-  if (weapons[weaponIndex] != laserCannon) {
+  if (weapons[weaponIndex] != player::laserCannon) {
     laser->on = false;
   }
 
-  if (glfwGetKey(window, CAMERA_BACK_KEY) == GLFW_PRESS) {
+  if (glfwGetKey(window, keys::camera.back) == GLFW_PRESS) {
     viewDirection = 2;
-  } else if (glfwGetKey(window, CAMERA_BOSS_KEY) == GLFW_PRESS) {
+  } else if (glfwGetKey(window, keys::camera.boss) == GLFW_PRESS) {
     viewDirection = 3;
+  } else if (glfwGetKey(window, keys::camera.thirdPerson) == GLFW_PRESS) {
+    viewDirection = 4;
   } else {
     viewDirection = 1;
   }
 
-  if (glfwGetKey(window, SWITCH_WEAPON) == GLFW_PRESS && canWeaponSwap) {
+  if (glfwGetKey(window, keys::gameplay.switchWeapon) == GLFW_PRESS &&
+      canWeaponSwap) {
     weaponIndex = (weaponIndex + 1) % 2;
     canWeaponSwap = false;
     shootCounter = 0.0f;
+    blade->spinCounter = 0.0f;
   }
-  if (glfwGetKey(window, SWITCH_WEAPON) != GLFW_PRESS) {
+  if (glfwGetKey(window, keys::gameplay.switchWeapon) != GLFW_PRESS) {
     canWeaponSwap = true;
   }
 
-  if (glfwGetKey(window, ABILITY_KEY) == GLFW_PRESS) {
+  if (glfwGetKey(window, keys::gameplay.ability) == GLFW_PRESS) {
     useShipAbility();
   }
 
-  if (glfwGetKey(window, ULTIMATE_KEY) == GLFW_PRESS) {
+  if (glfwGetKey(window, keys::gameplay.ultimate) == GLFW_PRESS) {
     useShipUltimate();
   }
 
@@ -137,9 +137,9 @@ void Player::handleKeyboardInput(GLFWwindow *window, float dt) {
   float pitchAngle = -yOffset * cameraSpeed * 0.5;
   float rollAngle = zOffset * cameraSpeed;
 
-  glm::vec3 cameraFront = glm::normalize(orientation * CAMERA_FRONT);
-  glm::vec3 cameraRight = glm::normalize(orientation * CAMERA_RIGHT);
-  glm::vec3 cameraUp = glm::normalize(orientation * CAMERA_UP);
+  glm::vec3 cameraFront = glm::normalize(orientation * global::cameraFront);
+  glm::vec3 cameraRight = glm::normalize(orientation * global::cameraRight);
+  glm::vec3 cameraUp = glm::normalize(orientation * global::cameraUp);
 
   glm::quat qYaw = glm::angleAxis(glm::radians(yawAngle), cameraUp);
   glm::quat qPitch = glm::angleAxis(glm::radians(pitchAngle), cameraRight);
@@ -152,16 +152,17 @@ void Player::handleKeyboardInput(GLFWwindow *window, float dt) {
 
 void Player::update(float dt) {
   updateCameraMovement(dt);
-  if (weapons[weaponIndex] != chargeRifle && shootCounter < MAX_COUNTER)
+  if (weapons[weaponIndex] != player::chargeRifle &&
+      shootCounter < global::maxCounter)
     shootCounter += dt * shootSpeedBoost;
 
   shipUpdate(dt);
 
   blade->update(dt, position, orientation);
 
-  if (weapons[weaponIndex] == laserCannon) {
+  if (weapons[weaponIndex] == player::laserCannon) {
     float downOffset = 1.0f;
-    float dPitch = -std::asin(downOffset / LASER_LENGTH);
+    float dPitch = -std::asin(downOffset / bullet::laser.length);
 
     // float dPitch = glm::radians(-9.2069);
 
@@ -170,14 +171,14 @@ void Player::update(float dt) {
 
     // glm::vec3 laserFront = glm::normalize(orientation * CAMERA_FRONT);
 
-    ShootArgs shootArgs = getShootArgs(-1.0f, 0.0f, 0.0f);
+    player::ShootArgs shootArgs = getShootArgs(-1.0f, 0.0f, 0.0f);
     // laser->update(dt,
     // shootArgs.bulletPosition + laserFront * LASER_LENGTH / 2.0f,
     // orientation, shootArgs.direction);
     laser->update(dt, shootArgs.bulletPosition, laserOrientation);
   }
 
-  if (weapons[weaponIndex] == swingBlade) {
+  if (weapons[weaponIndex] == player::swingBlade) {
     if (blade->spinCounter >= 0.0f) {
       blade->spinCounter -= dt * shootSpeedBoost;
     }
@@ -185,17 +186,17 @@ void Player::update(float dt) {
 }
 
 void Player::updateCamera() {
-  front = glm::normalize(orientation * CAMERA_FRONT);
+  front = glm::normalize(orientation * global::cameraFront);
   right = glm::normalize(glm::cross(front, worldUp));
   up = glm::normalize(glm::cross(right, front));
 }
 
 void Player::updateCameraMovement(float dt) {
-  front = glm::normalize(orientation * CAMERA_FRONT);
+  front = glm::normalize(orientation * global::cameraFront);
 
-  speed += applyDrag(speed, shipDragStrength[ship], dt);
+  speed += applyDrag(speed, ship::shipDragStrength[ship], dt);
 
-  fov = 45.0f + (speed / shipMaxSpeed[ship]) * 20.0f;
+  fov = 45.0f + (speed / ship::shipMaxSpeed[ship]) * 20.0f;
 
   float vel = speed;
 
@@ -218,41 +219,41 @@ float Player::applyDrag(float currentSpeed, float dragRate, float dt) {
 
 void Player::shootBullet() {
   switch (weapons[weaponIndex]) {
-  case machineGun:
+  case player::machineGun:
     shootMachineGun();
     break;
-  case shotGun:
+  case player::shotGun:
     shootShotGun();
     break;
-  case homingMissile:
+  case player::homingMissile:
     shootHomingMissile();
     break;
-  case bombLauncher:
+  case player::bombLauncher:
     shootBombLauncher();
     break;
-  case zapRifle:
+  case player::zapRifle:
     shootZapRifle();
     break;
-  case cannonBall:
+  case player::cannonBall:
     shootCannon();
     break;
-  case laserCannon:
+  case player::laserCannon:
     shootLaser();
     break;
-  case swingBlade:
+  case player::swingBlade:
     shootBlade();
     break;
   }
 }
 
-ShootArgs Player::getShootArgs(float yOffset, float xOffset,
-                               float bulletSpread) {
-  ShootArgs shootArgs;
+player::ShootArgs Player::getShootArgs(float yOffset, float xOffset,
+                                       float bulletSpread) {
+  player::ShootArgs shootArgs;
 
-  glm::vec3 cameraUp = glm::normalize(orientation * CAMERA_UP);
-  glm::vec3 cameraRight = glm::normalize(orientation * CAMERA_RIGHT);
+  glm::vec3 cameraUp = glm::normalize(orientation * global::cameraUp);
+  glm::vec3 cameraRight = glm::normalize(orientation * global::cameraRight);
 
-  glm::vec3 direction = glm::normalize(orientation * CAMERA_FRONT);
+  glm::vec3 direction = glm::normalize(orientation * global::cameraFront);
   direction.x += ((float(rand() % 100) / 100.0) - 0.5) / bulletSpread;
   direction.y += ((float(rand() % 100) / 100.0) - 0.5) / bulletSpread;
   direction.z += ((float(rand() % 100) / 100.0) - 0.5) / bulletSpread;
@@ -278,114 +279,120 @@ ShootArgs Player::getShootArgs(float yOffset, float xOffset,
 }
 
 void Player::shootMachineGun() {
-  if (shootCounter < MACHINE_GUN_COOLDOWN)
+  if (shootCounter < bullet::machineGun.cooldown)
     return;
   shootCounter = 0.0f;
 
-  glm::vec3 scale = glm::vec3(MACHINE_GUN_BULLET_SIZE);
+  glm::vec3 scale = glm::vec3(bullet::machineGun.bulletSize);
   glm::vec3 color = glm::vec3(1.0f);
 
-  ShootArgs shootArgs = getShootArgs(-2.0f, 1.0f, MACHINE_GUN_SPREAD);
+  player::ShootArgs shootArgs =
+      getShootArgs(-2.0f, 1.0f, bullet::machineGun.spread);
 
   Projectile projectile;
   projectile.bullet = std::make_unique<Bullet>(
       shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
-      shootArgs.direction, orientation, scale, color, MACHINE_GUN_SPEED,
-      MACHINE_GUN_DAMAGE);
+      shootArgs.direction, orientation, scale, color, bullet::machineGun.speed,
+      bullet::machineGun.damage);
   projectiles.push_back(std::move(projectile));
 }
 
 void Player::shootShotGun() {
-  if (shootCounter < SHOTGUN_COOLDOWN)
+  if (shootCounter < bullet::shotgun.cooldown)
     return;
   shootCounter = 0.0f;
 
-  glm::vec3 scale = glm::vec3(SHOTGUN_BULLET_SIZE);
+  glm::vec3 scale = glm::vec3(bullet::shotgun.bulletSize);
   glm::vec3 color = glm::vec3(1.0f);
 
   for (unsigned int i = 0; i < 25; i++) {
-    ShootArgs shootArgs = getShootArgs(-2.0f, 1.0f, SHOTGUN_SPREAD);
+    player::ShootArgs shootArgs =
+        getShootArgs(-2.0f, 1.0f, bullet::shotgun.spread);
     Projectile projectile;
     projectile.bullet = std::make_unique<Bullet>(
         shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
-        shootArgs.direction, orientation, scale, color, SHOTGUN_SPEED,
-        SHOTGUN_DAMAGE);
+        shootArgs.direction, orientation, scale, color, bullet::shotgun.speed,
+        bullet::shotgun.damage);
     projectiles.push_back(std::move(projectile));
   }
 }
 
 void Player::shootHomingMissile() {
-  if (shootCounter < HOMING_MISSILE_COOLDOWN)
+  if (shootCounter < bullet::homingMissile.cooldown)
     return;
   shootCounter = 0.0f;
 
-  glm::vec3 scale = glm::vec3(HOMING_MISSILE_BULLET_SIZE);
+  glm::vec3 scale = glm::vec3(bullet::homingMissile.bulletSize);
   glm::vec3 color = glm::vec3(1.0f);
 
-  ShootArgs shootArgs = getShootArgs(-1.0f, 1.0f, HOMING_MISSILE_SPREAD);
+  player::ShootArgs shootArgs =
+      getShootArgs(-1.0f, 1.0f, bullet::homingMissile.spread);
 
   Projectile projectile;
   projectile.bullet = std::make_unique<HomingMissile>(
       shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
-      shootArgs.direction, orientation, scale, color, HOMING_MISSILE_SPEED,
-      HOMING_MISSILE_DAMAGE);
+      shootArgs.direction, orientation, scale, color,
+      bullet::homingMissile.speed, bullet::homingMissile.damage);
   projectiles.push_back(std::move(projectile));
 }
 
 void Player::shootBombLauncher() {
-  if (shootCounter < BOMB_LAUNCHER_COOLDOWN)
+  if (shootCounter < bullet::bombLauncher.cooldown)
     return;
 
   shootCounter = 0.0f;
 
-  glm::vec3 scale = glm::vec3(BOMB_LAUNCHER_BULLET_SIZE);
+  glm::vec3 scale = glm::vec3(bullet::bombLauncher.bulletSize);
   glm::vec3 color = glm::vec3(1.0f);
 
-  ShootArgs shootArgs = getShootArgs(-2.0f, 1.0f, BOMB_LAUNCHER_SPREAD);
+  player::ShootArgs shootArgs =
+      getShootArgs(-2.0f, 1.0f, bullet::bombLauncher.spread);
 
   Projectile projectile;
   projectile.bullet = std::make_unique<BombBullet>(
       shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
-      shootArgs.direction, orientation, scale, color, BOMB_LAUNCHER_SPEED,
-      BOMB_LAUNCHER_DAMAGE, BOMB_LAUNCHER_EXPLOSION_TIMER);
+      shootArgs.direction, orientation, scale, color,
+      bullet::bombLauncher.speed, bullet::bombLauncher.damage,
+      bullet::bombLauncher.explosionTimer);
   projectiles.push_back(std::move(projectile));
 }
 
 void Player::shootChargeRifle() {
   float holdAmount = 0.0f;
-  float k = 4.0f;
   bool full = false;
 
-  if (shootCounter > CHARGE_RIFLE_COOLDOWN) {
+  if (shootCounter > bullet::chargeRifle.cooldown) {
     full = true;
-  } else if (shootCounter > CHARGE_RIFLE_COOLDOWN / 4.0) {
+  } else if (shootCounter > bullet::chargeRifle.cooldown / 4.0) {
   } else {
     return;
   }
 
-  holdAmount = glm::clamp(shootCounter / CHARGE_RIFLE_COOLDOWN, 0.0f, 1.0f);
-  float num = exp(k * holdAmount) - 1;
-  float denom = exp(k) - 1;
+  holdAmount =
+      glm::clamp(shootCounter / bullet::chargeRifle.cooldown, 0.0f, 1.0f);
+  float num = exp(bullet::chargeRifle.strength * holdAmount) - 1;
+  float denom = exp(bullet::chargeRifle.strength) - 1;
   float charge = num / denom;
 
   shootCounter = 0.0f;
 
-  glm::vec3 cameraUp = glm::normalize(orientation * CAMERA_UP);
-  glm::vec3 cameraRight = glm::normalize(orientation * CAMERA_RIGHT);
+  glm::vec3 cameraUp = glm::normalize(orientation * global::cameraUp);
+  glm::vec3 cameraRight = glm::normalize(orientation * global::cameraRight);
 
-  glm::vec3 direction = glm::normalize(orientation * CAMERA_FRONT);
+  glm::vec3 direction = glm::normalize(orientation * global::cameraFront);
   glm::vec3 bulletPosition = glm::vec3(0.0f);
   bulletPosition = position + cameraUp * -2.0f;
 
-  glm::vec3 scale = glm::vec3(CHARGE_RIFLE_BULLET_SIZE) * charge;
+  glm::vec3 scale = glm::vec3(bullet::chargeRifle.bulletSize) * charge;
   if (full) {
     scale *= 2.0f;
   }
   glm::vec3 color = glm::vec3(1.0f);
 
-  float speed = glm::clamp(CHARGE_RIFLE_SPEED * charge,
-                           CHARGE_RIFLE_SPEED / 2.0f, CHARGE_RIFLE_SPEED);
-  float damage = CHARGE_RIFLE_DAMAGE * charge;
+  float speed =
+      glm::clamp(bullet::chargeRifle.speed * charge,
+                 bullet::chargeRifle.speed / 2.0f, bullet::chargeRifle.speed);
+  float damage = bullet::chargeRifle.damage * charge;
 
   Projectile projectile;
   projectile.bullet =
@@ -395,38 +402,40 @@ void Player::shootChargeRifle() {
 }
 
 void Player::shootZapRifle() {
-  if (shootCounter < ZAP_RIFLE_COOLDOWN)
+  if (shootCounter < bullet::zapRifle.cooldown)
     return;
   shootCounter = 0.0f;
 
-  glm::vec3 scale = glm::vec3(ZAP_RIFLE_BULLET_SIZE);
+  glm::vec3 scale = glm::vec3(bullet::zapRifle.bulletSize);
   glm::vec3 color = glm::vec3(1.0f);
 
-  ShootArgs shootArgs = getShootArgs(0.0f, 1.0f, ZAP_RIFLE_SPREAD);
+  player::ShootArgs shootArgs =
+      getShootArgs(0.0f, 1.0f, bullet::zapRifle.spread);
 
   Projectile projectile;
   projectile.bullet = std::make_unique<ZapBullet>(
       shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
-      shootArgs.direction, orientation, scale, color, ZAP_RIFLE_SPEED,
-      ZAP_RIFLE_DAMAGE);
+      shootArgs.direction, orientation, scale, color, bullet::zapRifle.spread,
+      bullet::zapRifle.damage);
   projectiles.push_back(std::move(projectile));
 }
 
 void Player::shootCannon() {
-  if (shootCounter < CANNON_COOLDOWN)
+  if (shootCounter < bullet::cannon.cooldown)
     return;
   shootCounter = 0.0f;
 
-  glm::vec3 scale = glm::vec3(CANNON_BULLET_SIZE);
+  glm::vec3 scale = glm::vec3(bullet::cannon.bulletSize);
   glm::vec3 color = glm::vec3(1.0f);
 
-  ShootArgs shootArgs = getShootArgs(-1.0f, 0.0f, CANNON_SPREAD);
+  player::ShootArgs shootArgs =
+      getShootArgs(-1.0f, 0.0f, bullet::cannon.spread);
 
   Projectile projectile;
   projectile.bullet = std::make_unique<Bullet>(
       shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
-      shootArgs.direction, orientation, scale, color, CANNON_SPEED,
-      CANNON_DAMAGE);
+      shootArgs.direction, orientation, scale, color, bullet::cannon.speed,
+      bullet::cannon.damage);
   projectiles.push_back(std::move(projectile));
 }
 
@@ -434,78 +443,78 @@ void Player::shootLaser() { laser->on = true; }
 
 void Player::shootBlade() {
   if (blade->spinCounter < 0.0f) {
-    blade->spinCounter = BLADE_SPIN_TIME;
+    blade->spinCounter = bullet::blade.spinTime;
   }
 }
 
 void Player::shipUpdate(float dt) {
   switch (ship) {
-  case normalShip:
+  case player::normalShip:
     normalShipUpdate(dt);
     break;
-  case tankShip:
+  case player::tankShip:
     break;
-  case timeShip:
+  case player::timeShip:
     break;
-  case vampireShip:
+  case player::vampireShip:
     break;
-  case speedShip:
+  case player::speedShip:
     break;
-  case parryShip:
+  case player::parryShip:
     break;
   }
 }
 
 void Player::useShipAbility() {
   switch (ship) {
-  case normalShip:
+  case player::normalShip:
     normalShipAbility();
     break;
-  case tankShip:
+  case player::tankShip:
     break;
-  case timeShip:
+  case player::timeShip:
     break;
-  case vampireShip:
+  case player::vampireShip:
     break;
-  case speedShip:
+  case player::speedShip:
     break;
-  case parryShip:
+  case player::parryShip:
     break;
   }
 }
 
 void Player::useShipUltimate() {
   switch (ship) {
-  case normalShip:
+  case player::normalShip:
     normalShipUltimate();
     break;
-  case tankShip:
+  case player::tankShip:
     break;
-  case timeShip:
+  case player::timeShip:
     break;
-  case vampireShip:
+  case player::vampireShip:
     break;
-  case speedShip:
+  case player::speedShip:
     break;
-  case parryShip:
+  case player::parryShip:
     break;
   }
 }
 
 void Player::normalShipUpdate(float dt) {
-  if (abilityCounter < MAX_COUNTER) {
+  if (abilityCounter < global::maxCounter) {
     abilityCounter += dt;
   }
-  if (ultimateCounter < MAX_COUNTER) {
+  if (ultimateCounter < global::maxCounter) {
     ultimateCounter += dt;
   }
 
   if (abilityTimer > 0.0f) {
-    float percent = (NORMAL_SHIP_ABILITY_LENGTH - abilityTimer) /
-                    NORMAL_SHIP_ABILITY_LENGTH;
-    float y = exp(-NORMAL_SHIP_ABILITY_STRENGTH * percent);
+    float percent = (ship::normalShip.abilityLength - abilityTimer) /
+                    ship::normalShip.abilityLength;
+    float y = exp(-ship::normalShip.abilityStrength * percent);
 
-    speed = NORMAL_SHIP_ABILITY_SPEED * y + beforeDashSpeed;
+    speed = ship::normalShip.abilitySpeed * y + beforeDashSpeed;
     abilityTimer -= dt;
   }
 
@@ -513,36 +522,36 @@ void Player::normalShipUpdate(float dt) {
     ultimateTimer -= dt;
   }
 
-  if (notHitCounter < MAX_COUNTER) {
+  if (notHitCounter < global::maxCounter) {
     notHitCounter += dt;
   }
 
-  float x = notHitCounter / NORMAL_SHIP_MAX_PASSIVE_TIME;
+  float x = notHitCounter / ship::normalShip.maxPassiveTime;
 
-  float num = 1 - exp(-NORMAL_SHIP_PASSIVE_STRENGTH * x);
-  float denom = 1 - exp(-NORMAL_SHIP_PASSIVE_STRENGTH);
-  float y = (NORMAL_SHIP_MAX_PASSIVE_BOOST - 1.0f) * (num / denom) + 1.0f;
+  float num = 1 - exp(-ship::normalShip.passiveStrength * x);
+  float denom = 1 - exp(-ship::normalShip.passiveStrength);
+  float y = (ship::normalShip.maxPassiveBoost - 1.0f) * (num / denom) + 1.0f;
 
-  damageBoost = glm::clamp(y, 1.0f, NORMAL_SHIP_MAX_PASSIVE_BOOST);
-  shootSpeedBoost = glm::clamp(y, 1.0f, NORMAL_SHIP_MAX_PASSIVE_BOOST);
+  damageBoost = glm::clamp(y, 1.0f, ship::normalShip.maxPassiveBoost);
+  shootSpeedBoost = glm::clamp(y, 1.0f, ship::normalShip.maxPassiveBoost);
   if (ultimateTimer > 0.0f) {
-    shootSpeedBoost *= NORMAL_SHIP_ULTIMATE_BOOST;
+    shootSpeedBoost *= ship::normalShip.ultimateBoost;
   }
 }
 void Player::normalShipAbility() {
-  if (abilityCounter < NORMAL_SHIP_ABILITY_COOLDOWN)
+  if (abilityCounter < ship::normalShip.abilityCooldown)
     return;
 
   beforeDashSpeed = speed;
-  speed = NORMAL_SHIP_ABILITY_SPEED;
+  speed = ship::normalShip.abilitySpeed;
   abilityCounter = 0;
-  abilityTimer = NORMAL_SHIP_ABILITY_LENGTH;
+  abilityTimer = ship::normalShip.abilityLength;
 }
 
 void Player::normalShipUltimate() {
-  if (ultimateCounter < NORMAL_SHIP_ULTIMATE_COOLDOWN)
+  if (ultimateCounter < ship::normalShip.ultimateCooldown)
     return;
 
   ultimateCounter = 0;
-  ultimateTimer = NORMAL_SHIP_ULTIMATE_LENGTH;
+  ultimateTimer = ship::normalShip.ultimateLength;
 }
