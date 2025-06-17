@@ -15,7 +15,7 @@ Blade blade;
 Bullet::Bullet(glm::vec3 positionIn, glm::vec3 rotationIn,
                glm::vec3 directionIn, glm::quat orientationIn,
                glm::vec3 scaleIn, glm::vec3 colorIn, float speedIn,
-               float damageIn) {
+               float damageIn, bool enemyBulletIn) {
   position = positionIn;
 
   direction = glm::normalize(directionIn);
@@ -25,9 +25,10 @@ Bullet::Bullet(glm::vec3 positionIn, glm::vec3 rotationIn,
   damage = damageIn;
   rotation = rotationIn;
   orientation = orientationIn;
+  enemyBullet = enemyBulletIn;
 }
 
-void Bullet::update(float dt) { position += direction * speed; }
+void Bullet::update(float dt) { position += direction * speed * dt; }
 
 void Bullet::killBullet(glm::vec3 playerPosition) {
   float dist = glm::distance(playerPosition, position);
@@ -59,9 +60,9 @@ void Bullet::draw(Shader shader, float timePassed) {
 BombBullet::BombBullet(glm::vec3 positionIn, glm::vec3 rotationIn,
                        glm::vec3 directionIn, glm::quat orientationIn,
                        glm::vec3 scaleIn, glm::vec3 colorIn, float speedIn,
-                       float damageIn, float explodeTimerIn)
+                       float damageIn, bool enemyBulletIn, float explodeTimerIn)
     : Bullet(positionIn, rotationIn, directionIn, orientationIn, scaleIn,
-             colorIn, speedIn, damageIn) {
+             colorIn, speedIn, damageIn, enemyBulletIn) {
   explodeTimer = explodeTimerIn;
 }
 
@@ -85,9 +86,9 @@ void BombBullet::explode() {
 HomingMissile::HomingMissile(glm::vec3 positionIn, glm::vec3 rotationIn,
                              glm::vec3 directionIn, glm::quat orientationIn,
                              glm::vec3 scaleIn, glm::vec3 colorIn,
-                             float speedIn, float damageIn)
+                             float speedIn, float damageIn, bool enemyBulletIn)
     : Bullet(positionIn, rotationIn, directionIn, orientationIn, scaleIn,
-             colorIn, speedIn, damageIn) {}
+             colorIn, speedIn, damageIn, enemyBulletIn) {}
 
 void HomingMissile::update(float dt) {
   // change to closest target pos
@@ -103,9 +104,9 @@ void HomingMissile::update(float dt) {
 ZapBullet::ZapBullet(glm::vec3 positionIn, glm::vec3 rotationIn,
                      glm::vec3 directionIn, glm::quat orientationIn,
                      glm::vec3 scaleIn, glm::vec3 colorIn, float speedIn,
-                     float damageIn)
+                     float damageIn, bool enemyBulletIn)
     : Bullet(positionIn, rotationIn, directionIn, orientationIn, scaleIn,
-             colorIn, speedIn, damageIn) {}
+             colorIn, speedIn, damageIn, enemyBulletIn) {}
 
 void ZapBullet::update(float dt) {
   zapCounter += dt;

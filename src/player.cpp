@@ -17,6 +17,8 @@ Player::Player(glm::vec3 positionIn, glm::vec3 worldUpIn, glm::vec3 frontIn,
   weapons[1] = weaponsIn[1];
   ship = shipIn;
 
+  health = ship::shipMaxHealth[ship];
+
   updateCamera();
 }
 
@@ -48,7 +50,6 @@ glm::mat4 Player::getViewMatrix(glm::vec3 bossPosition) {
 }
 
 void Player::handleKeyboardInput(GLFWwindow *window, float dt) {
-
   float cameraSpeed = ship::shipTurnSpeed[ship] * dt;
   float xOffset = 0.0f;
   float yOffset = 0.0f;
@@ -76,7 +77,7 @@ void Player::handleKeyboardInput(GLFWwindow *window, float dt) {
     zOffset += cameraSpeed * 1.5f;
   }
   if (glfwGetKey(window, keys::gameplay.rollLeft) == GLFW_PRESS) {
-    zOffset -= cameraSpeed * 1.53;
+    zOffset -= cameraSpeed * 1.5f;
   }
 
   if (glfwGetKey(window, keys::gameplay.yawLeft) == GLFW_PRESS) {
@@ -160,27 +161,30 @@ void Player::update(float dt) {
 
   blade->update(dt, position, orientation);
 
-  if (weapons[weaponIndex] == player::laserCannon) {
-    float downOffset = 1.0f;
-    float dPitch = -std::asin(downOffset / bullet::laser.length);
+  if (!(ship == player::tankShip && abilityTimer > 0.0f)) {
 
-    // float dPitch = glm::radians(-9.2069);
+    if (weapons[weaponIndex] == player::laserCannon) {
+      float downOffset = 1.0f;
+      float dPitch = -std::asin(downOffset / bullet::laser.length);
 
-    glm::quat laserOrientation =
-        glm::rotate(orientation, dPitch, glm::vec3(1.0f, 0.0f, 0.0f));
+      // float dPitch = glm::radians(-9.2069);
 
-    // glm::vec3 laserFront = glm::normalize(orientation * CAMERA_FRONT);
+      glm::quat laserOrientation =
+          glm::rotate(orientation, dPitch, glm::vec3(1.0f, 0.0f, 0.0f));
 
-    player::ShootArgs shootArgs = getShootArgs(-1.0f, 0.0f, 0.0f);
-    // laser->update(dt,
-    // shootArgs.bulletPosition + laserFront * LASER_LENGTH / 2.0f,
-    // orientation, shootArgs.direction);
-    laser->update(dt, shootArgs.bulletPosition, laserOrientation);
-  }
+      // glm::vec3 laserFront = glm::normalize(orientation * CAMERA_FRONT);
 
-  if (weapons[weaponIndex] == player::swingBlade) {
-    if (blade->spinCounter >= 0.0f) {
-      blade->spinCounter -= dt * shootSpeedBoost;
+      player::ShootArgs shootArgs = getShootArgs(-1.0f, 0.0f, 0.0f);
+      // laser->update(dt,
+      // shootArgs.bulletPosition + laserFront * LASER_LENGTH / 2.0f,
+      // orientation, shootArgs.direction);
+      laser->update(dt, shootArgs.bulletPosition, laserOrientation);
+    }
+
+    if (weapons[weaponIndex] == player::swingBlade) {
+      if (blade->spinCounter >= 0.0f) {
+        blade->spinCounter -= dt * shootSpeedBoost;
+      }
     }
   }
 }
@@ -218,6 +222,10 @@ float Player::applyDrag(float currentSpeed, float dragRate, float dt) {
 }
 
 void Player::shootBullet() {
+  if (ship == player::tankShip && abilityTimer > 0.0f) {
+    return;
+  }
+
   switch (weapons[weaponIndex]) {
   case player::machineGun:
     shootMachineGun();
@@ -293,7 +301,7 @@ void Player::shootMachineGun() {
   projectile.bullet = std::make_unique<Bullet>(
       shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
       shootArgs.direction, orientation, scale, color, bullet::machineGun.speed,
-      bullet::machineGun.damage);
+      bullet::machineGun.damage, false);
   projectiles.push_back(std::move(projectile));
 }
 
@@ -312,7 +320,7 @@ void Player::shootShotGun() {
     projectile.bullet = std::make_unique<Bullet>(
         shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
         shootArgs.direction, orientation, scale, color, bullet::shotgun.speed,
-        bullet::shotgun.damage);
+        bullet::shotgun.damage, false);
     projectiles.push_back(std::move(projectile));
   }
 }
@@ -332,7 +340,7 @@ void Player::shootHomingMissile() {
   projectile.bullet = std::make_unique<HomingMissile>(
       shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
       shootArgs.direction, orientation, scale, color,
-      bullet::homingMissile.speed, bullet::homingMissile.damage);
+      bullet::homingMissile.speed, bullet::homingMissile.damage, false);
   projectiles.push_back(std::move(projectile));
 }
 
@@ -352,7 +360,7 @@ void Player::shootBombLauncher() {
   projectile.bullet = std::make_unique<BombBullet>(
       shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
       shootArgs.direction, orientation, scale, color,
-      bullet::bombLauncher.speed, bullet::bombLauncher.damage,
+      bullet::bombLauncher.speed, bullet::bombLauncher.damage, false,
       bullet::bombLauncher.explosionTimer);
   projectiles.push_back(std::move(projectile));
 }
@@ -397,7 +405,7 @@ void Player::shootChargeRifle() {
   Projectile projectile;
   projectile.bullet =
       std::make_unique<Bullet>(bulletPosition, cameraRight, direction,
-                               orientation, scale, color, speed, damage);
+                               orientation, scale, color, speed, damage, false);
   projectiles.push_back(std::move(projectile));
 }
 
@@ -416,7 +424,7 @@ void Player::shootZapRifle() {
   projectile.bullet = std::make_unique<ZapBullet>(
       shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
       shootArgs.direction, orientation, scale, color, bullet::zapRifle.spread,
-      bullet::zapRifle.damage);
+      bullet::zapRifle.damage, false);
   projectiles.push_back(std::move(projectile));
 }
 
@@ -435,7 +443,7 @@ void Player::shootCannon() {
   projectile.bullet = std::make_unique<Bullet>(
       shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
       shootArgs.direction, orientation, scale, color, bullet::cannon.speed,
-      bullet::cannon.damage);
+      bullet::cannon.damage, false);
   projectiles.push_back(std::move(projectile));
 }
 
@@ -453,8 +461,10 @@ void Player::shipUpdate(float dt) {
     normalShipUpdate(dt);
     break;
   case player::tankShip:
+    tankShipUpdate(dt);
     break;
   case player::timeShip:
+    timeShipUpdate(dt);
     break;
   case player::vampireShip:
     break;
@@ -471,8 +481,10 @@ void Player::useShipAbility() {
     normalShipAbility();
     break;
   case player::tankShip:
+    tankShipAbility();
     break;
   case player::timeShip:
+    timeShipAbility();
     break;
   case player::vampireShip:
     break;
@@ -489,8 +501,10 @@ void Player::useShipUltimate() {
     normalShipUltimate();
     break;
   case player::tankShip:
+    tankShipUltimate();
     break;
   case player::timeShip:
+    timeShipUltimate();
     break;
   case player::vampireShip:
     break;
@@ -554,4 +568,95 @@ void Player::normalShipUltimate() {
 
   ultimateCounter = 0;
   ultimateTimer = ship::normalShip.ultimateLength;
+}
+
+void Player::tankShipUpdate(float dt) {
+  if (abilityCounter < global::maxCounter) {
+    abilityCounter += dt;
+  }
+  if (ultimateCounter < global::maxCounter) {
+    ultimateCounter += dt;
+  }
+
+  if (abilityTimer > 0.0f) {
+    abilityTimer -= dt;
+  }
+
+  if (ultimateTimer > 0.0f) {
+    ultimateTimer -= dt;
+  }
+
+  if (ultimateTimer > 0.0f) {
+    damageReductionAmount = 0.0f;
+  } else if (abilityTimer > 0.0f) {
+    damageReductionAmount = 0.5f;
+  } else {
+    damageReductionAmount = 1.0f;
+  }
+
+  if (notHitCounter < global::maxCounter) {
+    notHitCounter += dt;
+  }
+
+  if (speed < ship::tankShip.passiveMinSpeed) {
+    damageBoost = ship::tankShip.passiveDamageBoost;
+  } else {
+    damageBoost = 1.0f;
+  }
+}
+
+void Player::tankShipAbility() {
+  if (abilityCounter < ship::tankShip.abilityCooldown)
+    return;
+
+  abilityCounter = 0;
+  abilityTimer = ship::tankShip.abilityLength;
+}
+
+void Player::tankShipUltimate() {
+  if (ultimateCounter < ship::tankShip.ultimateCooldown)
+    return;
+
+  ultimateCounter = 0;
+  ultimateTimer = ship::tankShip.ultimateLength;
+}
+
+void Player::timeShipUpdate(float dt) {
+  if (abilityCounter < global::maxCounter) {
+    abilityCounter += dt;
+  }
+  if (ultimateCounter < global::maxCounter) {
+    ultimateCounter += dt;
+  }
+
+  if (abilityTimer > 0.0f) {
+    abilityTimer -= dt;
+  }
+
+  if (ultimateTimer > 0.0f) {
+    ultimateTimer -= dt;
+    timeSlowAmount = 0.0f;
+  } else {
+    timeSlowAmount = 1.0f;
+  }
+}
+
+void Player::timeShipAbility() {
+  if (abilityCounter < ship::timeShip.abilityCooldown)
+    return;
+
+  abilityCounter = 0;
+  abilityTimer = ship::timeShip.abilityLength;
+}
+
+void Player::timeShipUltimate() {
+  if (ultimateCounter < ship::timeShip.ultimateCooldown)
+    return;
+
+  ultimateCounter = 0;
+  ultimateTimer = ship::timeShip.ultimateLength;
+}
+
+void Player::takeDamage(float damage) {
+  health -= damage * damageReductionAmount;
 }

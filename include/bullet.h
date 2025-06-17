@@ -12,7 +12,7 @@
 namespace bullet {
 struct MachineGun {
   const float cooldown = 0.05f;
-  const float speed = 5.0f;
+  const float speed = 750.0f;
   const float spread = 50.0f;
   const float bulletSize = 0.5f;
   const float damage = 1.0f;
@@ -20,7 +20,7 @@ struct MachineGun {
 
 struct Shotgun {
   const float cooldown = 0.5f;
-  const float speed = 3.0f;
+  const float speed = 450.0f;
   const float spread = 5.0f;
   const float bulletSize = 1.0f;
   const float damage = 0.5f;
@@ -28,7 +28,7 @@ struct Shotgun {
 
 struct HomingMissile {
   const float cooldown = 0.2f;
-  const float speed = 2.0f;
+  const float speed = 300.0f;
   const float turnSpeed = 2.0f;
   const float spread = 10.0f;
   const float bulletSize = 0.75f;
@@ -37,7 +37,7 @@ struct HomingMissile {
 
 struct BombLauncher {
   const float cooldown = 0.75f;
-  const float speed = 2.0f;
+  const float speed = 300.0f;
   const float spread = 20.0f;
   const float bulletSize = 3.0f;
   const float damage = 10.0f;
@@ -46,7 +46,7 @@ struct BombLauncher {
 
 struct ChargeRifle {
   const float cooldown = 1.0f;
-  const float speed = 3.0f;
+  const float speed = 450.0f;
   const float spread = 100.0f;
   const float bulletSize = 5.0f;
   const float damage = 30.0f;
@@ -55,7 +55,7 @@ struct ChargeRifle {
 
 struct ZapRifle {
   const float cooldown = 1.0f;
-  const float speed = 1.0f;
+  const float speed = 150.0f;
   const float spread = 30.0f;
   const float bulletSize = 1.0f;
   const float damage = 1.0f;
@@ -65,7 +65,7 @@ struct ZapRifle {
 
 struct Cannon {
   const float cooldown = 3.0f;
-  const float speed = 3.0f;
+  const float speed = 450.0f;
   const float spread = 50.0f;
   const float bulletSize = 10.0f;
   const float damage = 50.0f;
@@ -113,10 +113,11 @@ public:
   float damage;
 
   bool alive = true;
+  bool enemyBullet;
 
   Bullet(glm::vec3 positionIn, glm::vec3 rotationIn, glm::vec3 directionIn,
          glm::quat orientationIn, glm::vec3 scaleIn, glm::vec3 colorIn,
-         float speedIn, float damageIn);
+         float speedIn, float damageIn, bool enemyBulletIn);
   virtual void update(float dt);
 
   void killBullet(glm::vec3 playerPosition);
@@ -132,7 +133,8 @@ public:
   float explodeCounter = 0.0f;
   BombBullet(glm::vec3 positionIn, glm::vec3 rotationIn, glm::vec3 directionIn,
              glm::quat orientationIn, glm::vec3 scaleIn, glm::vec3 colorIn,
-             float speedIn, float damageIn, float explodeTimerIn);
+             float speedIn, float damageIn, bool enemyBulletIn,
+             float explodeTimerIn);
 
   void update(float dt) override;
 
@@ -146,7 +148,7 @@ public:
   HomingMissile(glm::vec3 positionIn, glm::vec3 rotationIn,
                 glm::vec3 directionIn, glm::quat orientationIn,
                 glm::vec3 scaleIn, glm::vec3 colorIn, float speedIn,
-                float damageIn);
+                float damageIn, bool enemyBulletIn);
 
   void update(float dt) override;
 
@@ -157,7 +159,7 @@ class ZapBullet : public Bullet {
 public:
   ZapBullet(glm::vec3 positionIn, glm::vec3 rotationIn, glm::vec3 directionIn,
             glm::quat orientationIn, glm::vec3 scaleIn, glm::vec3 colorIn,
-            float speedIn, float damageIn);
+            float speedIn, float damageIn, bool enemyBulletIn);
 
   void update(float dt) override;
 

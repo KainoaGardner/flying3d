@@ -54,9 +54,14 @@ public:
   float speed = 0.0f;
   float fov = 45.0f;
 
-  float damageBoost = 1.0;
-  float speedBoost = 1.0;
-  float shootSpeedBoost = 1.0;
+  float damageBoost = 1.0f;
+  float speedBoost = 1.0f;
+  float shootSpeedBoost = 1.0f;
+  float damageReductionAmount = 1.0f;
+
+  float timeSlowAmount = 1.0f;
+
+  float health;
 
   Laser *laser = new Laser(glm::vec3(1.0f), bullet::laser.damage);
   Blade *blade = new Blade(glm::vec3(bullet::blade.size), glm::vec3(1.0f),
@@ -76,16 +81,19 @@ public:
 
   void update(float dt);
 
+  void takeDamage(float damage);
+
+  float shootCounter = 0.0f;
+  float abilityCounter = global::maxCounter;
+  float ultimateCounter = global::maxCounter;
+  // float ultimateCounter = 0.0f;
+  float abilityTimer = 0.0f;
+  float ultimateTimer = 0.0f;
+
 private:
   bool leftGun = false;
   bool canWeaponSwap = true;
 
-  float shootCounter = 0.0f;
-  float abilityCounter = global::maxCounter;
-  float ultimateCounter = 0.0f;
-
-  float abilityTimer = 0.0f;
-  float ultimateTimer = 0.0f;
   float beforeDashSpeed;
 
   float notHitCounter = 0.0f;
@@ -123,6 +131,14 @@ private:
   void normalShipUpdate(float dt);
   void normalShipAbility();
   void normalShipUltimate();
+
+  void tankShipUpdate(float dt);
+  void tankShipAbility();
+  void tankShipUltimate();
+
+  void timeShipUpdate(float dt);
+  void timeShipAbility();
+  void timeShipUltimate();
 };
 
 #endif

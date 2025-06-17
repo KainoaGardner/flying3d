@@ -29,13 +29,13 @@ int main() {
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
   unsigned int weapons[2] = {player::machineGun, player::laserCannon};
-  Player player(glm::vec3(0.0f, 10.0f, 0.0f), global::cameraUp,
-                global::cameraFront, global::cameraOrientation,
-                player::normalShip, weapons);
-
   GLFWwindow *window =
       glfwCreateWindow(config::gameConfig.width, config::gameConfig.height,
                        "Learn Opengl", NULL, NULL);
+
+  Player player(glm::vec3(0.0f, 10.0f, 0.0f), global::cameraUp,
+                global::cameraFront, global::cameraOrientation,
+                player::timeShip, weapons);
 
   if (window == NULL) {
     std::cout << "Failed to create GLFW window" << std::endl;
@@ -170,7 +170,7 @@ int main() {
     // camera.updateCameraMovement(dt);
 
     glm::vec3 bossPos = glm::vec3(0.0f);
-    bossShootCounter += dt;
+    bossShootCounter += dt * player.timeSlowAmount;
     if (bossShootCounter >= bossShootCooldown) {
       glm::vec3 toPlayer = glm::normalize(player.position - bossPos);
       toPlayer.x += ((float(rand() % 100) / 100.0) - 0.5) / 5.0;
@@ -180,7 +180,7 @@ int main() {
       Projectile projectile;
       projectile.bullet = std::make_unique<Bullet>(
           bossPos, toPlayer, toPlayer, global::cameraOrientation,
-          glm::vec3(5.0f), glm::vec3(1.0f, 0.0f, 0.0f), 0.5f, 1.0f);
+          glm::vec3(5.0f), glm::vec3(1.0f, 0.0f, 0.0f), 75.0f, 1.0f, true);
       projectiles.push_back(std::move(projectile));
       bossShootCounter = 0.0f;
     }
@@ -242,7 +242,12 @@ int main() {
     for (unsigned int i = 0; i < projectiles.size(); i++) {
       Projectile &projectile = projectiles[i];
       if (projectile.bullet) {
-        projectile.bullet->update(dt);
+        if (projectile.bullet->enemyBullet) {
+          projectile.bullet->update(dt * player.timeSlowAmount);
+        } else {
+          projectile.bullet->update(dt);
+        }
+
         projectile.bullet->killBullet(player.position);
         if (!projectile.bullet->alive) {
           projectiles.erase(projectiles.begin() + i);
@@ -265,9 +270,11 @@ int main() {
     }
 
     glBindVertexArray(beamGeometry.vao);
-    player.laser->draw(bulletShader, timePassed);
+    if (!(player.ship == player::tankShip && player.abilityTimer > 0.0f)) {
+      player.laser->draw(bulletShader, timePassed);
 
-    player.blade->draw(bulletShader, timePassed);
+      player.blade->draw(bulletShader, timePassed);
+    }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
