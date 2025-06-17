@@ -28,14 +28,14 @@ int main() {
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-  unsigned int weapons[2] = {player::machineGun, player::laserCannon};
+  unsigned int weapons[2] = {player::machineGun, player::bombLauncher};
   GLFWwindow *window =
       glfwCreateWindow(config::gameConfig.width, config::gameConfig.height,
                        "Learn Opengl", NULL, NULL);
 
   Player player(glm::vec3(0.0f, 10.0f, 0.0f), global::cameraUp,
                 global::cameraFront, global::cameraOrientation,
-                player::timeShip, weapons);
+                player::speedShip, weapons);
 
   if (window == NULL) {
     std::cout << "Failed to create GLFW window" << std::endl;
@@ -243,7 +243,13 @@ int main() {
       Projectile &projectile = projectiles[i];
       if (projectile.bullet) {
         if (projectile.bullet->enemyBullet) {
-          projectile.bullet->update(dt * player.timeSlowAmount);
+          if (player.ship == player::timeShip) {
+            float timeSlowDT =
+                player.getBulletTimeSlow(projectile.bullet->position);
+            projectile.bullet->update(dt * timeSlowDT * player.timeSlowAmount);
+          } else {
+            projectile.bullet->update(dt * player.timeSlowAmount);
+          }
         } else {
           projectile.bullet->update(dt);
         }
@@ -253,7 +259,7 @@ int main() {
           projectiles.erase(projectiles.begin() + i);
           continue;
         };
-        projectile.bullet->draw(bulletShader, timePassed);
+        projectile.bullet->draw(bulletShader);
       }
     }
 

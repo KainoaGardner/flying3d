@@ -18,6 +18,7 @@ Player::Player(glm::vec3 positionIn, glm::vec3 worldUpIn, glm::vec3 frontIn,
   ship = shipIn;
 
   health = ship::shipMaxHealth[ship];
+  maxSpeed = ship::shipMaxSpeed[ship];
 
   updateCamera();
 }
@@ -56,12 +57,13 @@ void Player::handleKeyboardInput(GLFWwindow *window, float dt) {
   float zOffset = 0.0f;
 
   if (glfwGetKey(window, keys::gameplay.forward) == GLFW_PRESS) {
-    speed += addSpeed(speed, ship::shipMaxSpeed[ship],
-                      ship::shipAcceleration[ship], dt);
+    speed += addSpeed(speed, maxSpeed, ship::shipAcceleration[ship], dt) *
+             speedBoost;
   }
 
   if (glfwGetKey(window, keys::gameplay.backward) == GLFW_PRESS) {
-    speed += subtractSpeed(speed, ship::shipBreakStrength[ship], dt);
+    speed +=
+        subtractSpeed(speed, ship::shipBreakStrength[ship], dt) * speedBoost;
     if (speed < 0.0f)
       speed = 0.0f;
   }
@@ -147,6 +149,10 @@ void Player::handleKeyboardInput(GLFWwindow *window, float dt) {
   glm::quat qRoll = glm::angleAxis(glm::radians(rollAngle), cameraFront);
 
   orientation = glm::normalize(qRoll * qYaw * qPitch * orientation);
+
+  if (ship == player::timeShip) {
+    timeShipInput(window);
+  }
 
   updateCamera();
 }
@@ -300,8 +306,8 @@ void Player::shootMachineGun() {
   Projectile projectile;
   projectile.bullet = std::make_unique<Bullet>(
       shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
-      shootArgs.direction, orientation, scale, color, bullet::machineGun.speed,
-      bullet::machineGun.damage, false);
+      shootArgs.direction, orientation, scale, color,
+      bullet::machineGun.speed + speed, bullet::machineGun.damage, false);
   projectiles.push_back(std::move(projectile));
 }
 
@@ -319,8 +325,8 @@ void Player::shootShotGun() {
     Projectile projectile;
     projectile.bullet = std::make_unique<Bullet>(
         shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
-        shootArgs.direction, orientation, scale, color, bullet::shotgun.speed,
-        bullet::shotgun.damage, false);
+        shootArgs.direction, orientation, scale, color,
+        bullet::shotgun.speed + speed, bullet::shotgun.damage, false);
     projectiles.push_back(std::move(projectile));
   }
 }
@@ -340,7 +346,7 @@ void Player::shootHomingMissile() {
   projectile.bullet = std::make_unique<HomingMissile>(
       shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
       shootArgs.direction, orientation, scale, color,
-      bullet::homingMissile.speed, bullet::homingMissile.damage, false);
+      bullet::homingMissile.speed + speed, bullet::homingMissile.damage, false);
   projectiles.push_back(std::move(projectile));
 }
 
@@ -360,7 +366,7 @@ void Player::shootBombLauncher() {
   projectile.bullet = std::make_unique<BombBullet>(
       shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
       shootArgs.direction, orientation, scale, color,
-      bullet::bombLauncher.speed, bullet::bombLauncher.damage, false,
+      bullet::bombLauncher.speed + speed, bullet::bombLauncher.damage, false,
       bullet::bombLauncher.explosionTimer);
   projectiles.push_back(std::move(projectile));
 }
@@ -423,8 +429,8 @@ void Player::shootZapRifle() {
   Projectile projectile;
   projectile.bullet = std::make_unique<ZapBullet>(
       shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
-      shootArgs.direction, orientation, scale, color, bullet::zapRifle.spread,
-      bullet::zapRifle.damage, false);
+      shootArgs.direction, orientation, scale, color,
+      bullet::zapRifle.speed + speed, bullet::zapRifle.damage, false);
   projectiles.push_back(std::move(projectile));
 }
 
@@ -442,8 +448,8 @@ void Player::shootCannon() {
   Projectile projectile;
   projectile.bullet = std::make_unique<Bullet>(
       shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
-      shootArgs.direction, orientation, scale, color, bullet::cannon.speed,
-      bullet::cannon.damage, false);
+      shootArgs.direction, orientation, scale, color,
+      bullet::cannon.speed + speed, bullet::cannon.damage, false);
   projectiles.push_back(std::move(projectile));
 }
 
@@ -466,11 +472,12 @@ void Player::shipUpdate(float dt) {
   case player::timeShip:
     timeShipUpdate(dt);
     break;
-  case player::vampireShip:
-    break;
   case player::speedShip:
+    speedShipUpdate(dt);
     break;
   case player::parryShip:
+    break;
+  case player::vampireShip:
     break;
   }
 }
@@ -486,11 +493,12 @@ void Player::useShipAbility() {
   case player::timeShip:
     timeShipAbility();
     break;
-  case player::vampireShip:
-    break;
   case player::speedShip:
+    speedShipAbility();
     break;
   case player::parryShip:
+    break;
+  case player::vampireShip:
     break;
   }
 }
@@ -506,11 +514,12 @@ void Player::useShipUltimate() {
   case player::timeShip:
     timeShipUltimate();
     break;
-  case player::vampireShip:
-    break;
   case player::speedShip:
+    speedShipUltimate();
     break;
   case player::parryShip:
+    break;
+  case player::vampireShip:
     break;
   }
 }
@@ -655,6 +664,102 @@ void Player::timeShipUltimate() {
 
   ultimateCounter = 0;
   ultimateTimer = ship::timeShip.ultimateLength;
+}
+
+float Player::getBulletTimeSlow(glm::vec3 bulletPosition) {
+  float distance = glm::distance(bulletPosition, position);
+  if (distance > ship::timeShip.passiveMaxDistance) {
+    return 1.0f;
+  }
+  return ship::timeShip.passiveMaxTimeStop;
+}
+
+void Player::timeShipInput(GLFWwindow *window) {
+  if (abilityTimer <= 0.0f) {
+    return;
+  }
+
+  bool teleport = false;
+
+  glm::vec3 cameraUp = glm::normalize(orientation * global::cameraUp);
+  glm::vec3 cameraRight = glm::normalize(orientation * global::cameraRight);
+  glm::vec3 cameraFront = glm::normalize(orientation * global::cameraFront);
+
+  if (glfwGetKey(window, keys::gameplay.forward) == GLFW_PRESS) {
+    position += cameraFront * ship::timeShip.abilityDistance;
+    teleport = true;
+  }
+
+  if (glfwGetKey(window, keys::gameplay.backward) == GLFW_PRESS) {
+    position -= cameraFront * ship::timeShip.abilityDistance;
+    teleport = true;
+  }
+
+  if (glfwGetKey(window, keys::gameplay.yawLeft) == GLFW_PRESS) {
+    position -= cameraRight * ship::timeShip.abilityDistance;
+    teleport = true;
+  }
+  if (glfwGetKey(window, keys::gameplay.yawRight) == GLFW_PRESS) {
+    position += cameraRight * ship::timeShip.abilityDistance;
+    teleport = true;
+  }
+
+  if (glfwGetKey(window, keys::gameplay.pitchUp) == GLFW_PRESS) {
+    position += cameraUp * ship::timeShip.abilityDistance;
+    teleport = true;
+  }
+  if (glfwGetKey(window, keys::gameplay.pitchDown) == GLFW_PRESS) {
+    position -= cameraUp * ship::timeShip.abilityDistance;
+    teleport = true;
+  }
+
+  if (teleport) {
+    abilityTimer = 0.0f;
+  }
+}
+
+void Player::speedShipUpdate(float dt) {
+  if (abilityCounter < global::maxCounter) {
+    abilityCounter += dt;
+  }
+  if (ultimateCounter < global::maxCounter) {
+    ultimateCounter += dt;
+  }
+
+  if (abilityTimer > 0.0f) {
+    abilityTimer -= dt;
+  }
+
+  if (ultimateTimer > 0.0f) {
+    ultimateTimer -= dt;
+    speedBoost = ship::speedShip.ultimateSpeedBoost;
+    maxSpeed = ship::speedShip.ultimateMaxSpeed;
+  } else {
+    speedBoost = 1.0f;
+    maxSpeed = ship::shipMaxSpeed[ship];
+  }
+
+  float max = ship::speedShip.passiveMaxDamageBoost;
+  float x = speed / ship::speedShip.passiveMaxSpeed;
+  float y = pow(max, pow(x, ship::speedShip.passiveStrength));
+
+  damageBoost = y;
+}
+
+void Player::speedShipAbility() {
+  if (abilityCounter < ship::speedShip.abilityCooldown)
+    return;
+
+  abilityCounter = 0;
+  abilityTimer = ship::speedShip.abilityLength;
+}
+
+void Player::speedShipUltimate() {
+  if (ultimateCounter < ship::speedShip.ultimateCooldown)
+    return;
+
+  ultimateCounter = 0;
+  ultimateTimer = ship::speedShip.ultimateLength;
 }
 
 void Player::takeDamage(float damage) {

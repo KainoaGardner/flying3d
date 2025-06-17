@@ -107,6 +107,8 @@ public:
   glm::vec3 direction;
   glm::quat orientation;
 
+  float spinAngle = 0.0f;
+
   glm::vec3 color;
 
   float speed;
@@ -122,7 +124,7 @@ public:
 
   void killBullet(glm::vec3 playerPosition);
 
-  void draw(Shader shader, float timePassed);
+  void draw(Shader shader);
 
 private:
 };

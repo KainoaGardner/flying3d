@@ -28,7 +28,14 @@ Bullet::Bullet(glm::vec3 positionIn, glm::vec3 rotationIn,
   enemyBullet = enemyBulletIn;
 }
 
-void Bullet::update(float dt) { position += direction * speed * dt; }
+void Bullet::update(float dt) {
+  spinAngle = spinAngle + dt;
+  if (spinAngle > 2 * M_PI) {
+    spinAngle -= 2 * M_PI;
+  }
+
+  position += direction * speed * dt;
+}
 
 void Bullet::killBullet(glm::vec3 playerPosition) {
   float dist = glm::distance(playerPosition, position);
@@ -37,13 +44,13 @@ void Bullet::killBullet(glm::vec3 playerPosition) {
   }
 }
 
-void Bullet::draw(Shader shader, float timePassed) {
+void Bullet::draw(Shader shader) {
   glm::mat4 model = glm::mat4(1.0f);
 
   model = glm::translate(model, position);
   glm::vec3 pitchAxis = glm::rotate(orientation, glm::vec3(1.0f, 0.0f, 0.0f));
   glm::quat spinQuat =
-      glm::angleAxis(timePassed * 25.0f, glm::normalize(pitchAxis));
+      glm::angleAxis(spinAngle * 25.0f, glm::normalize(pitchAxis));
 
   spinQuat = spinQuat * orientation;
 

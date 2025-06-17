@@ -26,10 +26,9 @@ enum Ships {
   normalShip,
   tankShip,
   timeShip,
-  vampireShip,
   speedShip,
   parryShip,
-
+  vampireShip,
 };
 
 struct ShootArgs {
@@ -90,7 +89,11 @@ public:
   float abilityTimer = 0.0f;
   float ultimateTimer = 0.0f;
 
+  float getBulletTimeSlow(glm::vec3 bulletPosition);
+
 private:
+  float maxSpeed;
+
   bool leftGun = false;
   bool canWeaponSwap = true;
 
@@ -137,8 +140,13 @@ private:
   void tankShipUltimate();
 
   void timeShipUpdate(float dt);
+  void timeShipInput(GLFWwindow *window);
   void timeShipAbility();
   void timeShipUltimate();
+
+  void speedShipUpdate(float dt);
+  void speedShipAbility();
+  void speedShipUltimate();
 };
 
 #endif
