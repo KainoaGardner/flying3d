@@ -11,42 +11,42 @@
 
 namespace bullet {
 struct MachineGun {
-  const float cooldown = 0.05f;
-  const float speed = 750.0f;
+  const float cooldown = 5.00f;
+  const float speed = 10.0f;
   const float spread = 50.0f;
   const float bulletSize = 0.5f;
   const float damage = 1.0f;
 };
 
 struct Shotgun {
-  const float cooldown = 0.5f;
-  const float speed = 450.0f;
+  const float cooldown = 50.0f;
+  const float speed = 6.5f;
   const float spread = 5.0f;
   const float bulletSize = 1.0f;
   const float damage = 0.5f;
 };
 
 struct HomingMissile {
-  const float cooldown = 0.2f;
-  const float speed = 300.0f;
-  const float turnSpeed = 2.0f;
+  const float cooldown = 15.0f;
+  const float speed = 3.0f;
+  const float turnSpeed = 0.02f;
   const float spread = 10.0f;
   const float bulletSize = 0.75f;
   const float damage = 5.0f;
 };
 
 struct BombLauncher {
-  const float cooldown = 0.75f;
-  const float speed = 300.0f;
+  const float cooldown = 60.0f;
+  const float speed = 3.0f;
   const float spread = 20.0f;
   const float bulletSize = 3.0f;
   const float damage = 10.0f;
-  const float explosionTimer = 2.0f;
+  const float explosionTimer = 200.0f;
 };
 
 struct ChargeRifle {
-  const float cooldown = 1.0f;
-  const float speed = 450.0f;
+  const float cooldown = 80.0f;
+  const float speed = 10.5f;
   const float spread = 100.0f;
   const float bulletSize = 5.0f;
   const float damage = 30.0f;
@@ -54,35 +54,35 @@ struct ChargeRifle {
 };
 
 struct ZapRifle {
-  const float cooldown = 1.0f;
-  const float speed = 150.0f;
+  const float cooldown = 75.0f;
+  const float speed = 1.5f;
   const float spread = 30.0f;
   const float bulletSize = 1.0f;
   const float damage = 1.0f;
-  const float zapCooldown = 0.5f;
+  const float zapCooldown = 50.0f;
   const float zapRange = 10.0f;
 };
 
 struct Cannon {
-  const float cooldown = 3.0f;
-  const float speed = 450.0f;
+  const float cooldown = 250.0f;
+  const float speed = 10.5f;
   const float spread = 50.0f;
   const float bulletSize = 10.0f;
   const float damage = 50.0f;
 };
 
 struct Laser {
-  const float cooldown = 0.1f;
+  const float cooldown = 10.0f;
   const float size = 1.0f;
   const float length = 100.0f;
   const float damage = 2.0f;
-  const float spinUpTime = 10.0f;
+  const float spinUpTime = 1000.0f;
   const float spinStrength = 10.0f;
   const float maxSpinSpeed = 50.0f;
 };
 
 struct Blade {
-  const float spinTime = 0.5f;
+  const float spinTime = 50.0f;
   const float size = 0.05f;
   const float length = 100.0f;
   const float damage = 30.0f;
@@ -120,7 +120,7 @@ public:
   Bullet(glm::vec3 positionIn, glm::vec3 rotationIn, glm::vec3 directionIn,
          glm::quat orientationIn, glm::vec3 scaleIn, glm::vec3 colorIn,
          float speedIn, float damageIn, bool enemyBulletIn);
-  virtual void update(float dt);
+  virtual void update(float timeSlow);
 
   void killBullet(glm::vec3 playerPosition);
 
@@ -138,7 +138,7 @@ public:
              float speedIn, float damageIn, bool enemyBulletIn,
              float explodeTimerIn);
 
-  void update(float dt) override;
+  void update(float timeSlow) override;
 
   void explode();
 
@@ -152,7 +152,7 @@ public:
                 glm::vec3 scaleIn, glm::vec3 colorIn, float speedIn,
                 float damageIn, bool enemyBulletIn);
 
-  void update(float dt) override;
+  void update(float timeSlow) override;
 
 private:
 };
@@ -163,7 +163,7 @@ public:
             glm::quat orientationIn, glm::vec3 scaleIn, glm::vec3 colorIn,
             float speedIn, float damageIn, bool enemyBulletIn);
 
-  void update(float dt) override;
+  void update(float timeSlow) override;
 
 private:
   float zapCounter = 0.0f;
@@ -189,7 +189,7 @@ public:
 
   Laser(glm::vec3 colorIn, float damageIn);
 
-  void update(float dt, glm::vec3 playerPos, glm::quat playerOrientation);
+  void update(glm::vec3 playerPos, glm::quat playerOrientation);
 
   void draw(Shader shader, float timePassed);
 
@@ -211,7 +211,7 @@ public:
 
   Blade(glm::vec3 scaleIn, glm::vec3 colorIn, float damageIn);
 
-  void update(float dt, glm::vec3 playerPos, glm::quat playerOrientation);
+  void update(glm::vec3 playerPos, glm::quat playerOrientation);
   void draw(Shader shader, float timePassed);
 
 private:

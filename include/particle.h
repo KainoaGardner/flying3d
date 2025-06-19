@@ -10,7 +10,7 @@
 
 namespace particle {
 struct Explosion {
-  const float timer = 1.0f;
+  const float timer = 100.0f;
   const float size = 30.0f;
 };
 
@@ -31,7 +31,7 @@ public:
   Explosion(glm::vec3 positionIn, glm::quat orientationIn, float maxScaleIn,
             float explosionTimerIn);
 
-  void update(float dt);
+  void update();
 
   void draw(Shader shader);
 

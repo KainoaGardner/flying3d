@@ -1,10 +1,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include "../include/player.h"
-#include "../include/bullet.h"
-#include "../include/glm/gtx/quaternion.hpp"
-#include "../include/glm/gtx/string_cast.hpp"
+#include "../include/glm/gtc/quaternion.hpp"
 #include "../include/key.h"
-#include "../include/ships.h"
 
 Player::Player(glm::vec3 positionIn, glm::vec3 worldUpIn, glm::vec3 frontIn,
                glm::quat orientationIn, unsigned int shipIn,
@@ -50,51 +47,50 @@ glm::mat4 Player::getViewMatrix(glm::vec3 bossPosition) {
   return view;
 }
 
-void Player::handleKeyboardInput(GLFWwindow *window, float dt) {
-  float cameraSpeed = ship::shipTurnSpeed[ship] * dt;
+void Player::handleKeyboardInput() {
+  float cameraSpeed = ship::shipTurnSpeed[ship];
   float xOffset = 0.0f;
   float yOffset = 0.0f;
   float zOffset = 0.0f;
 
-  if (glfwGetKey(window, keys::gameplay.forward) == GLFW_PRESS) {
-    speed += addSpeed(speed, maxSpeed, ship::shipAcceleration[ship], dt) *
-             speedBoost;
+  if (keys::actionPressed[keys::forward]) {
+    speed +=
+        addSpeed(speed, maxSpeed, ship::shipAcceleration[ship]) * speedBoost;
   }
 
-  if (glfwGetKey(window, keys::gameplay.backward) == GLFW_PRESS) {
-    speed +=
-        subtractSpeed(speed, ship::shipBreakStrength[ship], dt) * speedBoost;
+  if (keys::actionPressed[keys::backward]) {
+    speed += subtractSpeed(speed, ship::shipBreakStrength[ship]) * speedBoost;
     if (speed < 0.0f)
       speed = 0.0f;
   }
 
-  if (glfwGetKey(window, keys::gameplay.pitchUp) == GLFW_PRESS) {
+  if (keys::actionPressed[keys::pitchUp]) {
     yOffset += cameraSpeed;
   }
-  if (glfwGetKey(window, keys::gameplay.pitchDown) == GLFW_PRESS) {
+  if (keys::actionPressed[keys::pitchDown]) {
     yOffset -= cameraSpeed;
   }
 
-  if (glfwGetKey(window, keys::gameplay.rollRight) == GLFW_PRESS) {
+  if (keys::actionPressed[keys::rollRight]) {
     zOffset += cameraSpeed * 1.5f;
   }
-  if (glfwGetKey(window, keys::gameplay.rollLeft) == GLFW_PRESS) {
+  if (keys::actionPressed[keys::rollLeft]) {
     zOffset -= cameraSpeed * 1.5f;
   }
 
-  if (glfwGetKey(window, keys::gameplay.yawLeft) == GLFW_PRESS) {
+  if (keys::actionPressed[keys::yawLeft]) {
     xOffset -= cameraSpeed * 0.5f;
   }
-  if (glfwGetKey(window, keys::gameplay.yawRight) == GLFW_PRESS) {
+  if (keys::actionPressed[keys::yawRight]) {
     xOffset += cameraSpeed * 0.5f;
   }
 
-  if (glfwGetKey(window, keys::gameplay.shoot) == GLFW_PRESS) {
+  if (keys::actionPressed[keys::shoot]) {
     shootBullet();
 
     if (weapons[weaponIndex] == player::chargeRifle) {
       if (shootCounter < global::maxCounter)
-        shootCounter += dt * shootSpeedBoost;
+        shootCounter += 1.0f * shootSpeedBoost;
     }
   } else {
     if (weapons[weaponIndex] == player::chargeRifle)
@@ -107,32 +103,32 @@ void Player::handleKeyboardInput(GLFWwindow *window, float dt) {
     laser->on = false;
   }
 
-  if (glfwGetKey(window, keys::camera.back) == GLFW_PRESS) {
+  if (keys::actionPressed[keys::backCamera]) {
     viewDirection = 2;
-  } else if (glfwGetKey(window, keys::camera.boss) == GLFW_PRESS) {
+  } else if (keys::actionPressed[keys::bossCamera]) {
     viewDirection = 3;
-  } else if (glfwGetKey(window, keys::camera.thirdPerson) == GLFW_PRESS) {
+  } else if (keys::actionPressed[keys::thirdPersonCamera]) {
     viewDirection = 4;
   } else {
     viewDirection = 1;
   }
 
-  if (glfwGetKey(window, keys::gameplay.switchWeapon) == GLFW_PRESS &&
-      canWeaponSwap) {
+  if (keys::actionPressed[keys::switchWeapon] && canWeaponSwap) {
     weaponIndex = (weaponIndex + 1) % 2;
-    canWeaponSwap = false;
+    keys::actionPressed[keys::switchWeapon] = false;
+    // canWeaponSwap = false;
     shootCounter = 0.0f;
     blade->spinCounter = 0.0f;
   }
-  if (glfwGetKey(window, keys::gameplay.switchWeapon) != GLFW_PRESS) {
-    canWeaponSwap = true;
-  }
+  // if (keys::actionPressed[keys::switchWeapon]) {
+  //   canWeaponSwap = true;
+  // }
 
-  if (glfwGetKey(window, keys::gameplay.ability) == GLFW_PRESS) {
+  if (keys::actionPressed[keys::ability]) {
     useShipAbility();
   }
 
-  if (glfwGetKey(window, keys::gameplay.ultimate) == GLFW_PRESS) {
+  if (keys::actionPressed[keys::ultimate]) {
     useShipUltimate();
   }
 
@@ -151,21 +147,24 @@ void Player::handleKeyboardInput(GLFWwindow *window, float dt) {
   orientation = glm::normalize(qRoll * qYaw * qPitch * orientation);
 
   if (ship == player::timeShip) {
-    timeShipInput(window);
+    timeShipInput();
+  }
+  if (ship == player::speedShip) {
+    speedShipInput();
   }
 
   updateCamera();
 }
 
-void Player::update(float dt) {
-  updateCameraMovement(dt);
+void Player::update() {
+  updateCameraMovement();
   if (weapons[weaponIndex] != player::chargeRifle &&
       shootCounter < global::maxCounter)
-    shootCounter += dt * shootSpeedBoost;
+    shootCounter += 1.0f * shootSpeedBoost;
 
-  shipUpdate(dt);
+  shipUpdate();
 
-  blade->update(dt, position, orientation);
+  blade->update(position, orientation);
 
   if (!(ship == player::tankShip && abilityTimer > 0.0f)) {
 
@@ -184,12 +183,12 @@ void Player::update(float dt) {
       // laser->update(dt,
       // shootArgs.bulletPosition + laserFront * LASER_LENGTH / 2.0f,
       // orientation, shootArgs.direction);
-      laser->update(dt, shootArgs.bulletPosition, laserOrientation);
+      laser->update(shootArgs.bulletPosition, laserOrientation);
     }
 
     if (weapons[weaponIndex] == player::swingBlade) {
       if (blade->spinCounter >= 0.0f) {
-        blade->spinCounter -= dt * shootSpeedBoost;
+        blade->spinCounter -= 1.0f * shootSpeedBoost;
       }
     }
   }
@@ -201,30 +200,29 @@ void Player::updateCamera() {
   up = glm::normalize(glm::cross(right, front));
 }
 
-void Player::updateCameraMovement(float dt) {
+void Player::updateCameraMovement() {
   front = glm::normalize(orientation * global::cameraFront);
 
-  speed += applyDrag(speed, ship::shipDragStrength[ship], dt);
+  speed += applyDrag(speed, ship::shipDragStrength[ship]);
 
   fov = 45.0f + (speed / ship::shipMaxSpeed[ship]) * 20.0f;
 
   float vel = speed;
 
-  position += front * dt * vel;
+  position += front * vel;
 }
 
-float Player::addSpeed(float currentSpeed, float maxSpeed, float acceleration,
-                       float dt) {
+float Player::addSpeed(float currentSpeed, float maxSpeed, float acceleration) {
   float dSpeed = maxSpeed - currentSpeed;
-  return acceleration * dSpeed * dt;
+  return acceleration * dSpeed;
 }
 
-float Player::subtractSpeed(float currentSpeed, float brakeStrength, float dt) {
-  return -brakeStrength * currentSpeed * dt;
+float Player::subtractSpeed(float currentSpeed, float brakeStrength) {
+  return -brakeStrength * currentSpeed;
 }
 
-float Player::applyDrag(float currentSpeed, float dragRate, float dt) {
-  return -dragRate * currentSpeed * dt;
+float Player::applyDrag(float currentSpeed, float dragRate) {
+  return -dragRate * currentSpeed;
 }
 
 void Player::shootBullet() {
@@ -461,19 +459,31 @@ void Player::shootBlade() {
   }
 }
 
-void Player::shipUpdate(float dt) {
+void Player::shipUpdate() {
+  if (abilityCounter < global::maxCounter)
+    abilityCounter += 1.0f;
+
+  if (ultimateCounter < global::maxCounter)
+    ultimateCounter += 1.0f;
+
+  if (abilityTimer > 0.0f)
+    abilityTimer -= 1.0f;
+
+  if (ultimateTimer > 0.0f)
+    ultimateTimer -= 1.0f;
+
   switch (ship) {
   case player::normalShip:
-    normalShipUpdate(dt);
+    normalShipUpdate();
     break;
   case player::tankShip:
-    tankShipUpdate(dt);
+    tankShipUpdate();
     break;
   case player::timeShip:
-    timeShipUpdate(dt);
+    timeShipUpdate();
     break;
   case player::speedShip:
-    speedShipUpdate(dt);
+    speedShipUpdate();
     break;
   case player::parryShip:
     break;
@@ -524,29 +534,17 @@ void Player::useShipUltimate() {
   }
 }
 
-void Player::normalShipUpdate(float dt) {
-  if (abilityCounter < global::maxCounter) {
-    abilityCounter += dt;
-  }
-  if (ultimateCounter < global::maxCounter) {
-    ultimateCounter += dt;
-  }
-
+void Player::normalShipUpdate() {
   if (abilityTimer > 0.0f) {
     float percent = (ship::normalShip.abilityLength - abilityTimer) /
                     ship::normalShip.abilityLength;
     float y = exp(-ship::normalShip.abilityStrength * percent);
 
     speed = ship::normalShip.abilitySpeed * y + beforeDashSpeed;
-    abilityTimer -= dt;
-  }
-
-  if (ultimateTimer > 0.0f) {
-    ultimateTimer -= dt;
   }
 
   if (notHitCounter < global::maxCounter) {
-    notHitCounter += dt;
+    notHitCounter += 1.0f;
   }
 
   float x = notHitCounter / ship::normalShip.maxPassiveTime;
@@ -579,22 +577,7 @@ void Player::normalShipUltimate() {
   ultimateTimer = ship::normalShip.ultimateLength;
 }
 
-void Player::tankShipUpdate(float dt) {
-  if (abilityCounter < global::maxCounter) {
-    abilityCounter += dt;
-  }
-  if (ultimateCounter < global::maxCounter) {
-    ultimateCounter += dt;
-  }
-
-  if (abilityTimer > 0.0f) {
-    abilityTimer -= dt;
-  }
-
-  if (ultimateTimer > 0.0f) {
-    ultimateTimer -= dt;
-  }
-
+void Player::tankShipUpdate() {
   if (ultimateTimer > 0.0f) {
     damageReductionAmount = 0.0f;
   } else if (abilityTimer > 0.0f) {
@@ -604,7 +587,7 @@ void Player::tankShipUpdate(float dt) {
   }
 
   if (notHitCounter < global::maxCounter) {
-    notHitCounter += dt;
+    notHitCounter += 1.0f;
   }
 
   if (speed < ship::tankShip.passiveMinSpeed) {
@@ -630,20 +613,8 @@ void Player::tankShipUltimate() {
   ultimateTimer = ship::tankShip.ultimateLength;
 }
 
-void Player::timeShipUpdate(float dt) {
-  if (abilityCounter < global::maxCounter) {
-    abilityCounter += dt;
-  }
-  if (ultimateCounter < global::maxCounter) {
-    ultimateCounter += dt;
-  }
-
-  if (abilityTimer > 0.0f) {
-    abilityTimer -= dt;
-  }
-
+void Player::timeShipUpdate() {
   if (ultimateTimer > 0.0f) {
-    ultimateTimer -= dt;
     timeSlowAmount = 0.0f;
   } else {
     timeSlowAmount = 1.0f;
@@ -674,7 +645,7 @@ float Player::getBulletTimeSlow(glm::vec3 bulletPosition) {
   return ship::timeShip.passiveMaxTimeStop;
 }
 
-void Player::timeShipInput(GLFWwindow *window) {
+void Player::timeShipInput() {
   if (abilityTimer <= 0.0f) {
     return;
   }
@@ -685,31 +656,37 @@ void Player::timeShipInput(GLFWwindow *window) {
   glm::vec3 cameraRight = glm::normalize(orientation * global::cameraRight);
   glm::vec3 cameraFront = glm::normalize(orientation * global::cameraFront);
 
-  if (glfwGetKey(window, keys::gameplay.forward) == GLFW_PRESS) {
+  if (keys::actionPressed[keys::forward]) {
     position += cameraFront * ship::timeShip.abilityDistance;
+    keys::actionPressed[keys::forward] = false;
     teleport = true;
   }
 
-  if (glfwGetKey(window, keys::gameplay.backward) == GLFW_PRESS) {
+  if (keys::actionPressed[keys::backward]) {
     position -= cameraFront * ship::timeShip.abilityDistance;
+    keys::actionPressed[keys::backward] = false;
     teleport = true;
   }
 
-  if (glfwGetKey(window, keys::gameplay.yawLeft) == GLFW_PRESS) {
+  if (keys::actionPressed[keys::yawLeft]) {
     position -= cameraRight * ship::timeShip.abilityDistance;
+    keys::actionPressed[keys::yawLeft] = false;
     teleport = true;
   }
-  if (glfwGetKey(window, keys::gameplay.yawRight) == GLFW_PRESS) {
+  if (keys::actionPressed[keys::yawRight]) {
     position += cameraRight * ship::timeShip.abilityDistance;
+    keys::actionPressed[keys::yawRight] = false;
     teleport = true;
   }
 
-  if (glfwGetKey(window, keys::gameplay.pitchUp) == GLFW_PRESS) {
+  if (keys::actionPressed[keys::pitchUp]) {
     position += cameraUp * ship::timeShip.abilityDistance;
+    keys::actionPressed[keys::pitchUp] = false;
     teleport = true;
   }
-  if (glfwGetKey(window, keys::gameplay.pitchDown) == GLFW_PRESS) {
+  if (keys::actionPressed[keys::pitchDown]) {
     position -= cameraUp * ship::timeShip.abilityDistance;
+    keys::actionPressed[keys::pitchDown] = false;
     teleport = true;
   }
 
@@ -718,20 +695,8 @@ void Player::timeShipInput(GLFWwindow *window) {
   }
 }
 
-void Player::speedShipUpdate(float dt) {
-  if (abilityCounter < global::maxCounter) {
-    abilityCounter += dt;
-  }
-  if (ultimateCounter < global::maxCounter) {
-    ultimateCounter += dt;
-  }
-
-  if (abilityTimer > 0.0f) {
-    abilityTimer -= dt;
-  }
-
+void Player::speedShipUpdate() {
   if (ultimateTimer > 0.0f) {
-    ultimateTimer -= dt;
     speedBoost = ship::speedShip.ultimateSpeedBoost;
     maxSpeed = ship::speedShip.ultimateMaxSpeed;
   } else {
@@ -760,6 +725,72 @@ void Player::speedShipUltimate() {
 
   ultimateCounter = 0;
   ultimateTimer = ship::speedShip.ultimateLength;
+}
+
+void Player::speedShipInput() {
+  if (abilityTimer <= 0.0f) {
+    return;
+  }
+
+  bool turn = false;
+
+  glm::vec3 cameraUp = glm::normalize(orientation * global::cameraUp);
+  glm::vec3 cameraRight = glm::normalize(orientation * global::cameraRight);
+  glm::vec3 cameraFront = glm::normalize(orientation * global::cameraFront);
+
+  if (keys::actionPressed[keys::yawLeft]) {
+    glm::quat rotate =
+        glm::angleAxis(glm::radians(ship::speedShip.abilityAngle), cameraUp);
+    orientation = glm::normalize(rotate * orientation);
+    keys::actionPressed[keys::yawLeft] = false;
+    turn = true;
+  }
+  if (keys::actionPressed[keys::yawRight]) {
+    glm::quat rotate =
+        glm::angleAxis(glm::radians(-ship::speedShip.abilityAngle), cameraUp);
+    orientation = glm::normalize(rotate * orientation);
+
+    keys::actionPressed[keys::yawRight] = false;
+    turn = true;
+  }
+
+  if (keys::actionPressed[keys::pitchUp]) {
+    glm::quat rotate = glm::angleAxis(
+        glm::radians(-ship::speedShip.abilityAngle), cameraRight);
+    orientation = glm::normalize(rotate * orientation);
+
+    keys::actionPressed[keys::pitchUp] = false;
+    turn = true;
+  }
+  if (keys::actionPressed[keys::pitchDown]) {
+    glm::quat rotate = glm::angleAxis(
+        glm::radians(-ship::speedShip.abilityAngle), cameraRight);
+    orientation = glm::normalize(rotate * orientation);
+
+    keys::actionPressed[keys::pitchDown] = false;
+    turn = true;
+  }
+
+  if (keys::actionPressed[keys::rollLeft]) {
+    glm::quat rotate = glm::angleAxis(
+        glm::radians(-ship::speedShip.abilityAngle), cameraFront);
+    orientation = glm::normalize(rotate * orientation);
+
+    keys::actionPressed[keys::rollLeft] = false;
+    turn = true;
+  }
+
+  if (keys::actionPressed[keys::rollRight]) {
+    glm::quat rotate = glm::angleAxis(
+        glm::radians(-ship::speedShip.abilityAngle), cameraFront);
+    orientation = glm::normalize(rotate * orientation);
+
+    keys::actionPressed[keys::rollRight] = false;
+    turn = true;
+  }
+
+  if (turn)
+    abilityTimer = 0.0f;
 }
 
 void Player::takeDamage(float damage) {

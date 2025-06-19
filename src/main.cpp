@@ -6,6 +6,7 @@
 #include "../include/config.h"
 #include "../include/geomety.h"
 #include "../include/glm/gtc/type_ptr.hpp"
+#include "../include/key.h"
 #include "../include/particle.h"
 #include "../include/player.h"
 #include "../include/shader.h"
@@ -17,9 +18,14 @@
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window, Player *player);
+void keyInputCallback(GLFWwindow *window, int key, int scancode, int action,
+                      int mods);
 
-float dt = 0.0f;
-float lastFrame = 0.0f;
+glm::vec3 bossPos = glm::vec3(0.0f);
+float bossShootCooldown = 10.0f;
+float bossShootCounter = 0.0f;
+
+void update(Player *player);
 
 int main() {
   glfwInit();
@@ -28,7 +34,7 @@ int main() {
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-  unsigned int weapons[2] = {player::machineGun, player::bombLauncher};
+  unsigned int weapons[2] = {player::swingBlade, player::laserCannon};
   GLFWwindow *window =
       glfwCreateWindow(config::gameConfig.width, config::gameConfig.height,
                        "Learn Opengl", NULL, NULL);
@@ -45,6 +51,7 @@ int main() {
 
   glfwMakeContextCurrent(window);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+  glfwSetKeyCallback(window, keyInputCallback);
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   // glfwSetCursorPosCallback(window, mouseInputCallback);
   // glfwSetScrollCallback(window, scrollInputCallback);
@@ -151,39 +158,21 @@ int main() {
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  float bossShootCooldown = 0.1f;
-  float bossShootCounter = 0.0f;
   float startTime = glfwGetTime();
   while (!glfwWindowShouldClose(window)) {
-    float currFrame = glfwGetTime();
-    dt = currFrame - lastFrame;
-    lastFrame = currFrame;
-
+    float currentTime = glfwGetTime();
     processInput(window, &player);
+
+    if (currentTime - config::gameConfig.lastUpdateTime >=
+        config::gameConfig.logicIntervalTime) {
+      update(&player);
+      config::gameConfig.lastUpdateTime += config::gameConfig.logicIntervalTime;
+    }
 
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
-
-    player.update(dt);
-    // camera.updateCameraMovement(dt);
-
-    glm::vec3 bossPos = glm::vec3(0.0f);
-    bossShootCounter += dt * player.timeSlowAmount;
-    if (bossShootCounter >= bossShootCooldown) {
-      glm::vec3 toPlayer = glm::normalize(player.position - bossPos);
-      toPlayer.x += ((float(rand() % 100) / 100.0) - 0.5) / 5.0;
-      toPlayer.y += ((float(rand() % 100) / 100.0) - 0.5) / 5.0;
-      toPlayer.z += ((float(rand() % 100) / 100.0) - 0.5) / 5.0;
-
-      Projectile projectile;
-      projectile.bullet = std::make_unique<Bullet>(
-          bossPos, toPlayer, toPlayer, global::cameraOrientation,
-          glm::vec3(5.0f), glm::vec3(1.0f, 0.0f, 0.0f), 75.0f, 1.0f, true);
-      projectiles.push_back(std::move(projectile));
-      bossShootCounter = 0.0f;
-    }
 
     float timePassed = glfwGetTime() - startTime;
     shader.setFloat("uTime", timePassed);
@@ -242,23 +231,6 @@ int main() {
     for (unsigned int i = 0; i < projectiles.size(); i++) {
       Projectile &projectile = projectiles[i];
       if (projectile.bullet) {
-        if (projectile.bullet->enemyBullet) {
-          if (player.ship == player::timeShip) {
-            float timeSlowDT =
-                player.getBulletTimeSlow(projectile.bullet->position);
-            projectile.bullet->update(dt * timeSlowDT * player.timeSlowAmount);
-          } else {
-            projectile.bullet->update(dt * player.timeSlowAmount);
-          }
-        } else {
-          projectile.bullet->update(dt);
-        }
-
-        projectile.bullet->killBullet(player.position);
-        if (!projectile.bullet->alive) {
-          projectiles.erase(projectiles.begin() + i);
-          continue;
-        };
         projectile.bullet->draw(bulletShader);
       }
     }
@@ -266,11 +238,6 @@ int main() {
     for (unsigned int i = 0; i < particles.size(); i++) {
       Particle &particle = particles[i];
       if (particle.explosion) {
-        particle.explosion->update(dt);
-        if (!particle.explosion->alive) {
-          particles.erase(particles.begin() + i);
-          continue;
-        };
         particle.explosion->draw(bulletShader);
       }
     }
@@ -331,5 +298,75 @@ void processInput(GLFWwindow *window, Player *player) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, true);
   }
-  player->handleKeyboardInput(window, dt);
 }
+
+void keyInputCallback(GLFWwindow *window, int key, int scancode, int action,
+                      int mods) {
+
+  auto it = keys::keyToAction.find(key);
+  if (it != keys::keyToAction.end()) {
+    const keys::actions actionName = it->second;
+
+    if (action == GLFW_PRESS) {
+
+      keys::actionPressed[actionName] = true;
+    } else if (action == GLFW_RELEASE) {
+      keys::actionPressed[actionName] = false;
+    }
+  }
+}
+
+void update(Player *player) {
+  player->update();
+  player->handleKeyboardInput();
+
+  bossShootCounter += 1.0f * player->timeSlowAmount;
+  if (bossShootCounter >= bossShootCooldown) {
+    glm::vec3 toPlayer = glm::normalize(player->position - bossPos);
+    toPlayer.x += ((float(rand() % 100) / 100.0) - 0.5) / 5.0;
+    toPlayer.y += ((float(rand() % 100) / 100.0) - 0.5) / 5.0;
+    toPlayer.z += ((float(rand() % 100) / 100.0) - 0.5) / 5.0;
+
+    Projectile projectile;
+    projectile.bullet = std::make_unique<Bullet>(
+        bossPos, toPlayer, toPlayer, global::cameraOrientation, glm::vec3(5.0f),
+        glm::vec3(1.0f, 0.0f, 0.0f), 1.0f, 1.0f, true);
+    projectiles.push_back(std::move(projectile));
+    bossShootCounter = 0.0f;
+  }
+
+  for (unsigned int i = 0; i < projectiles.size(); i++) {
+    Projectile &projectile = projectiles[i];
+    if (projectile.bullet) {
+      if (projectile.bullet->enemyBullet) {
+        if (player->ship == player::timeShip) {
+          float timeSlow =
+              player->getBulletTimeSlow(projectile.bullet->position) *
+              player->timeSlowAmount;
+          projectile.bullet->update(timeSlow);
+        } else {
+          projectile.bullet->update(1.0f);
+        }
+      } else {
+        projectile.bullet->update(1.0f);
+      }
+
+      projectile.bullet->killBullet(player->position);
+      if (!projectile.bullet->alive) {
+        projectiles.erase(projectiles.begin() + i);
+        continue;
+      };
+    }
+  }
+
+  for (unsigned int i = 0; i < particles.size(); i++) {
+    Particle &particle = particles[i];
+    if (particle.explosion) {
+      particle.explosion->update();
+      if (!particle.explosion->alive) {
+        particles.erase(particles.begin() + i);
+        continue;
+      };
+    }
+  }
+};

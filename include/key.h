@@ -1,33 +1,30 @@
-#ifndef GEOMETRY_H
-#define GEOMETRY_H
+#ifndef KEY_H
+#define KEY_H
 
 #include <GLFW/glfw3.h>
+#include <unordered_map>
 
 namespace keys {
-struct Gameplay {
-  unsigned int forward;
-  unsigned int backward;
-  unsigned int pitchUp;
-  unsigned int pitchDown;
-  unsigned int yawRight;
-  unsigned int yawLeft;
-  unsigned int rollRight;
-  unsigned int rollLeft;
-
-  unsigned int shoot;
-  unsigned int switchWeapon;
-  unsigned int ability;
-  unsigned int ultimate;
+enum actions {
+  forward,
+  backward,
+  pitchUp,
+  pitchDown,
+  yawRight,
+  yawLeft,
+  rollRight,
+  rollLeft,
+  shoot,
+  switchWeapon,
+  ability,
+  ultimate,
+  backCamera,
+  thirdPersonCamera,
+  bossCamera,
 };
 
-struct Camera {
-  unsigned int back;
-  unsigned int thirdPerson;
-  unsigned int boss;
-};
-
-extern Gameplay gameplay;
-extern Camera camera;
+extern std::unordered_map<unsigned int, actions> keyToAction;
+extern std::unordered_map<actions, bool> actionPressed;
 
 } // namespace keys
 
