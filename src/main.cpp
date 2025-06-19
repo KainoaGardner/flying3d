@@ -41,7 +41,7 @@ int main() {
 
   Player player(glm::vec3(0.0f, 10.0f, 0.0f), global::cameraUp,
                 global::cameraFront, global::cameraOrientation,
-                player::speedShip, weapons);
+                player::timeShip, weapons);
 
   if (window == NULL) {
     std::cout << "Failed to create GLFW window" << std::endl;

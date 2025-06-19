@@ -1,1 +1,3 @@
-./bin/run
+bin/
+*.o
+*.obj
