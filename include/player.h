@@ -156,6 +156,8 @@ private:
   void vampireShipUpdate();
   void vampireShipAbility();
   void vampireShipUltimate();
+
+  void displayScreen();
 };
 
 #endif

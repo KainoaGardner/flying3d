@@ -305,7 +305,8 @@ void Player::shootMachineGun() {
   projectile.bullet = std::make_unique<Bullet>(
       shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
       shootArgs.direction, orientation, scale, color,
-      bullet::machineGun.speed + speed, bullet::machineGun.damage, false);
+      bullet::machineGun.speed + speed, bullet::machineGun.damage * damageBoost,
+      false);
   projectiles.push_back(std::move(projectile));
 }
 
@@ -324,7 +325,8 @@ void Player::shootShotGun() {
     projectile.bullet = std::make_unique<Bullet>(
         shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
         shootArgs.direction, orientation, scale, color,
-        bullet::shotgun.speed + speed, bullet::shotgun.damage, false);
+        bullet::shotgun.speed + speed, bullet::shotgun.damage * damageBoost,
+        false);
     projectiles.push_back(std::move(projectile));
   }
 }
@@ -344,7 +346,8 @@ void Player::shootHomingMissile() {
   projectile.bullet = std::make_unique<HomingMissile>(
       shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
       shootArgs.direction, orientation, scale, color,
-      bullet::homingMissile.speed + speed, bullet::homingMissile.damage, false);
+      bullet::homingMissile.speed + speed,
+      bullet::homingMissile.damage * damageBoost, false);
   projectiles.push_back(std::move(projectile));
 }
 
@@ -364,7 +367,8 @@ void Player::shootBombLauncher() {
   projectile.bullet = std::make_unique<BombBullet>(
       shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
       shootArgs.direction, orientation, scale, color,
-      bullet::bombLauncher.speed + speed, bullet::bombLauncher.damage, false,
+      bullet::bombLauncher.speed + speed,
+      bullet::bombLauncher.damage * damageBoost, false,
       bullet::bombLauncher.explosionTimer);
   projectiles.push_back(std::move(projectile));
 }
@@ -404,7 +408,7 @@ void Player::shootChargeRifle() {
   float speed =
       glm::clamp(bullet::chargeRifle.speed * charge,
                  bullet::chargeRifle.speed / 2.0f, bullet::chargeRifle.speed);
-  float damage = bullet::chargeRifle.damage * charge;
+  float damage = bullet::chargeRifle.damage * charge * damageBoost;
 
   Projectile projectile;
   projectile.bullet =
@@ -428,7 +432,8 @@ void Player::shootZapRifle() {
   projectile.bullet = std::make_unique<ZapBullet>(
       shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
       shootArgs.direction, orientation, scale, color,
-      bullet::zapRifle.speed + speed, bullet::zapRifle.damage, false);
+      bullet::zapRifle.speed + speed, bullet::zapRifle.damage * damageBoost,
+      false);
   projectiles.push_back(std::move(projectile));
 }
 
@@ -447,7 +452,7 @@ void Player::shootCannon() {
   projectile.bullet = std::make_unique<Bullet>(
       shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
       shootArgs.direction, orientation, scale, color,
-      bullet::cannon.speed + speed, bullet::cannon.damage, false);
+      bullet::cannon.speed + speed, bullet::cannon.damage * damageBoost, false);
   projectiles.push_back(std::move(projectile));
 }
 
@@ -841,15 +846,25 @@ void Player::parryShipUltimate() {
 }
 
 void Player::vampireShipUpdate() {
+
   if (ultimateTimer > 0.0f) {
     healShip(ship::vampireShip.ultimateHealAmount);
   }
 
   float finalDamage = 0.0f;
-  if (keys::actionPressed[keys::ability]) {
+  if (keys::actionPressed[keys::ability] &&
+      health - ship::vampireShip.abilityHealthCost >= 0.0f) {
     finalDamage += ship::vampireShip.abilityDamageBoost;
     takeDamage(ship::vampireShip.abilityHealthCost);
   }
+
+  float max = ship::vampireShip.passiveMaxDamageBoost;
+  float x = 1.0f - (health / ship::vampireShip.health);
+  float y = pow(max, pow(x, ship::vampireShip.passiveStrength));
+
+  finalDamage += y;
+
+  damageBoost = finalDamage;
 }
 
 void Player::vampireShipAbility() {}
@@ -873,3 +888,5 @@ void Player::healShip(float addHealth) {
     health += addHealth;
   }
 }
+
+void Player::display() {}

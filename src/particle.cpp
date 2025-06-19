@@ -26,15 +26,15 @@ void Explosion::update() {
   }
 }
 
-void Explosion::draw(Shader shader) {
+void Explosion::draw(Shader *shader) {
   glm::mat4 model = glm::mat4(1.0f);
 
   model = glm::translate(model, position);
   model *= glm::mat4_cast(orientation);
   model = glm::scale(model, scale);
 
-  shader.setMatrix4fv("uModel", model);
-  shader.setVec3f("uColor", glm::vec3(1.0f));
+  shader->setMatrix4fv("uModel", model);
+  shader->setVec3f("uColor", glm::vec3(1.0f));
 
   glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 }

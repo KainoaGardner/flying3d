@@ -33,7 +33,7 @@ public:
 
   void update();
 
-  void draw(Shader shader);
+  void draw(Shader *shader);
 
 private:
   float explosionCounter = 0.0f;

@@ -44,7 +44,7 @@ void Bullet::killBullet(glm::vec3 playerPosition) {
   }
 }
 
-void Bullet::draw(Shader shader) {
+void Bullet::draw(Shader *shader) {
   glm::mat4 model = glm::mat4(1.0f);
 
   model = glm::translate(model, position);
@@ -58,8 +58,8 @@ void Bullet::draw(Shader shader) {
 
   model = glm::scale(model, scale);
 
-  shader.setMatrix4fv("uModel", model);
-  shader.setVec3f("uColor", color);
+  shader->setMatrix4fv("uModel", model);
+  shader->setVec3f("uColor", color);
 
   glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 }
@@ -162,7 +162,7 @@ void Laser::update(glm::vec3 playerPos, glm::quat playerOrientation) {
   // check hit do damage
 }
 
-void Laser::draw(Shader shader, float timePassed) {
+void Laser::draw(Shader *shader, float timePassed) {
   if (!on)
     return;
 
@@ -179,8 +179,8 @@ void Laser::draw(Shader shader, float timePassed) {
 
   model = glm::scale(model, scale);
 
-  shader.setMatrix4fv("uModel", model);
-  shader.setVec3f("uColor", color);
+  shader->setMatrix4fv("uModel", model);
+  shader->setVec3f("uColor", color);
 
   glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 }
@@ -202,7 +202,7 @@ void Blade::update(glm::vec3 playerPos, glm::quat playerOrientation) {
   // check hit do damage
 }
 
-void Blade::draw(Shader shader, float timePassed) {
+void Blade::draw(Shader *shader, float timePassed) {
   if (spinCounter <= 0.0f) {
     return;
   }
@@ -229,8 +229,8 @@ void Blade::draw(Shader shader, float timePassed) {
 
   model = glm::scale(model, scale);
 
-  shader.setMatrix4fv("uModel", model);
-  shader.setVec3f("uColor", color);
+  shader->setMatrix4fv("uModel", model);
+  shader->setVec3f("uColor", color);
 
   glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
@@ -244,8 +244,8 @@ void Blade::draw(Shader shader, float timePassed) {
 
   model = glm::scale(model, scale);
 
-  shader.setMatrix4fv("uModel", model);
-  shader.setVec3f("uColor", color);
+  shader->setMatrix4fv("uModel", model);
+  shader->setVec3f("uColor", color);
 
   glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 }

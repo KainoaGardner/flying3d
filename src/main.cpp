@@ -4,6 +4,7 @@
 
 #include "../include/bullet.h"
 #include "../include/config.h"
+#include "../include/display.h"
 #include "../include/geomety.h"
 #include "../include/glm/gtc/type_ptr.hpp"
 #include "../include/key.h"
@@ -34,14 +35,14 @@ int main() {
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-  unsigned int weapons[2] = {player::swingBlade, player::laserCannon};
+  unsigned int weapons[2] = {player::machineGun, player::shotGun};
   GLFWwindow *window =
       glfwCreateWindow(config::gameConfig.width, config::gameConfig.height,
                        "Learn Opengl", NULL, NULL);
 
   Player player(glm::vec3(0.0f, 10.0f, 0.0f), global::cameraUp,
                 global::cameraFront, global::cameraOrientation,
-                player::parryShip, weapons);
+                player::vampireShip, weapons);
 
   if (window == NULL) {
     std::cout << "Failed to create GLFW window" << std::endl;
@@ -191,33 +192,17 @@ int main() {
                     glm::value_ptr(view));
     glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4),
                     glm::value_ptr(projection));
-
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-    glDepthFunc(GL_LEQUAL);
-    glDepthMask(GL_FALSE);
-
-    glBindVertexArray(skyboxGeometry.vao);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTexture);
-
-    cubemapShader.use();
-    cubemapShader.setMatrix4fv("uProjection", projection);
-    glm::mat4 noTranslateView = glm::mat4(glm::mat3(view));
-
-    cubemapShader.setMatrix4fv("uView", noTranslateView);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-
-    glBindVertexArray(cubeGeometry.vao);
-    glDepthMask(GL_TRUE);
-    glDepthFunc(GL_LESS);
+    // display
+    displayCubeMap(&cubemapShader, skyboxGeometry, skyboxTexture, view,
+                   projection);
 
     glm::mat4 model = glm::mat4(1.0f);
-    // model = glm::translate(model, glm::vec3(0.0f, -1.0f, 0.0f));
-    // model = glm::rotate(model, timePassed * 3.0f,
-    //                     glm::normalize(glm::vec3(2.0f, 0.0f, 1.0)));
     model = glm::scale(model, glm::vec3(50.0f));
 
+    // display boss
+    glBindVertexArray(cubeGeometry.vao);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, cubeTexture);
 
@@ -225,41 +210,13 @@ int main() {
     shader.setMatrix4fv("uModel", model);
 
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+    // display enemies
 
-    bulletShader.use();
+    displayBullets(&bulletShader, cubeGeometry, beamGeometry, &player,
+                   timePassed);
+    displayParticles(&bulletShader, cubeGeometry);
 
-    for (unsigned int i = 0; i < projectiles.size(); i++) {
-      Projectile &projectile = projectiles[i];
-      if (projectile.bullet) {
-        projectile.bullet->draw(bulletShader);
-      }
-    }
-
-    for (unsigned int i = 0; i < particles.size(); i++) {
-      Particle &particle = particles[i];
-      if (particle.explosion) {
-        particle.explosion->draw(bulletShader);
-      }
-    }
-
-    glBindVertexArray(beamGeometry.vao);
-    if (!(player.ship == player::tankShip && player.abilityTimer > 0.0f)) {
-      player.laser->draw(bulletShader, timePassed);
-
-      player.blade->draw(bulletShader, timePassed);
-    }
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    screenShader.use();
-    glBindVertexArray(screenGeometry.vao);
-    glDisable(GL_DEPTH_TEST);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, textureColorBuffer);
-
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+    displayScreen(&screenShader, screenGeometry, textureColorBuffer);
 
     glm::vec4 bossClip = projection * view * glm::vec4(bossPos, 1.0f);
     bossClip /= bossClip.w;
