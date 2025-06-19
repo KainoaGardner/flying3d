@@ -485,9 +485,8 @@ void Player::shipUpdate() {
   case player::speedShip:
     speedShipUpdate();
     break;
-  case player::parryShip:
-    break;
   case player::vampireShip:
+    vampireShipUpdate();
     break;
   }
 }
@@ -507,8 +506,10 @@ void Player::useShipAbility() {
     speedShipAbility();
     break;
   case player::parryShip:
+    parryShipAbility();
     break;
   case player::vampireShip:
+    vampireShipAbility();
     break;
   }
 }
@@ -528,8 +529,10 @@ void Player::useShipUltimate() {
     speedShipUltimate();
     break;
   case player::parryShip:
+    parryShipUltimate();
     break;
   case player::vampireShip:
+    vampireShipUltimate();
     break;
   }
 }
@@ -793,6 +796,80 @@ void Player::speedShipInput() {
     abilityTimer = 0.0f;
 }
 
+void Player::parryShipAbility() {
+  if (abilityCounter < ship::parryShip.abilityCooldown)
+    return;
+
+  glm::vec3 cameraFront = glm::normalize(orientation * global::cameraFront);
+  for (unsigned int i = 0; i < projectiles.size(); i++) {
+    Projectile &projectile = projectiles[i];
+    if (projectile.bullet) {
+      if (projectile.bullet->enemyBullet) {
+        float distance = glm::distance(projectile.bullet->position, position);
+        if (distance < ship::parryShip.abilityParryMaxDistance) {
+          projectile.bullet->direction = cameraFront;
+          projectile.bullet->enemyBullet = false;
+          projectile.bullet->color = glm::vec3(1.0f);
+          projectile.bullet->speed *= ship::parryShip.passiveParrySpeedBoost;
+          projectile.bullet->damage *= ship::parryShip.passiveParryDamage;
+        }
+      }
+    }
+  }
+
+  abilityCounter = 0;
+}
+
+void Player::parryShipUltimate() {
+  if (ultimateCounter < ship::parryShip.ultimateCooldown)
+    return;
+
+  glm::vec3 cameraFront = glm::normalize(orientation * global::cameraFront);
+  for (unsigned int i = 0; i < projectiles.size(); i++) {
+    Projectile &projectile = projectiles[i];
+    if (projectile.bullet) {
+      if (projectile.bullet->enemyBullet) {
+        projectile.bullet->direction = cameraFront;
+        projectile.bullet->enemyBullet = false;
+        projectile.bullet->color = glm::vec3(1.0f);
+        projectile.bullet->speed *= ship::parryShip.passiveParrySpeedBoost;
+        projectile.bullet->damage *= ship::parryShip.passiveParryDamage;
+      }
+    }
+  }
+  ultimateCounter = 0;
+}
+
+void Player::vampireShipUpdate() {
+  if (ultimateTimer > 0.0f) {
+    healShip(ship::vampireShip.ultimateHealAmount);
+  }
+
+  float finalDamage = 0.0f;
+  if (keys::actionPressed[keys::ability]) {
+    finalDamage += ship::vampireShip.abilityDamageBoost;
+    takeDamage(ship::vampireShip.abilityHealthCost);
+  }
+}
+
+void Player::vampireShipAbility() {}
+
+void Player::vampireShipUltimate() {
+  if (ultimateCounter < ship::vampireShip.ultimateCooldown)
+    return;
+
+  ultimateTimer = ship::vampireShip.ultimateLength;
+  ultimateCounter = 0;
+}
+
 void Player::takeDamage(float damage) {
   health -= damage * damageReductionAmount;
+}
+
+void Player::healShip(float addHealth) {
+  if (health + addHealth > ship::shipMaxHealth[ship]) {
+    health = ship::shipMaxHealth[ship];
+  } else {
+    health += addHealth;
+  }
 }

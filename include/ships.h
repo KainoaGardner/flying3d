@@ -47,7 +47,7 @@ struct TankShip {
 };
 
 struct TimeShip {
-  const float health = 1000.0f;
+  const float health = 750.0f;
   const float maxSpeed = 4.5f;
   const float acceleration = 0.003f;
   const float breakStrength = 0.003f;
@@ -87,10 +87,50 @@ struct SpeedShip {
   const float passiveMaxDamageBoost = 3.0f;
 };
 
+struct ParryShip {
+  const float health = 1500.0f;
+  const float maxSpeed = 3.5f;
+  const float acceleration = 0.003f;
+  const float breakStrength = 0.003f;
+  const float turnSpeed = 1.2f;
+  const float dragStrength = 0.002f;
+
+  const float abilityCooldown = 1000.0f;
+  const float abilityParryMaxDistance = 50.0f;
+
+  const float ultimateCooldown = 10000.0f;
+
+  const float passiveParryDamage = 10.0f;
+  const float passiveParrySpeedBoost = 2.0f;
+};
+
+struct VampireShip {
+  const float health = 2000.0f;
+  const float maxSpeed = 4.0f;
+  const float acceleration = 0.004f;
+  const float breakStrength = 0.003f;
+  const float turnSpeed = 1.3f;
+  const float dragStrength = 0.002f;
+
+  const float abilityParryMaxDistance = 50.0f;
+  const float abilityDamageBoost = 2.0f;
+  const float abilityHealthCost = 1.0f;
+
+  const float ultimateCooldown = 10000.0f;
+  const float ultimateLength = 2000.0f;
+  const float ultimateHealAmount = 5.0f;
+
+  const float passiveMaxDamageBoost = 2.0f;
+  const float passiveParryDamage = 10.0f;
+  const float passiveParrySpeedBoost = 2.0f;
+};
+
 extern NormalShip normalShip;
 extern TankShip tankShip;
 extern TimeShip timeShip;
 extern SpeedShip speedShip;
+extern ParryShip parryShip;
+extern VampireShip vampireShip;
 
 extern const float shipMaxHealth[6];
 extern const float shipMaxSpeed[6];

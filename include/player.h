@@ -82,6 +82,7 @@ public:
   void update();
 
   void takeDamage(float damage);
+  void healShip(float addHealth);
 
   float shootCounter = 0.0f;
   float abilityCounter = global::maxCounter;
@@ -148,6 +149,13 @@ private:
   void speedShipInput();
   void speedShipAbility();
   void speedShipUltimate();
+
+  void parryShipAbility();
+  void parryShipUltimate();
+
+  void vampireShipUpdate();
+  void vampireShipAbility();
+  void vampireShipUltimate();
 };
 
 #endif
