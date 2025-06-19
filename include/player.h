@@ -5,6 +5,7 @@
 #include "../include/config.h"
 #include "../include/glad/glad.h"
 #include "../include/glm/glm.hpp"
+#include "../include/glm/gtx/quaternion.hpp"
 #include "../include/ships.h"
 #include <GLFW/glfw3.h>
 #include <string>
@@ -74,11 +75,11 @@ public:
 
   glm::mat4 getViewMatrix(glm::vec3 bossPosition);
 
-  void handleKeyboardInput(GLFWwindow *window, float dt);
+  void handleKeyboardInput();
   void handleMouseInput(float xOffset, float yOffset, bool constrain = true);
   void handleScrollInput(float yOffset, float minFov, float maxFov);
 
-  void update(float dt);
+  void update();
 
   void takeDamage(float damage);
 
@@ -105,12 +106,11 @@ private:
   unsigned int weapons[2];
 
   void updateCamera();
-  void updateCameraMovement(float dt);
+  void updateCameraMovement();
 
-  float addSpeed(float currentSpeed, float maxSpeed, float acceleration,
-                 float dt);
-  float subtractSpeed(float currentSpeed, float brakeStrength, float dt);
-  float applyDrag(float currentSpeed, float dragRate, float dt);
+  float addSpeed(float currentSpeed, float maxSpeed, float acceleration);
+  float subtractSpeed(float currentSpeed, float brakeStrength);
+  float applyDrag(float currentSpeed, float dragRate);
 
   player::ShootArgs getShootArgs(float yOffset, float xOffset,
                                  float bulletSpread);
@@ -126,25 +126,26 @@ private:
   void shootLaser();
   void shootBlade();
 
-  void shipUpdate(float dt);
+  void shipUpdate();
 
   void useShipAbility();
   void useShipUltimate();
 
-  void normalShipUpdate(float dt);
+  void normalShipUpdate();
   void normalShipAbility();
   void normalShipUltimate();
 
-  void tankShipUpdate(float dt);
+  void tankShipUpdate();
   void tankShipAbility();
   void tankShipUltimate();
 
-  void timeShipUpdate(float dt);
-  void timeShipInput(GLFWwindow *window);
+  void timeShipUpdate();
+  void timeShipInput();
   void timeShipAbility();
   void timeShipUltimate();
 
-  void speedShipUpdate(float dt);
+  void speedShipUpdate();
+  void speedShipInput();
   void speedShipAbility();
   void speedShipUltimate();
 };

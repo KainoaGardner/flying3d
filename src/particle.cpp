@@ -12,8 +12,8 @@ Explosion::Explosion(glm::vec3 positionIn, glm::quat orientationIn,
   explosionTimer = explosionTimerIn;
 }
 
-void Explosion::update(float dt) {
-  explosionCounter += dt;
+void Explosion::update() {
+  explosionCounter += 1.0f;
   float k = 4.0f;
 
   float explosionAmount = explosionCounter / explosionTimer;

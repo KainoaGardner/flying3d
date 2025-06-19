@@ -28,13 +28,13 @@ Bullet::Bullet(glm::vec3 positionIn, glm::vec3 rotationIn,
   enemyBullet = enemyBulletIn;
 }
 
-void Bullet::update(float dt) {
-  spinAngle = spinAngle + dt;
+void Bullet::update(float timeSlow) {
+  spinAngle = spinAngle + 1.0f * timeSlow;
   if (spinAngle > 2 * M_PI) {
     spinAngle -= 2 * M_PI;
   }
 
-  position += direction * speed * dt;
+  position += direction * speed * timeSlow;
 }
 
 void Bullet::killBullet(glm::vec3 playerPosition) {
@@ -73,9 +73,9 @@ BombBullet::BombBullet(glm::vec3 positionIn, glm::vec3 rotationIn,
   explodeTimer = explodeTimerIn;
 }
 
-void BombBullet::update(float dt) {
-  Bullet::update(dt);
-  explodeCounter += dt;
+void BombBullet::update(float timeSlow) {
+  Bullet::update(timeSlow);
+  explodeCounter += 1.0f;
   if (explodeCounter > explodeTimer) {
     explode();
   }
@@ -97,15 +97,15 @@ HomingMissile::HomingMissile(glm::vec3 positionIn, glm::vec3 rotationIn,
     : Bullet(positionIn, rotationIn, directionIn, orientationIn, scaleIn,
              colorIn, speedIn, damageIn, enemyBulletIn) {}
 
-void HomingMissile::update(float dt) {
+void HomingMissile::update(float timeSlow) {
   // change to closest target pos
   glm::vec3 closestTargetPos = glm::vec3(0.0f);
 
   glm::vec3 targetDirection = glm::normalize(closestTargetPos - position);
-  direction = glm::normalize(glm::mix(direction, targetDirection,
-                                      bullet::homingMissile.turnSpeed * dt));
+  direction = glm::normalize(
+      glm::mix(direction, targetDirection, bullet::homingMissile.turnSpeed));
 
-  Bullet::update(dt);
+  Bullet::update(timeSlow);
 }
 
 ZapBullet::ZapBullet(glm::vec3 positionIn, glm::vec3 rotationIn,
@@ -115,8 +115,8 @@ ZapBullet::ZapBullet(glm::vec3 positionIn, glm::vec3 rotationIn,
     : Bullet(positionIn, rotationIn, directionIn, orientationIn, scaleIn,
              colorIn, speedIn, damageIn, enemyBulletIn) {}
 
-void ZapBullet::update(float dt) {
-  zapCounter += dt;
+void ZapBullet::update(float timeSlow) {
+  zapCounter += 1.0f;
 
   bool zap = false;
   if (zapCounter > bullet::zapRifle.cooldown) {
@@ -128,7 +128,7 @@ void ZapBullet::update(float dt) {
     zapCounter = 0.0f;
   }
 
-  Bullet::update(dt);
+  Bullet::update(timeSlow);
 }
 
 Laser::Laser(glm::vec3 colorIn, float damageIn) {
@@ -136,14 +136,14 @@ Laser::Laser(glm::vec3 colorIn, float damageIn) {
   damage = damageIn;
 }
 
-void Laser::update(float dt, glm::vec3 playerPos, glm::quat playerOrientation) {
+void Laser::update(glm::vec3 playerPos, glm::quat playerOrientation) {
   if (!on) {
     spinCounter = 0.0f;
     return;
   }
 
   if (spinCounter < 100.f) {
-    spinCounter += dt;
+    spinCounter += 1.0f;
   }
 
   float x = spinCounter / bullet::laser.spinUpTime;
@@ -191,7 +191,7 @@ Blade::Blade(glm::vec3 scaleIn, glm::vec3 colorIn, float damageIn) {
   damage = damageIn;
 }
 
-void Blade::update(float dt, glm::vec3 playerPos, glm::quat playerOrientation) {
+void Blade::update(glm::vec3 playerPos, glm::quat playerOrientation) {
   if (spinCounter < 0.0f) {
     return;
   }
