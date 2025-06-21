@@ -97,6 +97,8 @@ extern ZapRifle zapRifle;
 extern Cannon cannon;
 extern Laser laser;
 extern Blade blade;
+
+extern const float bulletShootCooldown[9];
 } // namespace bullet
 
 class Bullet {

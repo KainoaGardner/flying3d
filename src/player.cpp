@@ -2,6 +2,7 @@
 #include "../include/player.h"
 #include "../include/glm/gtc/quaternion.hpp"
 #include "../include/key.h"
+#include <iostream>
 
 Player::Player(glm::vec3 positionIn, glm::vec3 worldUpIn, glm::vec3 frontIn,
                glm::quat orientationIn, unsigned int shipIn,
@@ -889,4 +890,98 @@ void Player::healShip(float addHealth) {
   }
 }
 
-void Player::display() {}
+void Player::displayScreen(player::DisplayContext displayContext) {
+  displayHealth(displayContext);
+  displayArrow(displayContext);
+  displayReload(displayContext);
+  displayCooldown(displayContext);
+}
+
+void Player::displayHealth(player::DisplayContext displayContext) {
+  displayContext.healthShader->use();
+  displayContext.healthShader->setFloat("uMaxHealth",
+                                        ship::shipMaxHealth[ship]);
+  displayContext.healthShader->setFloat("uCurrentHealth", health);
+  displayContext.healthShader->setVec2f(
+      "uResolution",
+      glm::vec2(config::gameConfig.width, config::gameConfig.height));
+
+  glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+}
+
+void Player::displayArrow(player::DisplayContext displayContext) {
+  glm::vec4 bossClip = displayContext.projection * displayContext.view *
+                       glm::vec4(displayContext.bossPos, 1.0f);
+  bossClip /= bossClip.w;
+
+  bool onScreen = bossClip.x >= -1.0f && bossClip.x <= 1.0f &&
+                  bossClip.y >= -1.0f && bossClip.y <= 1.0f &&
+                  bossClip.z >= -1.0f && bossClip.z <= 1.0f;
+
+  glm::vec3 toBoss = displayContext.bossPos - position;
+  glm::vec3 bossDirView = glm::mat3(displayContext.view) * toBoss;
+
+  glm::vec2 arrowDir = glm::normalize(glm::vec2(bossDirView));
+
+  if (!onScreen) {
+    displayContext.arrowShader->use();
+    displayContext.arrowShader->setVec2f("uArrowPos", arrowDir);
+    displayContext.arrowShader->setVec2f(
+        "uResolution",
+        glm::vec2(config::gameConfig.width, config::gameConfig.height));
+
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+  }
+}
+
+void Player::displayReload(player::DisplayContext displayContext) {
+  displayContext.reloadShader->use();
+
+  float progress = shootCounter;
+  if (weapons[weaponIndex] == player::swingBlade)
+    progress = bullet::blade.spinTime - blade->spinCounter;
+
+  displayContext.reloadShader->setFloat("uShootCounter", progress);
+
+  float cooldown = bullet::bulletShootCooldown[weapons[weaponIndex]];
+
+  displayContext.reloadShader->setFloat("uShootCooldown", cooldown);
+
+  displayContext.reloadShader->setVec2f(
+      "uResolution",
+      glm::vec2(config::gameConfig.width, config::gameConfig.height));
+
+  glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+}
+
+void Player::displayCooldown(player::DisplayContext displayContext) {
+  displayContext.cooldownShader->use();
+
+  float cooldown = ship::shipAbilityCooldown[ship];
+  float timer = abilityCounter;
+  displayContext.cooldownShader->setFloat("uTimer", timer);
+  displayContext.cooldownShader->setFloat("uCooldown", cooldown);
+
+  glm::vec2 translate = glm::vec2(-0.75, -0.95);
+  displayContext.cooldownShader->setVec2f("uTranslate", translate);
+
+  displayContext.cooldownShader->setVec2f(
+      "uResolution",
+      glm::vec2(config::gameConfig.width, config::gameConfig.height));
+
+  glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+
+  cooldown = ship::shipUltimateCooldown[ship];
+  timer = ultimateCounter;
+  displayContext.cooldownShader->setFloat("uTimer", timer);
+  displayContext.cooldownShader->setFloat("uCooldown", cooldown);
+
+  translate = glm::vec2(0.75, -0.95);
+  displayContext.cooldownShader->setVec2f("uTranslate", translate);
+
+  // displayContext.cooldownShader->setVec2f(
+  //     "uResolution",
+  //     glm::vec2(config::gameConfig.width, config::gameConfig.height));
+
+  glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+}

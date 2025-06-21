@@ -38,6 +38,16 @@ struct ShootArgs {
   float spin;
 };
 
+struct DisplayContext {
+  Shader *arrowShader;
+  Shader *healthShader;
+  Shader *reloadShader;
+  Shader *cooldownShader;
+  glm::mat4 projection;
+  glm::mat4 view;
+  glm::vec3 bossPos;
+};
+
 } // namespace player
 
 class Player {
@@ -93,6 +103,8 @@ public:
 
   float getBulletTimeSlow(glm::vec3 bulletPosition);
 
+  void displayScreen(player::DisplayContext);
+
 private:
   float maxSpeed;
 
@@ -115,6 +127,11 @@ private:
 
   player::ShootArgs getShootArgs(float yOffset, float xOffset,
                                  float bulletSpread);
+
+  void displayHealth(player::DisplayContext displayContext);
+  void displayArrow(player::DisplayContext displayContext);
+  void displayReload(player::DisplayContext displayContext);
+  void displayCooldown(player::DisplayContext displayContext);
 
   void shootBullet();
   void shootMachineGun();
@@ -156,8 +173,6 @@ private:
   void vampireShipUpdate();
   void vampireShipAbility();
   void vampireShipUltimate();
-
-  void displayScreen();
 };
 
 #endif

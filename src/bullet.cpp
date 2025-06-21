@@ -10,6 +10,15 @@ ZapRifle zapRifle;
 Cannon cannon;
 Laser laser;
 Blade blade;
+
+const float bulletShootCooldown[9] = {
+    bullet::machineGun.cooldown,    bullet::shotgun.cooldown,
+    bullet::homingMissile.cooldown, bullet::bombLauncher.cooldown,
+    bullet::chargeRifle.cooldown,   bullet::zapRifle.cooldown,
+    bullet::cannon.cooldown,        bullet::laser.cooldown,
+    bullet::blade.spinTime,
+};
+
 } // namespace bullet
 
 Bullet::Bullet(glm::vec3 positionIn, glm::vec3 rotationIn,

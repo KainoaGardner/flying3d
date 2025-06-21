@@ -7,6 +7,7 @@
 #include "../include/display.h"
 #include "../include/geomety.h"
 #include "../include/glm/gtc/type_ptr.hpp"
+
 #include "../include/key.h"
 #include "../include/particle.h"
 #include "../include/player.h"
@@ -42,7 +43,7 @@ int main() {
 
   Player player(glm::vec3(0.0f, 10.0f, 0.0f), global::cameraUp,
                 global::cameraFront, global::cameraOrientation,
-                player::vampireShip, weapons);
+                player::timeShip, weapons);
 
   if (window == NULL) {
     std::cout << "Failed to create GLFW window" << std::endl;
@@ -78,6 +79,15 @@ int main() {
 
   Shader arrowShader("./assets/shaders/screen.vert",
                      "./assets/shaders/arrow.frag");
+
+  Shader healthShader("./assets/shaders/screen.vert",
+                      "./assets/shaders/health.frag");
+
+  Shader reloadShader("./assets/shaders/screen.vert",
+                      "./assets/shaders/reload.frag");
+
+  Shader cooldownShader("./assets/shaders/screen.vert",
+                        "./assets/shaders/cooldown.frag");
 
   Shader screenShader("./assets/shaders/screen.vert",
                       "./assets/shaders/screen.frag");
@@ -218,26 +228,17 @@ int main() {
 
     displayScreen(&screenShader, screenGeometry, textureColorBuffer);
 
-    glm::vec4 bossClip = projection * view * glm::vec4(bossPos, 1.0f);
-    bossClip /= bossClip.w;
+    player::DisplayContext playerDisplayContext = {
+        .arrowShader = &arrowShader,
+        .healthShader = &healthShader,
+        .reloadShader = &reloadShader,
+        .cooldownShader = &cooldownShader,
+        .projection = projection,
+        .view = view,
+        .bossPos = bossPos,
 
-    bool onScreen = bossClip.x >= -1.0f && bossClip.x <= 1.0f &&
-                    bossClip.y >= -1.0f && bossClip.y <= 1.0f &&
-                    bossClip.z >= -1.0f && bossClip.z <= 1.0f;
-
-    glm::vec3 toBoss = bossPos - player.position;
-    glm::vec3 bossDirView = glm::mat3(view) * toBoss;
-
-    glm::vec2 arrowDir = glm::normalize(glm::vec2(bossDirView));
-
-    if (!onScreen) {
-      arrowShader.use();
-      arrowShader.setVec2f("uArrowPos", arrowDir);
-      arrowShader.setVec2f("uResolution", glm::vec2(config::gameConfig.width,
-                                                    config::gameConfig.height));
-
-      glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-    }
+    };
+    player.displayScreen(playerDisplayContext);
 
     glfwSwapBuffers(window);
     glfwPollEvents();

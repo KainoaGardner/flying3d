@@ -136,6 +136,9 @@ extern const float shipBreakStrength[6];
 extern const float shipTurnSpeed[6];
 extern const float shipDragStrength[6];
 
+extern const float shipAbilityCooldown[6];
+extern const float shipUltimateCooldown[6];
+
 } // namespace ship
 
 #endif

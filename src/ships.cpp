@@ -43,4 +43,17 @@ const float shipDragStrength[6] = {
     ship::timeShip.dragStrength,   ship::speedShip.dragStrength,
     ship::parryShip.dragStrength,  ship::vampireShip.dragStrength,
 };
+
+extern const float shipAbilityCooldown[6]{
+    ship::normalShip.abilityCooldown, ship::tankShip.abilityCooldown,
+    ship::timeShip.abilityCooldown,   ship::speedShip.abilityCooldown,
+    ship::parryShip.abilityCooldown,  0.0f,
+};
+
+extern const float shipUltimateCooldown[6]{
+    ship::normalShip.ultimateCooldown, ship::tankShip.ultimateCooldown,
+    ship::timeShip.ultimateCooldown,   ship::speedShip.ultimateCooldown,
+    ship::parryShip.ultimateCooldown,  ship::vampireShip.ultimateCooldown,
+};
+
 } // namespace ship
