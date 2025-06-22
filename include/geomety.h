@@ -18,9 +18,22 @@ struct Geometry {
   GLuint ebo;
 };
 
+namespace geometry {
+struct Geometries {
+  Geometry cube;
+  Geometry beam;
+  Geometry skybox;
+  Geometry screen;
+  Geometry text;
+};
+
+extern Geometries geometry;
+} // namespace geometry
+
 Geometry createCube();
 Geometry createCubemap();
 Geometry createScreen();
 Geometry createBeam();
+Geometry createText();
 
 #endif

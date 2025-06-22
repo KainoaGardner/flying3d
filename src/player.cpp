@@ -1,8 +1,10 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include "../include/player.h"
+#include "../include/display.h"
 #include "../include/glm/gtc/quaternion.hpp"
 #include "../include/key.h"
-#include <iostream>
+#include <iomanip>
+#include <sstream>
 
 Player::Player(glm::vec3 positionIn, glm::vec3 worldUpIn, glm::vec3 frontIn,
                glm::quat orientationIn, unsigned int shipIn,
@@ -895,14 +897,14 @@ void Player::displayScreen(player::DisplayContext displayContext) {
   displayArrow(displayContext);
   displayReload(displayContext);
   displayCooldown(displayContext);
+  displayCooldownText(displayContext);
 }
 
 void Player::displayHealth(player::DisplayContext displayContext) {
-  displayContext.healthShader->use();
-  displayContext.healthShader->setFloat("uMaxHealth",
-                                        ship::shipMaxHealth[ship]);
-  displayContext.healthShader->setFloat("uCurrentHealth", health);
-  displayContext.healthShader->setVec2f(
+  shader::shader.health->use();
+  shader::shader.health->setFloat("uMaxHealth", ship::shipMaxHealth[ship]);
+  shader::shader.health->setFloat("uCurrentHealth", health);
+  shader::shader.health->setVec2f(
       "uResolution",
       glm::vec2(config::gameConfig.width, config::gameConfig.height));
 
@@ -924,9 +926,9 @@ void Player::displayArrow(player::DisplayContext displayContext) {
   glm::vec2 arrowDir = glm::normalize(glm::vec2(bossDirView));
 
   if (!onScreen) {
-    displayContext.arrowShader->use();
-    displayContext.arrowShader->setVec2f("uArrowPos", arrowDir);
-    displayContext.arrowShader->setVec2f(
+    shader::shader.arrow->use();
+    shader::shader.arrow->setVec2f("uArrowPos", arrowDir);
+    shader::shader.arrow->setVec2f(
         "uResolution",
         glm::vec2(config::gameConfig.width, config::gameConfig.height));
 
@@ -935,19 +937,19 @@ void Player::displayArrow(player::DisplayContext displayContext) {
 }
 
 void Player::displayReload(player::DisplayContext displayContext) {
-  displayContext.reloadShader->use();
+  shader::shader.reload->use();
 
   float progress = shootCounter;
   if (weapons[weaponIndex] == player::swingBlade)
     progress = bullet::blade.spinTime - blade->spinCounter;
 
-  displayContext.reloadShader->setFloat("uShootCounter", progress);
+  shader::shader.reload->setFloat("uShootCounter", progress);
 
   float cooldown = bullet::bulletShootCooldown[weapons[weaponIndex]];
 
-  displayContext.reloadShader->setFloat("uShootCooldown", cooldown);
+  shader::shader.reload->setFloat("uShootCooldown", cooldown);
 
-  displayContext.reloadShader->setVec2f(
+  shader::shader.reload->setVec2f(
       "uResolution",
       glm::vec2(config::gameConfig.width, config::gameConfig.height));
 
@@ -955,17 +957,17 @@ void Player::displayReload(player::DisplayContext displayContext) {
 }
 
 void Player::displayCooldown(player::DisplayContext displayContext) {
-  displayContext.cooldownShader->use();
+  shader::shader.cooldown->use();
 
   float cooldown = ship::shipAbilityCooldown[ship];
   float timer = abilityCounter;
-  displayContext.cooldownShader->setFloat("uTimer", timer);
-  displayContext.cooldownShader->setFloat("uCooldown", cooldown);
+  shader::shader.cooldown->setFloat("uTimer", timer);
+  shader::shader.cooldown->setFloat("uCooldown", cooldown);
 
   glm::vec2 translate = glm::vec2(-0.75, -0.95);
-  displayContext.cooldownShader->setVec2f("uTranslate", translate);
+  shader::shader.cooldown->setVec2f("uTranslate", translate);
 
-  displayContext.cooldownShader->setVec2f(
+  shader::shader.cooldown->setVec2f(
       "uResolution",
       glm::vec2(config::gameConfig.width, config::gameConfig.height));
 
@@ -973,15 +975,38 @@ void Player::displayCooldown(player::DisplayContext displayContext) {
 
   cooldown = ship::shipUltimateCooldown[ship];
   timer = ultimateCounter;
-  displayContext.cooldownShader->setFloat("uTimer", timer);
-  displayContext.cooldownShader->setFloat("uCooldown", cooldown);
+  shader::shader.cooldown->setFloat("uTimer", timer);
+  shader::shader.cooldown->setFloat("uCooldown", cooldown);
 
   translate = glm::vec2(0.75, -0.95);
-  displayContext.cooldownShader->setVec2f("uTranslate", translate);
+  shader::shader.cooldown->setVec2f("uTranslate", translate);
 
   // displayContext.cooldownShader->setVec2f(
   //     "uResolution",
   //     glm::vec2(config::gameConfig.width, config::gameConfig.height));
 
   glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+}
+
+void Player::displayCooldownText(player::DisplayContext displayContext) {
+  float cooldown = ship::shipAbilityCooldown[ship];
+  float timer = (cooldown - glm::clamp(abilityCounter, 0.0f, cooldown)) /
+                config::gameConfig.fps;
+
+  renderText(displayContext.textProjection, " !\"#$%&\'()*+,-./01234567",
+             200.0f, 200.0f, 50.0f, glm::vec3(1.0f));
+  renderText(displayContext.textProjection, "89:;<=>?@ABCDEFGHIJKLMNO", 200.0f,
+             150.0f, 50.0f, glm::vec3(1.0f));
+  renderText(displayContext.textProjection, "PQRSTUVWXYZ[\\]^_`abcdefg", 200.0f,
+             100.0f, 50.0f, glm::vec3(1.0f));
+  renderText(displayContext.textProjection, "hijklmnopqrstuvwxyz{|}~", 200.0f,
+             50.0f, 50.0f, glm::vec3(1.0f));
+
+  if (timer > 0.0) {
+    std::stringstream ss;
+    ss << std::fixed << std::setprecision(2) << timer;
+    std::string abilityString = ss.str();
+    renderText(displayContext.textProjection, abilityString, 100.0f, 100.0f,
+               50.0f, glm::vec3(1.0f));
+  }
 }

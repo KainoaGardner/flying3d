@@ -165,6 +165,10 @@ Geometry createCubemap() {
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
   glEnableVertexAttribArray(0);
 
+  glBindVertexArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
   return geometry;
 }
 
@@ -189,6 +193,10 @@ Geometry createCube() {
   glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
                         (void *)(3 * sizeof(float)));
   glEnableVertexAttribArray(1);
+
+  glBindVertexArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
   return geometry;
 }
@@ -216,6 +224,10 @@ Geometry createScreen() {
                         (void *)(3 * sizeof(float)));
   glEnableVertexAttribArray(1);
 
+  glBindVertexArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
   return geometry;
 }
 
@@ -242,5 +254,41 @@ Geometry createBeam() {
                         (void *)(3 * sizeof(float)));
   glEnableVertexAttribArray(1);
 
+  glBindVertexArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
   return geometry;
+}
+
+Geometry createText() {
+  Geometry geometry;
+  glGenVertexArrays(1, &geometry.vao);
+  glBindVertexArray(geometry.vao);
+
+  glGenBuffers(1, &geometry.vbo);
+
+  glBindBuffer(GL_ARRAY_BUFFER, geometry.vbo);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 5, NULL, GL_DYNAMIC_DRAW);
+
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
+  glEnableVertexAttribArray(0);
+
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+                        (void *)(2 * sizeof(float)));
+  glEnableVertexAttribArray(1);
+
+  glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+                        (void *)(4 * sizeof(float)));
+  glEnableVertexAttribArray(2);
+
+  glBindVertexArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+  return geometry;
+}
+
+namespace geometry {
+Geometries geometry;
 }
