@@ -18,7 +18,8 @@ const glm::quat cameraOrientation = glm::quat(1, 0, 0, 0);
 
 namespace config {
 struct GameConfig {
-  const float logicIntervalTime = 1.0f / 60.0f;
+  const unsigned int fps = 60.0;
+  const float logicIntervalTime = 1.0f / fps;
   float lastUpdateTime = glfwGetTime();
   unsigned int width = 1280;
   unsigned int height = 720;

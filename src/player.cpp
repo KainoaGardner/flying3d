@@ -3,7 +3,8 @@
 #include "../include/display.h"
 #include "../include/glm/gtc/quaternion.hpp"
 #include "../include/key.h"
-#include <iostream>
+#include <iomanip>
+#include <sstream>
 
 Player::Player(glm::vec3 positionIn, glm::vec3 worldUpIn, glm::vec3 frontIn,
                glm::quat orientationIn, unsigned int shipIn,
@@ -988,6 +989,24 @@ void Player::displayCooldown(player::DisplayContext displayContext) {
 }
 
 void Player::displayCooldownText(player::DisplayContext displayContext) {
-  renderText(displayContext.textProjection, "test", 100.0f, 100.0f, 100.0f,
-             glm::vec3(1.0f));
+  float cooldown = ship::shipAbilityCooldown[ship];
+  float timer = (cooldown - glm::clamp(abilityCounter, 0.0f, cooldown)) /
+                config::gameConfig.fps;
+
+  renderText(displayContext.textProjection, " !\"#$%&\'()*+,-./01234567",
+             200.0f, 200.0f, 50.0f, glm::vec3(1.0f));
+  renderText(displayContext.textProjection, "89:;<=>?@ABCDEFGHIJKLMNO", 200.0f,
+             150.0f, 50.0f, glm::vec3(1.0f));
+  renderText(displayContext.textProjection, "PQRSTUVWXYZ[\\]^_`abcdefg", 200.0f,
+             100.0f, 50.0f, glm::vec3(1.0f));
+  renderText(displayContext.textProjection, "hijklmnopqrstuvwxyz{|}~", 200.0f,
+             50.0f, 50.0f, glm::vec3(1.0f));
+
+  if (timer > 0.0) {
+    std::stringstream ss;
+    ss << std::fixed << std::setprecision(2) << timer;
+    std::string abilityString = ss.str();
+    renderText(displayContext.textProjection, abilityString, 100.0f, 100.0f,
+               50.0f, glm::vec3(1.0f));
+  }
 }

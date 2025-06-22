@@ -96,6 +96,7 @@ void renderText(glm::mat4 projection, std::string text, float x, float y,
   shader::shader.text->setMatrix4fv("uProjection", projection);
   shader::shader.text->setInt("uTileCols", 24);
   shader::shader.text->setInt("uTileRows", 4);
+
   shader::shader.text->setVec3f("uTextColor", color);
 
   for (char c : text) {

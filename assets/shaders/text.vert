@@ -18,5 +18,5 @@ void main() {
     vec2 tileSize = vec2(1.0 / uTileCols, 1.0 / uTileRows);
     vec2 tileOffset = vec2(tileSize.x * col, tileSize.y * row);
 
-    vTexCoord = aTexCoord * tileSize + tileOffset;
+    vTexCoord = tileOffset + aTexCoord * tileSize;
 }
