@@ -7,6 +7,7 @@
 #include "../include/display.h"
 #include "../include/geomety.h"
 #include "../include/glm/gtc/type_ptr.hpp"
+#include "../include/textures.h"
 
 #include "../include/key.h"
 #include "../include/particle.h"
@@ -91,8 +92,19 @@ int main() {
 
   Shader screenShader("./assets/shaders/screen.vert",
                       "./assets/shaders/screen.frag");
+  Shader textShader("./assets/shaders/text.vert", "./assets/shaders/text.frag");
 
-  shader.use();
+  shader::shader = {
+      .normal = &shader,
+      .bullet = &bulletShader,
+      .cubemap = &cubemapShader,
+      .arrow = &arrowShader,
+      .health = &healthShader,
+      .reload = &reloadShader,
+      .cooldown = &cooldownShader,
+      .screen = &screenShader,
+      .text = &textShader,
+  };
 
   // textures
   stbi_set_flip_vertically_on_load(true);
@@ -107,8 +119,14 @@ int main() {
   };
 
   stbi_set_flip_vertically_on_load(false);
+  unsigned int bitmapTexture = loadTexture("./assets/fonts/text2.png");
+
   unsigned int skyboxTexture = loadCubemap(skyboxTextures);
   unsigned int cubeTexture = loadTexture("./assets/imgs/box.jpg");
+
+  textures::texture.space0 = skyboxTexture;
+  textures::texture.cube = cubeTexture;
+  textures::texture.text = bitmapTexture;
 
   glActiveTexture(GL_TEXTURE0);
 
@@ -116,6 +134,15 @@ int main() {
   Geometry beamGeometry = createBeam();
   Geometry skyboxGeometry = createCubemap();
   Geometry screenGeometry = createScreen();
+  Geometry textGeometry = createText();
+
+  geometry::geometry = {
+      .cube = cubeGeometry,
+      .beam = beamGeometry,
+      .skybox = skyboxGeometry,
+      .screen = screenGeometry,
+      .text = textGeometry,
+  };
 
   unsigned int matrixUniformBlockMain =
       glGetUniformBlockIndex(shader.program, "Matrices");
@@ -174,6 +201,9 @@ int main() {
     float currentTime = glfwGetTime();
     processInput(window, &player);
 
+    int fbWidth, fbHeight;
+    glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
+
     if (currentTime - config::gameConfig.lastUpdateTime >=
         config::gameConfig.logicIntervalTime) {
       update(&player);
@@ -186,7 +216,7 @@ int main() {
     glEnable(GL_DEPTH_TEST);
 
     float timePassed = glfwGetTime() - startTime;
-    shader.setFloat("uTime", timePassed);
+    shader::shader.normal->setFloat("uTime", timePassed);
 
     glm::mat4 view = glm::mat4(1.0f);
     view = player.getViewMatrix(bossPos);
@@ -205,8 +235,7 @@ int main() {
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     // display
-    displayCubeMap(&cubemapShader, skyboxGeometry, skyboxTexture, view,
-                   projection);
+    displayCubeMap(view, projection);
 
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::scale(model, glm::vec3(50.0f));
@@ -214,31 +243,32 @@ int main() {
     // display boss
     glBindVertexArray(cubeGeometry.vao);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, cubeTexture);
+    glBindTexture(GL_TEXTURE_2D, textures::texture.cube);
 
-    shader.use();
-    shader.setMatrix4fv("uModel", model);
+    shader::shader.normal->use();
+    shader::shader.normal->setMatrix4fv("uModel", model);
 
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
     // display enemies
 
-    displayBullets(&bulletShader, cubeGeometry, beamGeometry, &player,
-                   timePassed);
-    displayParticles(&bulletShader, cubeGeometry);
+    displayBullets(&player, timePassed);
+    displayParticles();
 
-    displayScreen(&screenShader, screenGeometry, textureColorBuffer);
+    displayScreen(textureColorBuffer);
 
+    glm::mat4 textProjection =
+        glm::ortho(0.0f, float(fbWidth), 0.0f, float(fbHeight));
     player::DisplayContext playerDisplayContext = {
-        .arrowShader = &arrowShader,
-        .healthShader = &healthShader,
-        .reloadShader = &reloadShader,
-        .cooldownShader = &cooldownShader,
         .projection = projection,
         .view = view,
         .bossPos = bossPos,
+        .textProjection = textProjection,
 
     };
     player.displayScreen(playerDisplayContext);
+
+    // renderText(&textShader, geometry::geometry.text, textProjection, "test",
+    //            100.f, 100.f, 50.f, glm::vec3(1.0f));
 
     glfwSwapBuffers(window);
     glfwPollEvents();

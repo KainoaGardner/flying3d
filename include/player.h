@@ -3,6 +3,7 @@
 
 #include "../include/bullet.h"
 #include "../include/config.h"
+#include "../include/geomety.h"
 #include "../include/glad/glad.h"
 #include "../include/glm/glm.hpp"
 #include "../include/glm/gtx/quaternion.hpp"
@@ -39,13 +40,10 @@ struct ShootArgs {
 };
 
 struct DisplayContext {
-  Shader *arrowShader;
-  Shader *healthShader;
-  Shader *reloadShader;
-  Shader *cooldownShader;
   glm::mat4 projection;
   glm::mat4 view;
   glm::vec3 bossPos;
+  glm::mat4 textProjection;
 };
 
 } // namespace player
@@ -132,6 +130,7 @@ private:
   void displayArrow(player::DisplayContext displayContext);
   void displayReload(player::DisplayContext displayContext);
   void displayCooldown(player::DisplayContext displayContext);
+  void displayCooldownText(player::DisplayContext displayContext);
 
   void shootBullet();
   void shootMachineGun();

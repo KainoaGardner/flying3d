@@ -1,5 +1,6 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include "../include/player.h"
+#include "../include/display.h"
 #include "../include/glm/gtc/quaternion.hpp"
 #include "../include/key.h"
 #include <iostream>
@@ -895,14 +896,14 @@ void Player::displayScreen(player::DisplayContext displayContext) {
   displayArrow(displayContext);
   displayReload(displayContext);
   displayCooldown(displayContext);
+  displayCooldownText(displayContext);
 }
 
 void Player::displayHealth(player::DisplayContext displayContext) {
-  displayContext.healthShader->use();
-  displayContext.healthShader->setFloat("uMaxHealth",
-                                        ship::shipMaxHealth[ship]);
-  displayContext.healthShader->setFloat("uCurrentHealth", health);
-  displayContext.healthShader->setVec2f(
+  shader::shader.health->use();
+  shader::shader.health->setFloat("uMaxHealth", ship::shipMaxHealth[ship]);
+  shader::shader.health->setFloat("uCurrentHealth", health);
+  shader::shader.health->setVec2f(
       "uResolution",
       glm::vec2(config::gameConfig.width, config::gameConfig.height));
 
@@ -924,9 +925,9 @@ void Player::displayArrow(player::DisplayContext displayContext) {
   glm::vec2 arrowDir = glm::normalize(glm::vec2(bossDirView));
 
   if (!onScreen) {
-    displayContext.arrowShader->use();
-    displayContext.arrowShader->setVec2f("uArrowPos", arrowDir);
-    displayContext.arrowShader->setVec2f(
+    shader::shader.arrow->use();
+    shader::shader.arrow->setVec2f("uArrowPos", arrowDir);
+    shader::shader.arrow->setVec2f(
         "uResolution",
         glm::vec2(config::gameConfig.width, config::gameConfig.height));
 
@@ -935,19 +936,19 @@ void Player::displayArrow(player::DisplayContext displayContext) {
 }
 
 void Player::displayReload(player::DisplayContext displayContext) {
-  displayContext.reloadShader->use();
+  shader::shader.reload->use();
 
   float progress = shootCounter;
   if (weapons[weaponIndex] == player::swingBlade)
     progress = bullet::blade.spinTime - blade->spinCounter;
 
-  displayContext.reloadShader->setFloat("uShootCounter", progress);
+  shader::shader.reload->setFloat("uShootCounter", progress);
 
   float cooldown = bullet::bulletShootCooldown[weapons[weaponIndex]];
 
-  displayContext.reloadShader->setFloat("uShootCooldown", cooldown);
+  shader::shader.reload->setFloat("uShootCooldown", cooldown);
 
-  displayContext.reloadShader->setVec2f(
+  shader::shader.reload->setVec2f(
       "uResolution",
       glm::vec2(config::gameConfig.width, config::gameConfig.height));
 
@@ -955,17 +956,17 @@ void Player::displayReload(player::DisplayContext displayContext) {
 }
 
 void Player::displayCooldown(player::DisplayContext displayContext) {
-  displayContext.cooldownShader->use();
+  shader::shader.cooldown->use();
 
   float cooldown = ship::shipAbilityCooldown[ship];
   float timer = abilityCounter;
-  displayContext.cooldownShader->setFloat("uTimer", timer);
-  displayContext.cooldownShader->setFloat("uCooldown", cooldown);
+  shader::shader.cooldown->setFloat("uTimer", timer);
+  shader::shader.cooldown->setFloat("uCooldown", cooldown);
 
   glm::vec2 translate = glm::vec2(-0.75, -0.95);
-  displayContext.cooldownShader->setVec2f("uTranslate", translate);
+  shader::shader.cooldown->setVec2f("uTranslate", translate);
 
-  displayContext.cooldownShader->setVec2f(
+  shader::shader.cooldown->setVec2f(
       "uResolution",
       glm::vec2(config::gameConfig.width, config::gameConfig.height));
 
@@ -973,15 +974,20 @@ void Player::displayCooldown(player::DisplayContext displayContext) {
 
   cooldown = ship::shipUltimateCooldown[ship];
   timer = ultimateCounter;
-  displayContext.cooldownShader->setFloat("uTimer", timer);
-  displayContext.cooldownShader->setFloat("uCooldown", cooldown);
+  shader::shader.cooldown->setFloat("uTimer", timer);
+  shader::shader.cooldown->setFloat("uCooldown", cooldown);
 
   translate = glm::vec2(0.75, -0.95);
-  displayContext.cooldownShader->setVec2f("uTranslate", translate);
+  shader::shader.cooldown->setVec2f("uTranslate", translate);
 
   // displayContext.cooldownShader->setVec2f(
   //     "uResolution",
   //     glm::vec2(config::gameConfig.width, config::gameConfig.height));
 
   glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+}
+
+void Player::displayCooldownText(player::DisplayContext displayContext) {
+  renderText(displayContext.textProjection, "test", 100.0f, 100.0f, 100.0f,
+             glm::vec3(1.0f));
 }

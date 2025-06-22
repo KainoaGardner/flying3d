@@ -126,7 +126,7 @@ public:
 
   void killBullet(glm::vec3 playerPosition);
 
-  void draw(Shader *shader);
+  void draw();
 
 private:
 };
@@ -193,7 +193,7 @@ public:
 
   void update(glm::vec3 playerPos, glm::quat playerOrientation);
 
-  void draw(Shader *shader, float timePassed);
+  void draw(float timePassed);
 
 private:
   float spinCounter = 0.0f;
@@ -214,7 +214,7 @@ public:
   Blade(glm::vec3 scaleIn, glm::vec3 colorIn, float damageIn);
 
   void update(glm::vec3 playerPos, glm::quat playerOrientation);
-  void draw(Shader *shader, float timePassed);
+  void draw(float timePassed);
 
 private:
 };
