@@ -195,6 +195,9 @@ void Player::update() {
       }
     }
   }
+
+  if (checkBulletCollision()) {
+  }
 }
 
 void Player::updateCamera() {
@@ -1012,4 +1015,40 @@ void Player::displayCooldownText(player::DisplayContext displayContext) {
     renderText(displayContext.textProjection, timerString, x, y, 0.6f,
                glm::vec3(1.0f));
   }
+}
+
+bool Player::checkBulletCollision() {
+  for (auto it = projectiles.begin(); it != projectiles.end();) {
+    if (it->bullet->enemyBullet) {
+      glm::vec3 relativePoint = position - it->bullet->position;
+
+      glm::mat4 model = glm::mat4(1.0f);
+
+      glm::vec3 pitchAxis =
+          glm::rotate(it->bullet->orientation, glm::vec3(1.0f, 0.0f, 0.0f));
+      glm::quat spinQuat = glm::angleAxis(it->bullet->spinAngle * 25.0f,
+                                          glm::normalize(pitchAxis));
+      spinQuat = spinQuat * orientation;
+
+      model *= glm::mat4_cast(spinQuat);
+      glm::mat3 rotationMatrix = glm::mat3(model);
+      glm::vec3 localPoint = glm::transpose(rotationMatrix) * relativePoint;
+
+      glm::vec3 halfSize = glm::vec3(it->bullet->scale) * 0.5f;
+
+      if (localPoint.x >= -halfSize.x && localPoint.x <= halfSize.x &&
+          localPoint.y >= -halfSize.y && localPoint.y <= halfSize.y &&
+          localPoint.z >= -halfSize.z && localPoint.z <= halfSize.z) {
+        takeDamage(it->bullet->damage);
+        it = projectiles.erase(it);
+      } else {
+        ++it;
+      }
+
+    } else {
+      ++it;
+    }
+  }
+
+  return false;
 }

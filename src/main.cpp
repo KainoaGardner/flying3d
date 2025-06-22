@@ -44,7 +44,7 @@ int main() {
                        "Learn Opengl", NULL, NULL);
 
   // text::getFont("/usr/local/share/fonts/arial.ttf");
-  Player player(glm::vec3(0.0f, 10.0f, 0.0f), global::cameraUp,
+  Player player(glm::vec3(0.0f, 0.0f, 500.0f), global::cameraUp,
                 global::cameraFront, global::cameraOrientation,
                 player::speedShip, weapons);
 
@@ -319,13 +319,13 @@ void update(Player *player) {
     Projectile projectile;
     projectile.bullet = std::make_unique<Bullet>(
         bossPos, toPlayer, toPlayer, global::cameraOrientation, glm::vec3(5.0f),
-        glm::vec3(1.0f, 0.0f, 0.0f), 1.0f, 1.0f, true);
+        glm::vec3(1.0f, 0.0f, 0.0f), 1.0f, 100.0f, true);
     projectiles.push_back(std::move(projectile));
     bossShootCounter = 0.0f;
   }
 
-  for (unsigned int i = 0; i < projectiles.size(); i++) {
-    Projectile &projectile = projectiles[i];
+  for (auto it = projectiles.begin(); it != projectiles.end();) {
+    Projectile &projectile = *it;
     if (projectile.bullet) {
       if (projectile.bullet->enemyBullet) {
         if (player->ship == player::timeShip) {
@@ -342,9 +342,10 @@ void update(Player *player) {
 
       projectile.bullet->killBullet(player->position);
       if (!projectile.bullet->alive) {
-        projectiles.erase(projectiles.begin() + i);
-        continue;
-      };
+        it = projectiles.erase(it);
+      } else {
+        ++it;
+      }
     }
   }
 

@@ -132,6 +132,8 @@ private:
   void displayCooldown(player::DisplayContext displayContext);
   void displayCooldownText(player::DisplayContext displayContext);
 
+  bool checkBulletCollision();
+
   void shootBullet();
   void shootMachineGun();
   void shootShotGun();
