@@ -8,6 +8,5 @@ uniform vec3 uTextColor;
 
 void main() {
     float alpha = texture(uText, vTexCoord).r;
-    // alpha = step(0.9, alpha);
     fragColor = vec4(uTextColor, alpha);
 }

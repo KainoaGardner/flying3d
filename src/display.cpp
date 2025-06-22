@@ -60,47 +60,53 @@ void displayScreen(unsigned int colorTexture) {
   glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 }
 
-void renderChar(char c, float x, float y, glm::vec2 size) {
-
-  float tileIndex = float(c - 32);
-
-  float w = size.x;
-  float h = size.y;
-
-  float vertices[6][5] = {
-      {x, y + h, 0.0f, 0.0f, tileIndex},     {x, y, 0.0f, 1.0f, tileIndex},
-      {x + w, y, 1.0f, 1.0f, tileIndex},
-
-      {x, y + h, 0.0f, 0.0f, tileIndex},     {x + w, y, 1.0f, 1.0f, tileIndex},
-      {x + w, y + h, 1.0f, 0.0f, tileIndex},
-  };
-
-  glBindBuffer(GL_ARRAY_BUFFER, geometry::geometry.text.vbo);
-  glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-
-  glBindVertexArray(geometry::geometry.text.vao);
-  glDrawArrays(GL_TRIANGLES, 0, 6);
-  glBindVertexArray(0);
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-
 void renderText(glm::mat4 projection, std::string text, float x, float y,
-                float size, glm::vec3 color) {
+                float scale, glm::vec3 color) {
 
   glDisable(GL_DEPTH_TEST);
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, textures::texture.text);
+  glBindVertexArray(geometry::geometry.text.vao);
 
-  glm::vec2 scale = glm::vec2(32.0f / 60.0f, 1.0f) * size;
   shader::shader.text->use();
   shader::shader.text->setMatrix4fv("uProjection", projection);
-  shader::shader.text->setInt("uTileCols", 24);
-  shader::shader.text->setInt("uTileRows", 4);
-
+  shader::shader.text->setInt("uText", 0);
   shader::shader.text->setVec3f("uTextColor", color);
 
-  for (char c : text) {
-    renderChar(c, x, y, scale);
-    x += scale.x;
+  std::string::const_iterator c;
+
+  float totalX = 0.0f;
+  for (c = text.begin(); c != text.end(); c++) {
+    text::Character ch = text::characters[*c];
+    totalX += (ch.advance >> 6) * scale;
   }
+
+  x -= totalX / 2.0f;
+
+  for (c = text.begin(); c != text.end(); c++) {
+    text::Character ch = text::characters[*c];
+    float xPos = x + ch.bearing.x * scale;
+    float yPos = y + (ch.size.y - ch.bearing.y) * scale;
+    float w = ch.size.x * scale;
+    float h = ch.size.y * scale;
+
+    float vertices[6][4] = {
+        {xPos, yPos + h, 0.0f, 0.0f},    {xPos, yPos, 0.0f, 1.0f},
+        {xPos + w, yPos, 1.0f, 1.0f},
+
+        {xPos, yPos + h, 0.0f, 0.0f},    {xPos + w, yPos, 1.0f, 1.0f},
+        {xPos + w, yPos + h, 1.0f, 0.0f}};
+
+    glBindTexture(GL_TEXTURE_2D, ch.textureId);
+
+    glBindBuffer(GL_ARRAY_BUFFER, geometry::geometry.text.vbo);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    x += (ch.advance >> 6) * scale;
+  }
+
+  glBindVertexArray(0);
+  glBindTexture(GL_TEXTURE_2D, 0);
 }

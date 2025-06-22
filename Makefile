@@ -1,6 +1,6 @@
 CC := gcc
 CXX := g++
-CXXFLAGS := -std=c++17 -Wall -Iinclude
+CXXFLAGS := -std=c++17 -Wall -Iinclude -I/usr/include/freetype2
 CFLAGS := -Wall -Iinclude
 
 SRC_DIR := src
@@ -21,6 +21,7 @@ SRCS := $(SRC_DIR)/main.cpp \
 				$(SRC_DIR)/ships.cpp \
 				$(SRC_DIR)/display.cpp \
 				$(SRC_DIR)/config.cpp \
+				$(SRC_DIR)/text.cpp \
 				$(SRC_DIR)/textures.cpp \
 				$(LIB_DIR)/glad.c \
 				$(LIB_DIR)/stb_image.cpp
@@ -31,6 +32,7 @@ OBJS := $(OBJ_DIR)/main.o \
 				$(OBJ_DIR)/player.o \
 				$(OBJ_DIR)/utils.o \
 				$(OBJ_DIR)/key.o \
+				$(OBJ_DIR)/text.o \
 				$(OBJ_DIR)/bullet.o \
 				$(OBJ_DIR)/config.o \
 				$(OBJ_DIR)/display.o \
@@ -40,7 +42,7 @@ OBJS := $(OBJ_DIR)/main.o \
 				$(OBJ_DIR)/glad.o \
 				$(OBJ_DIR)/stb_image.o
 
-LIBS := -lGL -lglfw -ldl -lX11 -lpthread
+LIBS := -lGL -lglfw -ldl -lX11 -lpthread -lfreetype
 
 
 all: $(EXEC)

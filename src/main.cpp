@@ -14,6 +14,7 @@
 #include "../include/player.h"
 #include "../include/shader.h"
 #include "../include/stb_image.h"
+#include "../include/text.h"
 #include "../include/utils.h"
 #include <GLFW/glfw3.h>
 #include <iostream>
@@ -37,14 +38,15 @@ int main() {
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-  unsigned int weapons[2] = {player::machineGun, player::shotGun};
+  unsigned int weapons[2] = {player::machineGun, player::cannonBall};
   GLFWwindow *window =
       glfwCreateWindow(config::gameConfig.width, config::gameConfig.height,
                        "Learn Opengl", NULL, NULL);
 
+  // text::getFont("/usr/local/share/fonts/arial.ttf");
   Player player(glm::vec3(0.0f, 10.0f, 0.0f), global::cameraUp,
                 global::cameraFront, global::cameraOrientation,
-                player::timeShip, weapons);
+                player::speedShip, weapons);
 
   if (window == NULL) {
     std::cout << "Failed to create GLFW window" << std::endl;
@@ -92,6 +94,7 @@ int main() {
 
   Shader screenShader("./assets/shaders/screen.vert",
                       "./assets/shaders/screen.frag");
+
   Shader textShader("./assets/shaders/text.vert", "./assets/shaders/text.frag");
 
   shader::shader = {
@@ -119,14 +122,14 @@ int main() {
   };
 
   stbi_set_flip_vertically_on_load(false);
-  unsigned int bitmapTexture = loadTexture("./assets/fonts/text2.png");
 
   unsigned int skyboxTexture = loadCubemap(skyboxTextures);
   unsigned int cubeTexture = loadTexture("./assets/imgs/box.jpg");
 
+  text::getFont("./assets/fonts/arcade.ttf");
+
   textures::texture.space0 = skyboxTexture;
   textures::texture.cube = cubeTexture;
-  textures::texture.text = bitmapTexture;
 
   glActiveTexture(GL_TEXTURE0);
 
@@ -203,6 +206,8 @@ int main() {
 
     int fbWidth, fbHeight;
     glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
+    config::gameConfig.width = fbWidth;
+    config::gameConfig.height = fbHeight;
 
     if (currentTime - config::gameConfig.lastUpdateTime >=
         config::gameConfig.logicIntervalTime) {
@@ -263,12 +268,8 @@ int main() {
         .view = view,
         .bossPos = bossPos,
         .textProjection = textProjection,
-
     };
     player.displayScreen(playerDisplayContext);
-
-    // renderText(&textShader, geometry::geometry.text, textProjection, "test",
-    //            100.f, 100.f, 50.f, glm::vec3(1.0f));
 
     glfwSwapBuffers(window);
     glfwPollEvents();
