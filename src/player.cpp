@@ -981,10 +981,6 @@ void Player::displayCooldown(player::DisplayContext displayContext) {
   translate = glm::vec2(0.75, -0.95);
   shader::shader.cooldown->setVec2f("uTranslate", translate);
 
-  // displayContext.cooldownShader->setVec2f(
-  //     "uResolution",
-  //     glm::vec2(config::gameConfig.width, config::gameConfig.height));
-
   glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 }
 
@@ -992,21 +988,28 @@ void Player::displayCooldownText(player::DisplayContext displayContext) {
   float cooldown = ship::shipAbilityCooldown[ship];
   float timer = (cooldown - glm::clamp(abilityCounter, 0.0f, cooldown)) /
                 config::gameConfig.fps;
-
-  renderText(displayContext.textProjection, " !\"#$%&\'()*+,-./01234567",
-             200.0f, 200.0f, 50.0f, glm::vec3(1.0f));
-  renderText(displayContext.textProjection, "89:;<=>?@ABCDEFGHIJKLMNO", 200.0f,
-             150.0f, 50.0f, glm::vec3(1.0f));
-  renderText(displayContext.textProjection, "PQRSTUVWXYZ[\\]^_`abcdefg", 200.0f,
-             100.0f, 50.0f, glm::vec3(1.0f));
-  renderText(displayContext.textProjection, "hijklmnopqrstuvwxyz{|}~", 200.0f,
-             50.0f, 50.0f, glm::vec3(1.0f));
-
   if (timer > 0.0) {
-    std::stringstream ss;
-    ss << std::fixed << std::setprecision(2) << timer;
-    std::string abilityString = ss.str();
-    renderText(displayContext.textProjection, abilityString, 100.0f, 100.0f,
-               50.0f, glm::vec3(1.0f));
+    std::ostringstream s;
+    s << std::fixed << std::setprecision(0) << timer;
+    std::string timerString = s.str();
+
+    float x = config::gameConfig.width / 3.55f;
+    float y = config::gameConfig.height / 14.0f;
+    renderText(displayContext.textProjection, timerString, x, y, 0.75f,
+               glm::vec3(1.0f));
+  }
+
+  cooldown = ship::shipUltimateCooldown[ship];
+  timer = (cooldown - glm::clamp(ultimateCounter, 0.0f, cooldown)) /
+          config::gameConfig.fps;
+  if (timer > 0.0) {
+    std::ostringstream s;
+    s << std::fixed << std::setprecision(0) << timer;
+    std::string timerString = s.str();
+
+    float x = config::gameConfig.width - config::gameConfig.width / 3.59f;
+    float y = config::gameConfig.height / 14.0f;
+    renderText(displayContext.textProjection, timerString, x, y, 0.6f,
+               glm::vec3(1.0f));
   }
 }
