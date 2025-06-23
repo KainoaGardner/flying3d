@@ -112,7 +112,7 @@ struct VampireShip {
 
   const float abilityParryMaxDistance = 50.0f;
   const float abilityDamageBoost = 1.0f;
-  const float abilityHealthCost = 1.0f;
+  const float abilityHealthCost = 3.0f;
 
   const float ultimateCooldown = 10000.0f;
   const float ultimateLength = 2000.0f;

@@ -30,7 +30,8 @@ void displayBullets(Player *player, float timePassed) {
   }
 
   glBindVertexArray(geometry::geometry.beam.vao);
-  if (!(player->ship == player::tankShip && player->abilityTimer > 0.0f)) {
+  if (!(player->ship == player::tankShip && player->abilityTimer > 0.0f) &&
+      player->alive) {
     player->laser->draw(timePassed);
 
     player->blade->draw(timePassed);

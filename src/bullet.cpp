@@ -1,5 +1,6 @@
 #include "../include/bullet.h"
 
+#include "../include/boss.h"
 namespace bullet {
 MachineGun machineGun;
 Shotgun shotgun;
@@ -108,7 +109,7 @@ HomingMissile::HomingMissile(glm::vec3 positionIn, glm::vec3 rotationIn,
 
 void HomingMissile::update(float timeSlow) {
   // change to closest target pos
-  glm::vec3 closestTargetPos = glm::vec3(0.0f);
+  glm::vec3 closestTargetPos = boss::bossPosition;
 
   glm::vec3 targetDirection = glm::normalize(closestTargetPos - position);
   direction = glm::normalize(

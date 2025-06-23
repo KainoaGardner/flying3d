@@ -2,6 +2,7 @@
 #include "../include/glm/glm.hpp"
 #include "../include/glm/gtc/matrix_transform.hpp"
 
+#include "../include/boss.h"
 #include "../include/bullet.h"
 #include "../include/config.h"
 #include "../include/display.h"
@@ -26,10 +27,8 @@ void keyInputCallback(GLFWwindow *window, int key, int scancode, int action,
                       int mods);
 
 glm::vec3 bossPos = glm::vec3(0.0f);
-float bossShootCooldown = 10.0f;
-float bossShootCounter = 0.0f;
 
-void update(Player *player);
+void update(Player *player, Cube *boss);
 
 int main() {
   glfwInit();
@@ -38,15 +37,17 @@ int main() {
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-  unsigned int weapons[2] = {player::machineGun, player::cannonBall};
+  unsigned int weapons[2] = {player::swingBlade, player::homingMissile};
   GLFWwindow *window =
       glfwCreateWindow(config::gameConfig.width, config::gameConfig.height,
                        "Learn Opengl", NULL, NULL);
 
-  // text::getFont("/usr/local/share/fonts/arial.ttf");
   Player player(glm::vec3(0.0f, 0.0f, 500.0f), global::cameraUp,
                 global::cameraFront, global::cameraOrientation,
-                player::speedShip, weapons);
+                player::vampireShip, weapons);
+
+  Cube boss(glm::vec3(0.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f),
+            glm::vec3(50.0f), boss::cube.health);
 
   if (window == NULL) {
     std::cout << "Failed to create GLFW window" << std::endl;
@@ -211,7 +212,7 @@ int main() {
 
     if (currentTime - config::gameConfig.lastUpdateTime >=
         config::gameConfig.logicIntervalTime) {
-      update(&player);
+      update(&player, &boss);
       config::gameConfig.lastUpdateTime += config::gameConfig.logicIntervalTime;
     }
 
@@ -224,7 +225,7 @@ int main() {
     shader::shader.normal->setFloat("uTime", timePassed);
 
     glm::mat4 view = glm::mat4(1.0f);
-    view = player.getViewMatrix(bossPos);
+    view = player.getViewMatrix(boss.position);
 
     glm::mat4 projection;
     projection = glm::perspective(glm::radians(player.fov),
@@ -242,18 +243,7 @@ int main() {
     // display
     displayCubeMap(view, projection);
 
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::scale(model, glm::vec3(50.0f));
-
-    // display boss
-    glBindVertexArray(cubeGeometry.vao);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, textures::texture.cube);
-
-    shader::shader.normal->use();
-    shader::shader.normal->setMatrix4fv("uModel", model);
-
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+    boss.display();
     // display enemies
 
     displayBullets(&player, timePassed);
@@ -305,24 +295,12 @@ void keyInputCallback(GLFWwindow *window, int key, int scancode, int action,
   }
 }
 
-void update(Player *player) {
+void update(Player *player, Cube *boss) {
   player->update();
   player->handleKeyboardInput();
 
-  bossShootCounter += 1.0f * player->timeSlowAmount;
-  if (bossShootCounter >= bossShootCooldown) {
-    glm::vec3 toPlayer = glm::normalize(player->position - bossPos);
-    toPlayer.x += ((float(rand() % 100) / 100.0) - 0.5) / 5.0;
-    toPlayer.y += ((float(rand() % 100) / 100.0) - 0.5) / 5.0;
-    toPlayer.z += ((float(rand() % 100) / 100.0) - 0.5) / 5.0;
-
-    Projectile projectile;
-    projectile.bullet = std::make_unique<Bullet>(
-        bossPos, toPlayer, toPlayer, global::cameraOrientation, glm::vec3(5.0f),
-        glm::vec3(1.0f, 0.0f, 0.0f), 1.0f, 100.0f, true);
-    projectiles.push_back(std::move(projectile));
-    bossShootCounter = 0.0f;
-  }
+  boss->update(player);
+  boss::bossPosition = boss->position;
 
   for (auto it = projectiles.begin(); it != projectiles.end();) {
     Projectile &projectile = *it;

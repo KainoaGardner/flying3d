@@ -6,6 +6,10 @@
 #include <iomanip>
 #include <sstream>
 
+namespace player {
+PlayerStruct playerStruct;
+}
+
 Player::Player(glm::vec3 positionIn, glm::vec3 worldUpIn, glm::vec3 frontIn,
                glm::quat orientationIn, unsigned int shipIn,
                unsigned int weaponsIn[2]) {
@@ -30,27 +34,43 @@ glm::mat4 Player::getViewMatrix(glm::vec3 bossPosition) {
 
   glm::vec3 cameraUp = glm::normalize(orientation * global::cameraUp);
   switch (viewDirection) {
-  case 1:
+  case 1: {
     view = glm::translate(view, -position);
     break;
-  case 2:
+  }
+  case 2: {
     view = glm::rotate(view, float(M_PI), cameraUp);
     view = glm::translate(view, -position);
     break;
-  case 3:
+  }
+  case 3: {
     view = glm::lookAt(position, bossPosition, cameraUp);
     break;
-  case 4:
+  }
+  case 4: {
     glm::vec3 cameraFront = glm::normalize(orientation * global::cameraFront);
     glm::vec3 thirdPerson = -position + cameraFront * 10.0f - cameraUp * 2.0f;
     view = glm::translate(view, thirdPerson);
     break;
+  }
+  case 5: {
+    glm::vec3 cameraFront = glm::normalize(orientation * global::cameraFront);
+    glm::vec3 thirdPerson = -position + cameraFront * 50.0f - cameraUp * 5.0f;
+    view = glm::translate(view, thirdPerson);
+
+    break;
+    // view = glm::lookAt(thirdPerson, position, cameraUp);
+  }
   }
 
   return view;
 }
 
 void Player::handleKeyboardInput() {
+  if (!alive) {
+    return;
+  }
+
   float cameraSpeed = ship::shipTurnSpeed[ship];
   float xOffset = 0.0f;
   float yOffset = 0.0f;
@@ -160,6 +180,21 @@ void Player::handleKeyboardInput() {
 }
 
 void Player::update() {
+  if (!alive) {
+    if (deathCounter < global::maxCounter) {
+      deathCounter += 1.0f;
+    }
+
+    if (deathCounter > player::playerStruct.respawnTime) {
+      alive = false;
+      deathCounter = 0.0f;
+    }
+
+    viewDirection = 5;
+
+    return;
+  }
+
   updateCameraMovement();
   if (weapons[weaponIndex] != player::chargeRifle &&
       shootCounter < global::maxCounter)
@@ -196,8 +231,7 @@ void Player::update() {
     }
   }
 
-  if (checkBulletCollision()) {
-  }
+  checkBulletCollision();
 }
 
 void Player::updateCamera() {
@@ -885,6 +919,14 @@ void Player::vampireShipUltimate() {
 
 void Player::takeDamage(float damage) {
   health -= damage * damageReductionAmount;
+  if (health < 0.0f && alive) {
+    alive = false;
+    Particle particle;
+    particle.explosion = std::make_unique<Explosion>(position, orientation,
+                                                     particle::explosion.size,
+                                                     particle::explosion.timer);
+    particles.push_back(std::move(particle));
+  }
 }
 
 void Player::healShip(float addHealth) {
@@ -896,6 +938,9 @@ void Player::healShip(float addHealth) {
 }
 
 void Player::displayScreen(player::DisplayContext displayContext) {
+  if (!alive)
+    return;
+
   displayHealth(displayContext);
   displayArrow(displayContext);
   displayReload(displayContext);
@@ -964,6 +1009,12 @@ void Player::displayCooldown(player::DisplayContext displayContext) {
 
   float cooldown = ship::shipAbilityCooldown[ship];
   float timer = abilityCounter;
+
+  if (ship == player::vampireShip && keys::actionPressed[keys::ability]) {
+    cooldown = 1.0f;
+    timer = 0.0f;
+  }
+
   shader::shader.cooldown->setFloat("uTimer", timer);
   shader::shader.cooldown->setFloat("uCooldown", cooldown);
 

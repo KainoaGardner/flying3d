@@ -46,6 +46,12 @@ struct DisplayContext {
   glm::mat4 textProjection;
 };
 
+struct PlayerStruct {
+  const float respawnTime = 100.0f;
+};
+
+extern PlayerStruct playerStruct;
+
 } // namespace player
 
 class Player {
@@ -98,10 +104,13 @@ public:
   // float ultimateCounter = 0.0f;
   float abilityTimer = 0.0f;
   float ultimateTimer = 0.0f;
+  float deathCounter = 0.0f;
 
   float getBulletTimeSlow(glm::vec3 bulletPosition);
 
   void displayScreen(player::DisplayContext);
+
+  bool alive = true;
 
 private:
   float maxSpeed;
