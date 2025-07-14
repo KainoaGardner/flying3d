@@ -37,14 +37,14 @@ int main() {
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-  unsigned int weapons[2] = {player::swingBlade, player::homingMissile};
+  unsigned int weapons[2] = {player::machineGun, player::homingMissile};
   GLFWwindow *window =
       glfwCreateWindow(config::gameConfig.width, config::gameConfig.height,
                        "Learn Opengl", NULL, NULL);
 
   Player player(glm::vec3(0.0f, 0.0f, 500.0f), global::cameraUp,
                 global::cameraFront, global::cameraOrientation,
-                player::vampireShip, weapons);
+                player::normalShip, weapons);
 
   Cube boss(glm::vec3(0.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f),
             glm::vec3(50.0f), boss::cube.health);
