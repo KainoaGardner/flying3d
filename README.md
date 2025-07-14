@@ -3,7 +3,7 @@
 
 <h2 align="left">Gameplay</h2>
   
-<img src=".github/flyGame.png"
+<img src=".github/flyingGame.png"
      alt="Image"
      style="float: left; margin-right: 10px; height: 500px" />
 
