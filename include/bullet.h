@@ -26,6 +26,16 @@ struct Shotgun {
   const float damage = 0.5f;
 };
 
+struct FlameThrower {
+  const float cooldown = 0.5f;
+  const float speed = 1.0f;
+  const float spread = 10.0f;
+  const float bulletSize = 0.5f;
+  const float damage = 0.75f;
+  const float disappearTime = 300.0f;
+};
+
+
 struct HomingMissile {
   const float cooldown = 15.0f;
   const float speed = 3.0f;
@@ -52,6 +62,7 @@ struct ChargeRifle {
   const float damage = 30.0f;
   const float strength = 4.0f;
 };
+
 
 struct ZapRifle {
   const float cooldown = 75.0f;
@@ -90,6 +101,7 @@ struct Blade {
 
 extern MachineGun machineGun;
 extern Shotgun shotgun;
+extern FlameThrower flameThrower;
 extern HomingMissile homingMissile;
 extern BombLauncher bombLauncher;
 extern ChargeRifle chargeRifle;
@@ -98,7 +110,7 @@ extern Cannon cannon;
 extern Laser laser;
 extern Blade blade;
 
-extern const float bulletShootCooldown[9];
+extern const float bulletShootCooldown[10];
 } // namespace bullet
 
 class Bullet {
@@ -146,6 +158,21 @@ public:
 
 private:
 };
+
+class FlameBullet : public Bullet {
+public:
+  float disappearTimer;
+  float disappearCounter = 0.0f;
+
+  FlameBullet(glm::vec3 positionIn, glm::vec3 rotationIn, glm::vec3 directionIn,
+             glm::quat orientationIn, glm::vec3 scaleIn, glm::vec3 colorIn,
+             float speedIn, float damageIn, bool enemyBulletIn,
+             float disappearTimer);
+
+  void update(float timeSlow) override;
+private:
+};
+
 
 class HomingMissile : public Bullet {
 public:

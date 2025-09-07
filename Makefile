@@ -21,6 +21,7 @@ SRCS := $(SRC_DIR)/main.cpp \
 				$(SRC_DIR)/ships.cpp \
 				$(SRC_DIR)/display.cpp \
 				$(SRC_DIR)/config.cpp \
+				$(SRC_DIR)/collision.cpp \
 				$(SRC_DIR)/text.cpp \
 				$(SRC_DIR)/boss.cpp \
 				$(SRC_DIR)/textures.cpp \
@@ -36,6 +37,7 @@ OBJS := $(OBJ_DIR)/main.o \
 				$(OBJ_DIR)/text.o \
 				$(OBJ_DIR)/bullet.o \
 				$(OBJ_DIR)/config.o \
+				$(OBJ_DIR)/collision.o \
 				$(OBJ_DIR)/display.o \
 				$(OBJ_DIR)/particle.o \
 				$(OBJ_DIR)/boss.o \

@@ -9,6 +9,10 @@
 
 namespace global {
 const float maxCounter = std::numeric_limits<float>::max();
+const glm::vec3 localFront = glm::vec3(0.0f, 0.0f, 1.0f);
+const glm::vec3 localUp = glm::vec3(0.0f, 1.0f, 0.0f);
+const glm::vec3 localRight = glm::vec3(1.0f, 0.0f, 0.0f);
+
 const glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 const glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 const glm::vec3 cameraRight = glm::vec3(1.0f, 0.0f, 0.0f);

@@ -112,14 +112,15 @@ struct VampireShip {
 
   const float abilityParryMaxDistance = 50.0f;
   const float abilityDamageBoost = 1.0f;
-  const float abilityHealthCost = 3.0f;
+  const float abilityHealthCost = 10.0f;
 
   const float ultimateCooldown = 10000.0f;
-  const float ultimateLength = 2000.0f;
-  const float ultimateHealAmount = 5.0f;
+  const float ultimateLength = 1000.0f;
+  const float ultimateHealAmount = 10.0f;
 
   const float passiveMaxDamageBoost = 3.0f;
   const float passiveStrength = 3.0f;
+  const float passiveLifeStealPercent = 10.0f;
 };
 
 extern NormalShip normalShip;

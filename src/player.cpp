@@ -231,7 +231,7 @@ void Player::update() {
     }
   }
 
-  checkBulletCollision();
+  collisionUpdate();
 }
 
 void Player::updateCamera() {
@@ -276,6 +276,9 @@ void Player::shootBullet() {
     break;
   case player::shotGun:
     shootShotGun();
+    break;
+  case player::flameThrower:
+    shootFlameThrower();
     break;
   case player::homingMissile:
     shootHomingMissile();
@@ -369,6 +372,38 @@ void Player::shootShotGun() {
         false);
     projectiles.push_back(std::move(projectile));
   }
+}
+
+void Player::shootFlameThrower() {
+  if (shootCounter < bullet::flameThrower.cooldown)
+    return;
+  shootCounter = 0.0f;
+
+  glm::vec3 scale = glm::vec3(bullet::flameThrower.bulletSize);
+
+  int randNum = rand() % 3;
+  if (leftGun){
+  }
+
+  glm::vec3 color;
+  if (randNum == 0){
+    color = glm::vec3(1.0f,0.0f,0.0f);
+  }else if (randNum == 1){
+    color = glm::vec3(1.0f,0.5f,0.0f);
+  }else{
+    color = glm::vec3(1.0f,1.0f,0.0f);
+  }
+
+  player::ShootArgs shootArgs =
+      getShootArgs(-2.0f, 1.0f, bullet::flameThrower.spread);
+
+  Projectile projectile;
+  projectile.bullet = std::make_unique<FlameBullet>(
+      shootArgs.bulletPosition, shootArgs.spin * shootArgs.direction,
+      shootArgs.direction, orientation, scale, color,
+      bullet::flameThrower.speed + speed, bullet::flameThrower.damage * damageBoost,
+      false,bullet::flameThrower.disappearTime);
+  projectiles.push_back(std::move(projectile));
 }
 
 void Player::shootHomingMissile() {
@@ -903,7 +938,6 @@ void Player::vampireShipUpdate() {
   float y = pow(max, pow(x, ship::vampireShip.passiveStrength));
 
   finalDamage += y;
-
   damageBoost = finalDamage;
 }
 
@@ -923,10 +957,16 @@ void Player::takeDamage(float damage) {
     alive = false;
     Particle particle;
     particle.explosion = std::make_unique<Explosion>(position, orientation,
-                                                     particle::explosion.size,
+                                                     particle::explosion.size * 3.0f,
                                                      particle::explosion.timer);
     particles.push_back(std::move(particle));
   }
+}
+
+
+void Player::vampireLifeSteal(float damage){
+  if (ship != player::vampireShip) return;
+  healShip(damage * ship::vampireShip.passiveLifeStealPercent);
 }
 
 void Player::healShip(float addHealth) {
@@ -1066,6 +1106,10 @@ void Player::displayCooldownText(player::DisplayContext displayContext) {
     renderText(displayContext.textProjection, timerString, x, y, 0.6f,
                glm::vec3(1.0f));
   }
+}
+
+void Player::collisionUpdate() {
+  checkBulletCollision();
 }
 
 bool Player::checkBulletCollision() {

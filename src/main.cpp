@@ -28,7 +28,7 @@ void keyInputCallback(GLFWwindow *window, int key, int scancode, int action,
 
 glm::vec3 bossPos = glm::vec3(0.0f);
 
-void update(Player *player, Cube *boss);
+void update(Player *player, Boss *boss);
 
 int main() {
   glfwInit();
@@ -37,7 +37,7 @@ int main() {
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-  unsigned int weapons[2] = {player::machineGun, player::homingMissile};
+  unsigned int weapons[2] = {player::flameThrower, player::shotGun};
   GLFWwindow *window =
       glfwCreateWindow(config::gameConfig.width, config::gameConfig.height,
                        "Learn Opengl", NULL, NULL);
@@ -295,7 +295,7 @@ void keyInputCallback(GLFWwindow *window, int key, int scancode, int action,
   }
 }
 
-void update(Player *player, Cube *boss) {
+void update(Player *player, Boss *boss) {
   player->update();
   player->handleKeyboardInput();
 

@@ -39,6 +39,7 @@ void displayBullets(Player *player, float timePassed) {
 }
 
 void displayParticles() {
+  glBindVertexArray(geometry::geometry.cube.vao);
   for (unsigned int i = 0; i < particles.size(); i++) {
     Particle &particle = particles[i];
     if (particle.explosion) {

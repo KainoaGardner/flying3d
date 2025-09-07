@@ -15,6 +15,7 @@ namespace player {
 enum Weapons {
   machineGun,
   shotGun,
+  flameThrower,
   homingMissile,
   bombLauncher,
   chargeRifle,
@@ -95,7 +96,6 @@ public:
 
   void update();
 
-  void takeDamage(float damage);
   void healShip(float addHealth);
 
   float shootCounter = 0.0f;
@@ -112,6 +112,9 @@ public:
 
   bool alive = true;
 
+
+  void vampireLifeSteal(float damage);
+
 private:
   float maxSpeed;
 
@@ -125,6 +128,8 @@ private:
   bool shooting = false;
   unsigned int weapons[2];
 
+
+  void takeDamage(float damage);
   void updateCamera();
   void updateCameraMovement();
 
@@ -141,11 +146,13 @@ private:
   void displayCooldown(player::DisplayContext displayContext);
   void displayCooldownText(player::DisplayContext displayContext);
 
+  void collisionUpdate();
   bool checkBulletCollision();
 
   void shootBullet();
   void shootMachineGun();
   void shootShotGun();
+  void shootFlameThrower();
   void shootHomingMissile();
   void shootBombLauncher();
   void shootChargeRifle();

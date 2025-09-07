@@ -1,8 +1,11 @@
 #include "../include/bullet.h"
 
 #include "../include/boss.h"
+#include <iostream>
+
 namespace bullet {
 MachineGun machineGun;
+FlameThrower flameThrower;
 Shotgun shotgun;
 HomingMissile homingMissile;
 BombLauncher bombLauncher;
@@ -12,8 +15,8 @@ Cannon cannon;
 Laser laser;
 Blade blade;
 
-const float bulletShootCooldown[9] = {
-    bullet::machineGun.cooldown,    bullet::shotgun.cooldown,
+const float bulletShootCooldown[10] = {
+    bullet::machineGun.cooldown,    bullet::shotgun.cooldown, bullet::flameThrower.cooldown,
     bullet::homingMissile.cooldown, bullet::bombLauncher.cooldown,
     bullet::chargeRifle.cooldown,   bullet::zapRifle.cooldown,
     bullet::cannon.cooldown,        bullet::laser.cooldown,
@@ -83,6 +86,9 @@ BombBullet::BombBullet(glm::vec3 positionIn, glm::vec3 rotationIn,
   explodeTimer = explodeTimerIn;
 }
 
+
+
+
 void BombBullet::update(float timeSlow) {
   Bullet::update(timeSlow);
   explodeCounter += 1.0f;
@@ -99,6 +105,24 @@ void BombBullet::explode() {
                                                    particle::explosion.timer);
   particles.push_back(std::move(particle));
 }
+
+FlameBullet::FlameBullet(glm::vec3 positionIn, glm::vec3 rotationIn,
+                       glm::vec3 directionIn, glm::quat orientationIn,
+                       glm::vec3 scaleIn, glm::vec3 colorIn, float speedIn,
+                       float damageIn, bool enemyBulletIn, float disappearTimerIn)
+    : Bullet(positionIn, rotationIn, directionIn, orientationIn, scaleIn,
+             colorIn, speedIn, damageIn, enemyBulletIn) {
+  disappearTimer = disappearTimerIn;
+}
+
+void FlameBullet::update(float timeSlow) {
+  Bullet::update(timeSlow);
+  disappearCounter += 1.0f;
+  if (disappearCounter > disappearTimer) {
+    alive = false;
+  }
+}
+
 
 HomingMissile::HomingMissile(glm::vec3 positionIn, glm::vec3 rotationIn,
                              glm::vec3 directionIn, glm::quat orientationIn,
@@ -140,6 +164,8 @@ void ZapBullet::update(float timeSlow) {
 
   Bullet::update(timeSlow);
 }
+
+
 
 Laser::Laser(glm::vec3 colorIn, float damageIn) {
   color = colorIn;

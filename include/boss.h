@@ -37,6 +37,13 @@ public:
   virtual void display();
 
 private:
+
+protected:
+  void collisionUpdate(Player *player);
+  float bulletCollisionUpdate();
+  bool checkBulletCollsion(Bullet& bullet); 
+  void takeDamage(float damage);
+
 };
 
 class Cube : public Boss {
@@ -50,5 +57,6 @@ public:
   float shootCounter = 0.0f;
 
 private:
+
 };
 #endif
