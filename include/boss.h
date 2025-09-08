@@ -10,7 +10,7 @@
 
 namespace boss {
 struct Cube {
-  const float shootCooldown = 10.0f;
+  const float shootCooldown = 5.0f;
   const float health = 1000.0f;
   const float turnSpeed = 0.05f;
 };

@@ -137,7 +137,9 @@ public:
          float speedIn, float damageIn, bool enemyBulletIn);
   virtual void update(float timeSlow);
 
-  void killBullet(glm::vec3 playerPosition);
+  void outOfBoundsBullet(glm::vec3 playerPosition);
+
+  virtual void killBullet();
 
   void draw();
 
@@ -154,7 +156,7 @@ public:
              float explodeTimerIn);
 
   void update(float timeSlow) override;
-
+  void killBullet() override;
   void explode();
 
 private:

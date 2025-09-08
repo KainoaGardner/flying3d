@@ -74,9 +74,8 @@ float Boss::bulletCollisionUpdate(){
       takeDamage(it->bullet->damage);
       damage += it->bullet->damage;
 
-      DamageText damageTextParticle(it->bullet->position, it->bullet->orientation,glm::vec3(1.0f), 
-                                                       it->bullet->scale.x * 2.0f,particle::damageText.timer,it->bullet->damage);
-      damageTextParticles.push_back(std::move(damageTextParticle));
+
+      it->bullet->killBullet();
       it = projectiles.erase(it);
     }else{
       ++it;
@@ -107,6 +106,11 @@ float Boss::laserCollisionUpdate(Player *player){
   if (dot > tolerance) {
     takeDamage(bullet::laser.damage * speed * speed);
     damage += bullet::laser.damage * speed * speed;
+
+    DamageText damageTextParticle(position, orientation,glm::vec3(1.0f), 
+                                                     bullet::laser.size,particle::damageText.timer,damage);
+    damageTextParticles.push_back(std::move(damageTextParticle));
+
   }
 
 

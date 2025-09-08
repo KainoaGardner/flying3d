@@ -37,14 +37,14 @@ int main() {
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-  unsigned int weapons[2] = {player::machineGun, player::cannonBall};
+  unsigned int weapons[2] = {player::bombLauncher, player::laserCannon};
   GLFWwindow *window =
       glfwCreateWindow(config::gameConfig.width, config::gameConfig.height,
                        "Learn Opengl", NULL, NULL);
 
   Player player(glm::vec3(0.0f, 0.0f, 500.0f), global::cameraUp,
                 global::cameraFront, global::cameraOrientation,
-                player::vampireShip, weapons);
+                player::tankShip, weapons);
 
   Cube boss(glm::vec3(0.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f),
             glm::vec3(50.0f), boss::cube.health);
@@ -322,7 +322,7 @@ void update(Player *player, Boss *boss) {
         projectile.bullet->update(1.0f);
       }
 
-      projectile.bullet->killBullet(player->position);
+      projectile.bullet->outOfBoundsBullet(player->position);
       if (!projectile.bullet->alive) {
         it = projectiles.erase(it);
       } else {

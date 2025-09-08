@@ -79,8 +79,8 @@ void DamageText::drawText(glm::mat4 view,glm::mat4 projection,glm::mat4 textProj
 
   float x = config::gameConfig.width - (1.0f - (ndc.x * 0.5f + 0.5f)) * config::gameConfig.width;
   float y = ((ndc.y * 0.5f + 0.5f)) * config::gameConfig.height;
-  float size = glm::max(0.1f,damage / 100.0f);
-  renderText(textProjection, std::to_string(int(damage)), x, y, size,
+  float size = glm::max(0.2f,damage / 100.0f);
+  renderText(textProjection, std::to_string(int(glm::ceil(damage))), x, y, size,
                glm::vec3(1.0f,1.0f,1.0f));
 
 }

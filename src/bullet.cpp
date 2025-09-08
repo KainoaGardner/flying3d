@@ -49,11 +49,17 @@ void Bullet::update(float timeSlow) {
   position += direction * speed * timeSlow;
 }
 
-void Bullet::killBullet(glm::vec3 playerPosition) {
+void Bullet::outOfBoundsBullet(glm::vec3 playerPosition) {
   float dist = glm::distance(playerPosition, position);
   if (dist > 1000.0f) {
     alive = false;
   }
+}
+
+void Bullet::killBullet() {
+      DamageText damageTextParticle(position, orientation,glm::vec3(1.0f), 
+                                                       scale.x * 2.0f,particle::damageText.timer,damage);
+      damageTextParticles.push_back(std::move(damageTextParticle));
 }
 
 void Bullet::draw() {
@@ -86,6 +92,12 @@ BombBullet::BombBullet(glm::vec3 positionIn, glm::vec3 rotationIn,
 }
 
 
+
+void BombBullet::killBullet() {
+  Bullet::killBullet();
+  explode();
+
+}
 
 
 void BombBullet::update(float timeSlow) {
