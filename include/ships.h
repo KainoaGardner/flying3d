@@ -3,7 +3,7 @@
 
 namespace ship {
 struct NormalShip {
-  const float health = 1000.0f;
+  const float health = 100.0f;
   const float maxSpeed = 4.0f;
   const float acceleration = 0.004f;
   const float breakStrength = 0.004f;
@@ -25,7 +25,7 @@ struct NormalShip {
 };
 
 struct TankShip {
-  const float health = 3000.0f;
+  const float health = 300.0f;
   const float maxSpeed = 3.0f;
   const float acceleration = 0.002f;
   const float breakStrength = 0.002f;
@@ -45,7 +45,7 @@ struct TankShip {
 };
 
 struct TimeShip {
-  const float health = 750.0f;
+  const float health = 75.0f;
   const float maxSpeed = 4.5f;
   const float acceleration = 0.003f;
   const float breakStrength = 0.003f;
@@ -64,7 +64,7 @@ struct TimeShip {
 };
 
 struct SpeedShip {
-  const float health = 500.0f;
+  const float health = 50.0f;
   const float maxSpeed = 5.0f;
   const float acceleration = 0.005f;
   const float breakStrength = 0.005f;
@@ -86,7 +86,7 @@ struct SpeedShip {
 };
 
 struct ParryShip {
-  const float health = 1500.0f;
+  const float health = 150.0f;
   const float maxSpeed = 3.5f;
   const float acceleration = 0.003f;
   const float breakStrength = 0.003f;
@@ -98,12 +98,12 @@ struct ParryShip {
 
   const float ultimateCooldown = 10000.0f;
 
-  const float passiveParryDamage = 10.0f;
+  const float passiveParryDamage = 3.0f;
   const float passiveParrySpeedBoost = 2.0f;
 };
 
 struct VampireShip {
-  const float health = 2000.0f;
+  const float health = 200.0f;
   const float maxSpeed = 4.0f;
   const float acceleration = 0.004f;
   const float breakStrength = 0.003f;
@@ -112,15 +112,15 @@ struct VampireShip {
 
   const float abilityParryMaxDistance = 50.0f;
   const float abilityDamageBoost = 1.0f;
-  const float abilityHealthCost = 10.0f;
+  const float abilityHealthCost = 1.0f;
 
   const float ultimateCooldown = 10000.0f;
   const float ultimateLength = 1000.0f;
-  const float ultimateHealAmount = 10.0f;
+  const float ultimateHealAmount = 1.0f;
 
   const float passiveMaxDamageBoost = 3.0f;
   const float passiveStrength = 3.0f;
-  const float passiveLifeStealPercent = 10.0f;
+  const float passiveLifeStealPercent = 1.0f;
 };
 
 extern NormalShip normalShip;

@@ -114,6 +114,7 @@ public:
 
 
   void vampireLifeSteal(float damage);
+  unsigned int weapons[2];
 
 private:
   float maxSpeed;
@@ -126,7 +127,6 @@ private:
   float notHitCounter = 0.0f;
 
   bool shooting = false;
-  unsigned int weapons[2];
 
 
   void takeDamage(float damage);
@@ -142,6 +142,7 @@ private:
 
   void displayHealth(player::DisplayContext displayContext);
   void displayArrow(player::DisplayContext displayContext);
+  void displayDamageText(player::DisplayContext displayContext);
   void displayReload(player::DisplayContext displayContext);
   void displayCooldown(player::DisplayContext displayContext);
   void displayCooldownText(player::DisplayContext displayContext);

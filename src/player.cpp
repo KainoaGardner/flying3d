@@ -55,7 +55,7 @@ glm::mat4 Player::getViewMatrix(glm::vec3 bossPosition) {
   }
   case 5: {
     glm::vec3 cameraFront = glm::normalize(orientation * global::cameraFront);
-    glm::vec3 thirdPerson = -position + cameraFront * 50.0f - cameraUp * 5.0f;
+    glm::vec3 thirdPerson = -position + cameraFront * 250.0f - cameraUp * 25.0f;
     view = glm::translate(view, thirdPerson);
 
     break;
@@ -456,6 +456,7 @@ void Player::shootChargeRifle() {
     full = true;
   } else if (shootCounter > bullet::chargeRifle.cooldown / 4.0) {
   } else {
+    shootCounter = 0.0f;
     return;
   }
 
@@ -913,7 +914,7 @@ void Player::parryShipUltimate() {
         projectile.bullet->enemyBullet = false;
         projectile.bullet->color = glm::vec3(1.0f);
         projectile.bullet->speed *= ship::parryShip.passiveParrySpeedBoost;
-        projectile.bullet->damage *= ship::parryShip.passiveParryDamage;
+        projectile.bullet->damage *= ship::parryShip.passiveParryDamage * 0.5f;
       }
     }
   }
@@ -955,8 +956,8 @@ void Player::takeDamage(float damage) {
   health -= damage * damageReductionAmount;
   if (health < 0.0f && alive) {
     alive = false;
-    Particle particle;
-    particle.explosion = std::make_unique<Explosion>(position, orientation,
+    ParticleList particle;
+    particle.particle = std::make_unique<Explosion>(position, orientation,glm::vec3(0.0f),
                                                      particle::explosion.size * 3.0f,
                                                      particle::explosion.timer);
     particles.push_back(std::move(particle));
@@ -981,11 +982,15 @@ void Player::displayScreen(player::DisplayContext displayContext) {
   if (!alive)
     return;
 
+
+  glDisable(GL_DEPTH_TEST);
   displayHealth(displayContext);
   displayArrow(displayContext);
   displayReload(displayContext);
   displayCooldown(displayContext);
   displayCooldownText(displayContext);
+  displayDamageText(displayContext);
+  glEnable(GL_DEPTH_TEST);
 }
 
 void Player::displayHealth(player::DisplayContext displayContext) {
@@ -995,6 +1000,8 @@ void Player::displayHealth(player::DisplayContext displayContext) {
   shader::shader.health->setVec2f(
       "uResolution",
       glm::vec2(config::gameConfig.width, config::gameConfig.height));
+  shader::shader.health->setVec2f( "uPosition", glm::vec2(0.0f,-0.9f));
+  shader::shader.health->setVec2f( "uScale", glm::vec2(1.0f,0.1f));
 
   glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 }
@@ -1021,6 +1028,14 @@ void Player::displayArrow(player::DisplayContext displayContext) {
         glm::vec2(config::gameConfig.width, config::gameConfig.height));
 
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+  }
+}
+
+void Player::displayDamageText(player::DisplayContext displayContext) {
+  for (unsigned int i = 0; i < damageTextParticles.size(); i++) {
+    DamageText &damageText = damageTextParticles[i];
+    damageText.drawText(displayContext.view,displayContext.projection,displayContext.textProjection);
+
   }
 }
 
@@ -1087,7 +1102,7 @@ void Player::displayCooldownText(player::DisplayContext displayContext) {
     s << std::fixed << std::setprecision(0) << timer;
     std::string timerString = s.str();
 
-    float x = config::gameConfig.width / 3.55f;
+    float x = config::gameConfig.width / 3.57f;
     float y = config::gameConfig.height / 14.0f;
     renderText(displayContext.textProjection, timerString, x, y, 0.75f,
                glm::vec3(1.0f));

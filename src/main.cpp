@@ -37,14 +37,14 @@ int main() {
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-  unsigned int weapons[2] = {player::flameThrower, player::shotGun};
+  unsigned int weapons[2] = {player::machineGun, player::cannonBall};
   GLFWwindow *window =
       glfwCreateWindow(config::gameConfig.width, config::gameConfig.height,
                        "Learn Opengl", NULL, NULL);
 
   Player player(glm::vec3(0.0f, 0.0f, 500.0f), global::cameraUp,
                 global::cameraFront, global::cameraOrientation,
-                player::normalShip, weapons);
+                player::vampireShip, weapons);
 
   Cube boss(glm::vec3(0.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f),
             glm::vec3(50.0f), boss::cube.health);
@@ -241,7 +241,18 @@ int main() {
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     // display
+    glm::mat4 textProjection =
+        glm::ortho(0.0f, float(fbWidth), 0.0f, float(fbHeight));
+    player::DisplayContext playerDisplayContext = {
+        .projection = projection,
+        .view = view,
+        .bossPos = bossPos,
+        .textProjection = textProjection,
+    };
+
+
     displayCubeMap(view, projection);
+
 
     boss.display();
     // display enemies
@@ -251,15 +262,8 @@ int main() {
 
     displayScreen(textureColorBuffer);
 
-    glm::mat4 textProjection =
-        glm::ortho(0.0f, float(fbWidth), 0.0f, float(fbHeight));
-    player::DisplayContext playerDisplayContext = {
-        .projection = projection,
-        .view = view,
-        .bossPos = bossPos,
-        .textProjection = textProjection,
-    };
     player.displayScreen(playerDisplayContext);
+    boss.displayScreen(playerDisplayContext);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
@@ -328,13 +332,23 @@ void update(Player *player, Boss *boss) {
   }
 
   for (unsigned int i = 0; i < particles.size(); i++) {
-    Particle &particle = particles[i];
-    if (particle.explosion) {
-      particle.explosion->update();
-      if (!particle.explosion->alive) {
+    ParticleList &particle = particles[i];
+    if (particle.particle) {
+      particle.particle->update();
+      if (!particle.particle->alive) {
         particles.erase(particles.begin() + i);
         continue;
       };
     }
   }
+
+  for (unsigned int i = 0; i < damageTextParticles.size(); i++) {
+    DamageText &damageText = damageTextParticles[i];
+    damageText.update();
+    if (!damageText.alive) {
+      damageTextParticles.erase(damageTextParticles.begin() + i);
+      continue;
+    };
+  }
+
 };

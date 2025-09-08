@@ -11,11 +11,18 @@
 namespace boss {
 struct Cube {
   const float shootCooldown = 10.0f;
-  const float health = 10000.0f;
+  const float health = 1000.0f;
   const float turnSpeed = 0.05f;
 };
 
+enum Ships {
+  cubeBoss,
+};
+
+
 extern glm::vec3 bossPosition;
+
+extern const float bossMaxHealth[1];
 
 extern Cube cube;
 } // namespace boss
@@ -34,13 +41,19 @@ public:
        float healthIn);
 
   virtual void update(Player *player);
+
   virtual void display();
+  void displayScreen(player::DisplayContext);
 
 private:
 
 protected:
+  void displayBossName(player::DisplayContext displayContext);
+  void displayHealth(player::DisplayContext displayContext);
+
   void collisionUpdate(Player *player);
   float bulletCollisionUpdate();
+  float laserCollisionUpdate(Player *player);
   bool checkBulletCollsion(Bullet& bullet); 
   void takeDamage(float damage);
 

@@ -39,13 +39,14 @@ void displayBullets(Player *player, float timePassed) {
 }
 
 void displayParticles() {
-  glBindVertexArray(geometry::geometry.cube.vao);
   for (unsigned int i = 0; i < particles.size(); i++) {
-    Particle &particle = particles[i];
-    if (particle.explosion) {
-      particle.explosion->draw();
+    ParticleList &particle = particles[i];
+    if (particle.particle) {
+      particle.particle->draw();
     }
   }
+
+
 }
 
 void displayScreen(unsigned int colorTexture) {
@@ -109,6 +110,7 @@ void renderText(glm::mat4 projection, std::string text, float x, float y,
     x += (ch.advance >> 6) * scale;
   }
 
+  glEnable(GL_DEPTH_TEST);
   glBindVertexArray(0);
   glBindTexture(GL_TEXTURE_2D, 0);
 }

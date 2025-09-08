@@ -39,7 +39,7 @@ struct FlameThrower {
 struct HomingMissile {
   const float cooldown = 15.0f;
   const float speed = 3.0f;
-  const float turnSpeed = 0.02f;
+  const float turnSpeed = 0.06f;
   const float spread = 10.0f;
   const float bulletSize = 0.75f;
   const float damage = 5.0f;
@@ -90,6 +90,7 @@ struct Laser {
   const float spinUpTime = 1000.0f;
   const float spinStrength = 10.0f;
   const float maxSpinSpeed = 50.0f;
+  const float toleranceDegrees = 5.0f;
 };
 
 struct Blade {
@@ -221,10 +222,10 @@ public:
   void update(glm::vec3 playerPos, glm::quat playerOrientation);
 
   void draw(float timePassed);
+  float spinSpeed = 0.0f;
 
 private:
   float spinCounter = 0.0f;
-  float spinSpeed = 0.0f;
 };
 
 class Blade {

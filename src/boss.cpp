@@ -1,9 +1,15 @@
 #include "../include/boss.h"
+#include "../include/display.h"
 #include "../include/collision.h"
 #include <iostream>
 
 namespace boss {
 Cube cube;
+
+
+const float bossMaxHealth[1] = {
+  boss::cube.health,
+};
 
 glm::vec3 bossPosition;
 } // namespace boss
@@ -20,8 +26,43 @@ void Boss::update(Player *player) {}
 
 void Boss::display() {}
 
+void Boss::displayScreen(player::DisplayContext displayContext) {
+  if (!alive) return;
+
+  glDisable(GL_DEPTH_TEST);
+  displayHealth(displayContext);
+  displayBossName(displayContext);
+  glEnable(GL_DEPTH_TEST);
+}
+
+void Boss::displayBossName(player::DisplayContext displayContext) {
+  float x = config::gameConfig.width / 2.0f;
+  float y = config::gameConfig.height - config::gameConfig.height / 24.0f;
+
+  renderText(displayContext.textProjection, "Cube", x, y, 0.50f, glm::vec3(1.0f));
+
+}
+
+
+void Boss::displayHealth(player::DisplayContext displayContext) {
+  glBindVertexArray(geometry::geometry.screen.vao);
+
+  shader::shader.health->use();
+  shader::shader.health->setFloat("uMaxHealth", boss::bossMaxHealth[boss::cubeBoss]);
+  shader::shader.health->setFloat("uCurrentHealth", health);
+  shader::shader.health->setVec2f(
+      "uResolution",
+      glm::vec2(config::gameConfig.width, config::gameConfig.height));
+  shader::shader.health->setVec2f( "uPosition", glm::vec2(0.0f,0.85f));
+  shader::shader.health->setVec2f( "uScale", glm::vec2(2.0f,0.05f));
+
+
+  glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+}
+
 void Boss::collisionUpdate(Player *player) {
   float damage = bulletCollisionUpdate();
+  damage += laserCollisionUpdate(player);
   player->vampireLifeSteal(damage);
 }
 
@@ -32,6 +73,10 @@ float Boss::bulletCollisionUpdate(){
     if (checkBulletCollsion(*it->bullet)){
       takeDamage(it->bullet->damage);
       damage += it->bullet->damage;
+
+      DamageText damageTextParticle(it->bullet->position, it->bullet->orientation,glm::vec3(1.0f), 
+                                                       it->bullet->scale.x * 2.0f,particle::damageText.timer,it->bullet->damage);
+      damageTextParticles.push_back(std::move(damageTextParticle));
       it = projectiles.erase(it);
     }else{
       ++it;
@@ -41,7 +86,32 @@ float Boss::bulletCollisionUpdate(){
   return damage;
 }
 
+float Boss::laserCollisionUpdate(Player *player){
+  if (player->weapons[player->weaponIndex] != player::laserCannon || !player->laser->on){
+    return 0;
+  } 
 
+  float damage = 0;
+  glm::vec3 cameraFront = glm::normalize(player->orientation * global::cameraFront);
+  glm::vec3 toBoss = glm::normalize(position - player->position);
+
+  float dist = glm::length2(player->position - position);
+  float distToleranceIncrease = dist / 10000.f;
+
+  float dot = glm::dot(cameraFront,toBoss);
+  float tolerance = cos(glm::radians(bullet::laser.toleranceDegrees));
+  tolerance = glm::min(tolerance,tolerance * distToleranceIncrease);
+  float speed = player->laser->spinSpeed / bullet::laser.maxSpinSpeed;
+
+
+  if (dot > tolerance) {
+    takeDamage(bullet::laser.damage * speed * speed);
+    damage += bullet::laser.damage * speed * speed;
+  }
+
+
+  return damage;
+}
 
 bool Boss::checkBulletCollsion(Bullet& bullet) {
   if (bullet.enemyBullet) return false;
@@ -77,8 +147,8 @@ void Boss::takeDamage(float damage) {
   health -= damage;
   if (health < 0.0f && alive) {
     alive = false;
-    Particle particle;
-    particle.explosion = std::make_unique<Explosion>(position, orientation,
+    ParticleList particle;
+    particle.particle = std::make_unique<Explosion>(position, orientation,glm::vec3(0.0f),
                                                      particle::explosion.size,
                                                      particle::explosion.timer);
     particles.push_back(std::move(particle));
@@ -91,6 +161,7 @@ Cube::Cube(glm::vec3 positionIn, glm::quat orientationIn, glm::vec3 scaleIn,
 
 
 void Cube::update(Player *player) {
+  if (!alive) return;
   // position += glm::vec3(0.1f, 0.0f, 0.0f);
 
   // glm::vec3 cameraUp = glm::normalize(orientation * global::cameraUp);
@@ -108,18 +179,19 @@ void Cube::update(Player *player) {
     toPlayer.z += ((float(rand() % 100) / 100.0) - 0.5) / 5.0;
 
     Projectile projectile;
-    // projectile.bullet = std::make_unique<Bullet>(
-    //     position, toPlayer, toPlayer, global::cameraOrientation,
-    //     glm::vec3(5.0f), glm::vec3(1.0f, 0.0f, 0.0f), 1.0f, 100.0f, true);
-    // projectiles.push_back(std::move(projectile));
+    projectile.bullet = std::make_unique<Bullet>(
+        position, toPlayer, toPlayer, global::cameraOrientation,
+        glm::vec3(5.0f), glm::vec3(1.0f, 0.0f, 0.0f), 3.0f, 10.0f, true);
+    projectiles.push_back(std::move(projectile));
     shootCounter = 0.0f;
   }
 
   collisionUpdate(player);
-  std::cout << "Health: " << health << std::endl;
 }
 
 void Cube::display() {
+  if (!alive) return;
+
   glBindVertexArray(geometry::geometry.cube.vao);
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, textures::texture.cube);

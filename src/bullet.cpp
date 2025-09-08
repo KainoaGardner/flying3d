@@ -1,7 +1,6 @@
 #include "../include/bullet.h"
 
 #include "../include/boss.h"
-#include <iostream>
 
 namespace bullet {
 MachineGun machineGun;
@@ -99,8 +98,8 @@ void BombBullet::update(float timeSlow) {
 
 void BombBullet::explode() {
   alive = false;
-  Particle particle;
-  particle.explosion = std::make_unique<Explosion>(position, orientation,
+  ParticleList particle;
+  particle.particle = std::make_unique<Explosion>(position, orientation,glm::vec3(0.0f),
                                                    particle::explosion.size,
                                                    particle::explosion.timer);
   particles.push_back(std::move(particle));

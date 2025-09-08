@@ -25,8 +25,11 @@ struct GameConfig {
   const unsigned int fps = 60.0;
   const float logicIntervalTime = 1.0f / fps;
   float lastUpdateTime = glfwGetTime();
+  // unsigned int width = 1280;
+  // unsigned int height = 720;
   unsigned int width = 1280;
   unsigned int height = 720;
+
 };
 
 extern GameConfig gameConfig;

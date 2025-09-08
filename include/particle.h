@@ -14,35 +14,70 @@ struct Explosion {
   const float size = 30.0f;
 };
 
+struct DamageText {
+  const float timer = 25.0f;
+  const float size = 5.0f;
+};
+
+
 extern Explosion explosion;
+extern DamageText damageText;
 } // namespace particle
 
-class Explosion {
+
+class Particle {
 public:
   glm::vec3 position;
-  glm::vec3 scale = glm::vec3(0.0f);
+  glm::vec3 scale;
   glm::quat orientation;
-
-  float maxScale;
-  float explosionTimer;
 
   bool alive = true;
 
-  Explosion(glm::vec3 positionIn, glm::quat orientationIn, float maxScaleIn,
+  Particle(glm::vec3 positionIn, glm::quat orientationIn, glm::vec3 scaleIn);
+
+  virtual void update();
+  virtual void draw();
+
+private:
+};
+
+class Explosion : public Particle {
+public:
+  float maxScale;
+  float explosionTimer;
+
+  Explosion(glm::vec3 positionIn, glm::quat orientationIn, glm::vec3 scaleIn,float maxScaleIn,
             float explosionTimerIn);
 
-  void update();
-
-  void draw();
+  void update() override;
+  void draw() override;
 
 private:
   float explosionCounter = 0.0f;
 };
 
-struct Particle {
-  std::unique_ptr<Explosion> explosion;
+class DamageText : public Particle {
+public:
+
+  float maxScale;
+  float disappearTime;
+  float damage;
+
+  DamageText(glm::vec3 positionIn, glm::quat orientationIn, glm::vec3 scaleIn,float maxScaleIn,
+            float disappearTime,float damageIn);
+
+  void update() override;
+  void drawText(glm::mat4 view,glm::mat4 projection,glm::mat4 textProjection);
+
+private:
+  float disappearCounter = 0.0f;
 };
 
-extern std::vector<Particle> particles;
+struct ParticleList {
+  std::unique_ptr<Particle> particle;
+};
+
+extern std::vector<ParticleList> particles;
+extern std::vector<DamageText> damageTextParticles;
 
 #endif
