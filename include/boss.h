@@ -4,7 +4,6 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include "../include/glad/glad.h"
 #include "../include/glm/gtx/quaternion.hpp"
-#include "../include/player.h"
 #include "../include/textures.h"
 #include <GLFW/glfw3.h>
 
@@ -27,14 +26,17 @@ extern const float bossMaxHealth[1];
 extern Cube cube;
 } // namespace boss
 
+class Player;
+
 class Boss {
 public:
   glm::vec3 position;
   glm::vec3 scale;
   glm::quat orientation;
 
-  float health;
+  Player *player;
 
+  float health;
   bool alive = true;
 
   Boss(glm::vec3 positionIn, glm::quat orientationIn, glm::vec3 scaleIn,

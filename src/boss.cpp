@@ -1,5 +1,5 @@
-#include "../include/boss.h"
 #include "../include/display.h"
+#include "../include/boss.h"
 #include "../include/collision.h"
 #include <iostream>
 

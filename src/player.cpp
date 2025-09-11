@@ -3,6 +3,8 @@
 #include "../include/display.h"
 #include "../include/glm/gtc/quaternion.hpp"
 #include "../include/key.h"
+#include "../include/boss.h"
+
 #include <iomanip>
 #include <sstream>
 
@@ -27,7 +29,7 @@ Player::Player(glm::vec3 positionIn, glm::vec3 worldUpIn, glm::vec3 frontIn,
   updateCamera();
 }
 
-glm::mat4 Player::getViewMatrix(glm::vec3 bossPosition) {
+glm::mat4 Player::getViewMatrix() {
   glm::mat4 view = glm::mat4_cast(glm::conjugate(orientation));
   // model = glm::rotate(model, timePassed * 3.0f,
   //                     glm::normalize(glm::vec3(2.0f, 0.0f, 1.0)));
@@ -44,7 +46,12 @@ glm::mat4 Player::getViewMatrix(glm::vec3 bossPosition) {
     break;
   }
   case 3: {
-    view = glm::lookAt(position, bossPosition, cameraUp);
+    glm::vec3 bossPos = glm::vec3(0.0f);
+    if (boss != nullptr){
+        bossPos = boss->position;
+    }
+
+    view = glm::lookAt(position, bossPos, cameraUp);
     break;
   }
   case 4: {
@@ -176,7 +183,6 @@ void Player::handleKeyboardInput() {
     speedShipInput();
   }
 
-  updateCamera();
 }
 
 void Player::update() {
@@ -192,8 +198,10 @@ void Player::update() {
 
     viewDirection = 5;
 
+
     return;
   }
+
 
   updateCameraMovement();
   if (weapons[weaponIndex] != player::chargeRifle &&
@@ -232,6 +240,9 @@ void Player::update() {
   }
 
   collisionUpdate();
+  handleKeyboardInput();
+  updateCamera();
+  updateDisplayContext();
 }
 
 void Player::updateCamera() {
@@ -239,6 +250,8 @@ void Player::updateCamera() {
   right = glm::normalize(glm::cross(front, worldUp));
   up = glm::normalize(glm::cross(right, front));
 }
+
+
 
 void Player::updateCameraMovement() {
   front = glm::normalize(orientation * global::cameraFront);
@@ -1007,15 +1020,20 @@ void Player::displayHealth(player::DisplayContext displayContext) {
 }
 
 void Player::displayArrow(player::DisplayContext displayContext) {
+  glm::vec3 bossPos = glm::vec3(0.0f);
+  if (boss == nullptr){
+    bossPos = boss->position;
+  }
+
   glm::vec4 bossClip = displayContext.projection * displayContext.view *
-                       glm::vec4(displayContext.bossPos, 1.0f);
+                       glm::vec4(bossPos, 1.0f);
   bossClip /= bossClip.w;
 
   bool onScreen = bossClip.x >= -1.0f && bossClip.x <= 1.0f &&
                   bossClip.y >= -1.0f && bossClip.y <= 1.0f &&
                   bossClip.z >= -1.0f && bossClip.z <= 1.0f;
 
-  glm::vec3 toBoss = displayContext.bossPos - position;
+  glm::vec3 toBoss = bossPos - position;
   glm::vec3 bossDirView = glm::mat3(displayContext.view) * toBoss;
 
   glm::vec2 arrowDir = glm::normalize(glm::vec2(bossDirView));

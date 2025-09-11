@@ -40,12 +40,6 @@ struct ShootArgs {
   float spin;
 };
 
-struct DisplayContext {
-  glm::mat4 projection;
-  glm::mat4 view;
-  glm::vec3 bossPos;
-  glm::mat4 textProjection;
-};
 
 struct PlayerStruct {
   const float respawnTime = 100.0f;
@@ -55,6 +49,9 @@ extern PlayerStruct playerStruct;
 
 } // namespace player
 
+class Boss;
+
+
 class Player {
 public:
   glm::vec3 position;
@@ -62,6 +59,9 @@ public:
   glm::vec3 up;
   glm::vec3 right;
   glm::vec3 worldUp;
+
+  Boss* boss;
+  config::DisplayContext displayContext;
 
   unsigned int weaponIndex = 0;
   unsigned int ship;
@@ -88,11 +88,10 @@ public:
   Player(glm::vec3 positionIn, glm::vec3 worldUpIn, glm::vec3 frontIn,
          glm::quat orientaionIn, unsigned int shipIn, unsigned int weapons[2]);
 
-  glm::mat4 getViewMatrix(glm::vec3 bossPosition);
+  glm::mat4 getViewMatrix();
 
-  void handleKeyboardInput();
-  void handleMouseInput(float xOffset, float yOffset, bool constrain = true);
-  void handleScrollInput(float yOffset, float minFov, float maxFov);
+  // void handleMouseInput(float xOffset, float yOffset, bool constrain = true);
+  // void handleScrollInput(float yOffset, float minFov, float maxFov);
 
   void update();
 
@@ -108,7 +107,7 @@ public:
 
   float getBulletTimeSlow(glm::vec3 bulletPosition);
 
-  void displayScreen(player::DisplayContext);
+  void displayScreen();
 
   bool alive = true;
 
@@ -130,6 +129,9 @@ private:
 
 
   void takeDamage(float damage);
+
+  void handleKeyboardInput();
+  void updateDisplayContext();
   void updateCamera();
   void updateCameraMovement();
 
@@ -140,12 +142,12 @@ private:
   player::ShootArgs getShootArgs(float yOffset, float xOffset,
                                  float bulletSpread);
 
-  void displayHealth(player::DisplayContext displayContext);
-  void displayArrow(player::DisplayContext displayContext);
-  void displayDamageText(player::DisplayContext displayContext);
-  void displayReload(player::DisplayContext displayContext);
-  void displayCooldown(player::DisplayContext displayContext);
-  void displayCooldownText(player::DisplayContext displayContext);
+  void displayHealth();
+  void displayArrow();
+  void displayDamageText();
+  void displayReload();
+  void displayCooldown();
+  void displayCooldownText();
 
   void collisionUpdate();
   bool checkBulletCollision();

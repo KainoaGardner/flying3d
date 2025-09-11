@@ -8,6 +8,9 @@
 #include "../include/text.h"
 #include "../include/textures.h"
 
+
+
+
 void displayCubeMap(glm::mat4 view, glm::mat4 projection);
 
 void displayBullets(Player *player, float timePassed);

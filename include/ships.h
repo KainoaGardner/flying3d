@@ -7,7 +7,7 @@ struct NormalShip {
   const float maxSpeed = 4.0f;
   const float acceleration = 0.004f;
   const float breakStrength = 0.004f;
-  const float turnSpeed = 1.3f;
+  const float turnSpeed = 1.2f;
   const float dragStrength = 0.002f;
 
   const float abilityCooldown = 1000.0f;
@@ -107,7 +107,7 @@ struct VampireShip {
   const float maxSpeed = 4.0f;
   const float acceleration = 0.004f;
   const float breakStrength = 0.003f;
-  const float turnSpeed = 1.3f;
+  const float turnSpeed = 1.25f;
   const float dragStrength = 0.002f;
 
   const float abilityParryMaxDistance = 50.0f;

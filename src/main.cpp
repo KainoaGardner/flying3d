@@ -37,14 +37,14 @@ int main() {
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-  unsigned int weapons[2] = {player::bombLauncher, player::laserCannon};
+  unsigned int weapons[2] = {player::machineGun, player::laserCannon};
   GLFWwindow *window =
       glfwCreateWindow(config::gameConfig.width, config::gameConfig.height,
                        "Learn Opengl", NULL, NULL);
 
   Player player(glm::vec3(0.0f, 0.0f, 500.0f), global::cameraUp,
                 global::cameraFront, global::cameraOrientation,
-                player::tankShip, weapons);
+                player::normalShip, weapons);
 
   Cube boss(glm::vec3(0.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f),
             glm::vec3(50.0f), boss::cube.health);
@@ -233,14 +233,6 @@ int main() {
                                       (float)config::gameConfig.height,
                                   0.1f, 10000.0f);
 
-    glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4),
-                    glm::value_ptr(view));
-    glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4),
-                    glm::value_ptr(projection));
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-    // display
     glm::mat4 textProjection =
         glm::ortho(0.0f, float(fbWidth), 0.0f, float(fbHeight));
     player::DisplayContext playerDisplayContext = {
@@ -249,6 +241,16 @@ int main() {
         .bossPos = bossPos,
         .textProjection = textProjection,
     };
+
+
+    glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4),
+                    glm::value_ptr(view));
+    glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4),
+                    glm::value_ptr(projection));
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    // display
 
 
     displayCubeMap(view, projection);
@@ -301,7 +303,6 @@ void keyInputCallback(GLFWwindow *window, int key, int scancode, int action,
 
 void update(Player *player, Boss *boss) {
   player->update();
-  player->handleKeyboardInput();
 
   boss->update(player);
   boss::bossPosition = boss->position;
