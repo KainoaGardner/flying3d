@@ -4,8 +4,9 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include "../include/glad/glad.h"
 #include "../include/glm/gtx/quaternion.hpp"
-#include "../include/textures.h"
 #include <GLFW/glfw3.h>
+
+#include "../include/config.h"
 
 namespace boss {
 struct Cube {
@@ -26,6 +27,8 @@ extern const float bossMaxHealth[1];
 extern Cube cube;
 } // namespace boss
 
+
+class Bullet;
 class Player;
 
 class Boss {
@@ -45,13 +48,13 @@ public:
   virtual void update(Player *player);
 
   virtual void display();
-  void displayScreen(player::DisplayContext);
+  void displayScreen(config::DisplayContext);
 
 private:
 
 protected:
-  void displayBossName(player::DisplayContext displayContext);
-  void displayHealth(player::DisplayContext displayContext);
+  void displayBossName(config::DisplayContext displayContext);
+  void displayHealth(config::DisplayContext displayContext);
 
   void collisionUpdate(Player *player);
   float bulletCollisionUpdate();

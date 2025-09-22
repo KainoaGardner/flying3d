@@ -4,7 +4,6 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include "../include/glm/glm.hpp"
-#include <GLFW/glfw3.h>
 #include <iostream>
 #include <map>
 

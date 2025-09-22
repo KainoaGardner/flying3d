@@ -3,6 +3,11 @@
 #include "../include/display.h"
 #include "../include/glm/gtc/quaternion.hpp"
 #include "../include/key.h"
+
+#include "../include/particle.h"
+#include "../include/shader.h"
+#include "../include/ships.h"
+#include "../include/bullet.h"
 #include "../include/boss.h"
 
 #include <iomanip>
@@ -25,6 +30,10 @@ Player::Player(glm::vec3 positionIn, glm::vec3 worldUpIn, glm::vec3 frontIn,
 
   health = ship::shipMaxHealth[ship];
   maxSpeed = ship::shipMaxSpeed[ship];
+
+  laser = new Laser(glm::vec3(1.0f), bullet::laser.damage);
+  blade = new Blade(glm::vec3(bullet::blade.size), glm::vec3(1.0f),
+                           bullet::blade.damage);
 
   updateCamera();
 }
@@ -126,10 +135,12 @@ void Player::handleKeyboardInput() {
     if (weapons[weaponIndex] == player::chargeRifle)
       shootChargeRifle();
 
-    laser->on = false;
+    if (laser != nullptr){
+      laser->on = false;
+    }
   }
 
-  if (weapons[weaponIndex] != player::laserCannon) {
+  if (weapons[weaponIndex] != player::laserCannon && laser != nullptr) {
     laser->on = false;
   }
 
@@ -148,7 +159,10 @@ void Player::handleKeyboardInput() {
     keys::actionPressed[keys::switchWeapon] = false;
     // canWeaponSwap = false;
     shootCounter = 0.0f;
-    blade->spinCounter = 0.0f;
+    
+    if (blade != nullptr){
+      blade->spinCounter = 0.0f;
+    }
   }
   // if (keys::actionPressed[keys::switchWeapon]) {
   //   canWeaponSwap = true;
@@ -210,11 +224,12 @@ void Player::update() {
 
   shipUpdate();
 
-  blade->update(position, orientation);
+  if (blade != nullptr){
+    blade->update(position, orientation);
+  }
 
   if (!(ship == player::tankShip && abilityTimer > 0.0f)) {
-
-    if (weapons[weaponIndex] == player::laserCannon) {
+    if (weapons[weaponIndex] == player::laserCannon && laser != nullptr) {
       float downOffset = 1.0f;
       float dPitch = -std::asin(downOffset / bullet::laser.length);
 
@@ -232,7 +247,7 @@ void Player::update() {
       laser->update(shootArgs.bulletPosition, laserOrientation);
     }
 
-    if (weapons[weaponIndex] == player::swingBlade) {
+    if (weapons[weaponIndex] == player::swingBlade && blade != nullptr) {
       if (blade->spinCounter >= 0.0f) {
         blade->spinCounter -= 1.0f * shootSpeedBoost;
       }
@@ -242,7 +257,6 @@ void Player::update() {
   collisionUpdate();
   handleKeyboardInput();
   updateCamera();
-  updateDisplayContext();
 }
 
 void Player::updateCamera() {
@@ -251,6 +265,12 @@ void Player::updateCamera() {
   up = glm::normalize(glm::cross(right, front));
 }
 
+
+void Player::updateDisplayContext(glm::mat4 projection,glm::mat4 view,glm::mat4 textProjection) {
+  displayContext.projection = projection;
+  displayContext.view = view;
+  displayContext.textProjection = textProjection;
+}
 
 
 void Player::updateCameraMovement() {
@@ -545,10 +565,14 @@ void Player::shootCannon() {
   projectiles.push_back(std::move(projectile));
 }
 
-void Player::shootLaser() { laser->on = true; }
+void Player::shootLaser() { 
+  if (laser != nullptr){
+    laser->on = true; 
+  }
+}
 
 void Player::shootBlade() {
-  if (blade->spinCounter < 0.0f) {
+  if (blade != nullptr && blade->spinCounter < 0.0f) {
     blade->spinCounter = bullet::blade.spinTime;
   }
 }
@@ -991,22 +1015,22 @@ void Player::healShip(float addHealth) {
   }
 }
 
-void Player::displayScreen(player::DisplayContext displayContext) {
+void Player::displayScreen() {
   if (!alive)
     return;
 
 
   glDisable(GL_DEPTH_TEST);
-  displayHealth(displayContext);
-  displayArrow(displayContext);
-  displayReload(displayContext);
-  displayCooldown(displayContext);
-  displayCooldownText(displayContext);
-  displayDamageText(displayContext);
+  displayHealth();
+  displayArrow();
+  displayReload();
+  displayCooldown();
+  displayCooldownText();
+  displayDamageText();
   glEnable(GL_DEPTH_TEST);
 }
 
-void Player::displayHealth(player::DisplayContext displayContext) {
+void Player::displayHealth() {
   shader::shader.health->use();
   shader::shader.health->setFloat("uMaxHealth", ship::shipMaxHealth[ship]);
   shader::shader.health->setFloat("uCurrentHealth", health);
@@ -1019,9 +1043,9 @@ void Player::displayHealth(player::DisplayContext displayContext) {
   glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 }
 
-void Player::displayArrow(player::DisplayContext displayContext) {
+void Player::displayArrow() {
   glm::vec3 bossPos = glm::vec3(0.0f);
-  if (boss == nullptr){
+  if (boss != nullptr){
     bossPos = boss->position;
   }
 
@@ -1049,7 +1073,7 @@ void Player::displayArrow(player::DisplayContext displayContext) {
   }
 }
 
-void Player::displayDamageText(player::DisplayContext displayContext) {
+void Player::displayDamageText() {
   for (unsigned int i = 0; i < damageTextParticles.size(); i++) {
     DamageText &damageText = damageTextParticles[i];
     damageText.drawText(displayContext.view,displayContext.projection,displayContext.textProjection);
@@ -1057,11 +1081,11 @@ void Player::displayDamageText(player::DisplayContext displayContext) {
   }
 }
 
-void Player::displayReload(player::DisplayContext displayContext) {
+void Player::displayReload() {
   shader::shader.reload->use();
 
   float progress = shootCounter;
-  if (weapons[weaponIndex] == player::swingBlade)
+  if (blade != nullptr && weapons[weaponIndex] == player::swingBlade)
     progress = bullet::blade.spinTime - blade->spinCounter;
 
   shader::shader.reload->setFloat("uShootCounter", progress);
@@ -1077,7 +1101,7 @@ void Player::displayReload(player::DisplayContext displayContext) {
   glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 }
 
-void Player::displayCooldown(player::DisplayContext displayContext) {
+void Player::displayCooldown() {
   shader::shader.cooldown->use();
 
   float cooldown = ship::shipAbilityCooldown[ship];
@@ -1111,7 +1135,7 @@ void Player::displayCooldown(player::DisplayContext displayContext) {
   glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 }
 
-void Player::displayCooldownText(player::DisplayContext displayContext) {
+void Player::displayCooldownText() {
   float cooldown = ship::shipAbilityCooldown[ship];
   float timer = (cooldown - glm::clamp(abilityCounter, 0.0f, cooldown)) /
                 config::gameConfig.fps;

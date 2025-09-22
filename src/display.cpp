@@ -1,4 +1,10 @@
 #include "../include/display.h"
+#include "../include/shader.h"
+#include "../include/textures.h"
+#include "../include/particle.h"
+#include "../include/geometry.h"
+#include "../include/text.h"
+#include "../include/bullet.h"
 
 void displayCubeMap(glm::mat4 view, glm::mat4 projection) {
   glDepthFunc(GL_LEQUAL);

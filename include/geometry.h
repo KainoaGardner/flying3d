@@ -1,7 +1,7 @@
 #ifndef GEOMETRY_H
 #define GEOMETRY_H
 
-#include "../include/bullet.h"
+#include <GLFW/glfw3.h>
 
 extern float CUBE_VERTICES[120];
 extern float CUBE_MAP_VERTICES[72];

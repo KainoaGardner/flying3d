@@ -1,4 +1,6 @@
 #include "../include/display.h"
+#include "../include/geometry.h"
+#include "../include/shader.h"
 #include "../include/particle.h"
 
 namespace particle {

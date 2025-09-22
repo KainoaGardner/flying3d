@@ -1,15 +1,11 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
-#include "../include/bullet.h"
 #include "../include/config.h"
-#include "../include/geomety.h"
 #include "../include/glad/glad.h"
 #include "../include/glm/glm.hpp"
-#include "../include/glm/gtx/quaternion.hpp"
-#include "../include/ships.h"
+
 #include <GLFW/glfw3.h>
-#include <string>
 
 namespace player {
 enum Weapons {
@@ -49,7 +45,10 @@ extern PlayerStruct playerStruct;
 
 } // namespace player
 
+
 class Boss;
+class Laser;
+class Blade;
 
 
 class Player {
@@ -78,9 +77,8 @@ public:
 
   float health;
 
-  Laser *laser = new Laser(glm::vec3(1.0f), bullet::laser.damage);
-  Blade *blade = new Blade(glm::vec3(bullet::blade.size), glm::vec3(1.0f),
-                           bullet::blade.damage);
+  Laser *laser;
+  Blade *blade;
 
   glm::quat orientation;
   unsigned int viewDirection = 1;
@@ -90,11 +88,11 @@ public:
 
   glm::mat4 getViewMatrix();
 
-  // void handleMouseInput(float xOffset, float yOffset, bool constrain = true);
-  // void handleScrollInput(float yOffset, float minFov, float maxFov);
+
 
   void update();
 
+  void updateDisplayContext(glm::mat4 projection,glm::mat4 view, glm::mat4 textProjection);
   void healShip(float addHealth);
 
   float shootCounter = 0.0f;
@@ -120,18 +118,14 @@ private:
 
   bool leftGun = false;
   bool canWeaponSwap = true;
-
   float beforeDashSpeed;
-
   float notHitCounter = 0.0f;
-
   bool shooting = false;
 
 
   void takeDamage(float damage);
 
   void handleKeyboardInput();
-  void updateDisplayContext();
   void updateCamera();
   void updateCameraMovement();
 

@@ -1,4 +1,11 @@
+#include <iostream>
+
+#include "../include/glad/glad.h"
+
 #include "../include/bullet.h"
+#include "../include/particle.h"
+#include "../include/shader.h"
+#include "../include/geometry.h"
 
 #include "../include/boss.h"
 
@@ -57,12 +64,14 @@ void Bullet::outOfBoundsBullet(glm::vec3 playerPosition) {
 }
 
 void Bullet::killBullet() {
+      alive = false;
       DamageText damageTextParticle(position, orientation,glm::vec3(1.0f), 
                                                        scale.x * 2.0f,particle::damageText.timer,damage);
       damageTextParticles.push_back(std::move(damageTextParticle));
 }
 
 void Bullet::draw() {
+  glBindVertexArray(geometry::geometry.cube.vao);
   glm::mat4 model = glm::mat4(1.0f);
 
   model = glm::translate(model, position);
@@ -91,25 +100,15 @@ BombBullet::BombBullet(glm::vec3 positionIn, glm::vec3 rotationIn,
   explodeTimer = explodeTimerIn;
 }
 
-
-
-void BombBullet::killBullet() {
-  Bullet::killBullet();
-  explode();
-
-}
-
-
 void BombBullet::update(float timeSlow) {
   Bullet::update(timeSlow);
   explodeCounter += 1.0f;
   if (explodeCounter > explodeTimer) {
-    explode();
+    killBullet();
   }
 }
 
 void BombBullet::explode() {
-  alive = false;
   ParticleList particle;
   particle.particle = std::make_unique<Explosion>(position, orientation,glm::vec3(0.0f),
                                                    particle::explosion.size,
@@ -213,6 +212,8 @@ void Laser::draw(float timePassed) {
   if (!on)
     return;
 
+
+  glBindVertexArray(geometry::geometry.beam.vao);
   glm::mat4 model = glm::mat4(1.0f);
   model = glm::translate(model, position);
   glm::vec3 pitchAxis = glm::rotate(orientation, glm::vec3(0.0f, 0.0f, 1.0f));
@@ -253,6 +254,8 @@ void Blade::draw(float timePassed) {
   if (spinCounter <= 0.0f) {
     return;
   }
+
+  glBindVertexArray(geometry::geometry.cube.vao);
 
   // glm::vec3 cameraUp =
   //     glm::normalize(orientation * glm::vec3(0.0f, 1.0f, 0.0f));

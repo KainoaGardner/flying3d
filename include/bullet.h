@@ -2,11 +2,7 @@
 #define BULLET_H
 
 #define GLM_ENABLE_EXPERIMENTAL
-#include "../include/glad/glad.h"
 #include "../include/glm/gtx/quaternion.hpp"
-#include "../include/particle.h"
-#include "../include/shader.h"
-#include <GLFW/glfw3.h>
 #include <memory>
 
 namespace bullet {
@@ -30,7 +26,7 @@ struct FlameThrower {
   const float cooldown = 0.5f;
   const float speed = 1.0f;
   const float spread = 10.0f;
-  const float bulletSize = 0.5f;
+  const float bulletSize = 0.2f;
   const float damage = 0.75f;
   const float disappearTime = 300.0f;
 };
@@ -114,6 +110,9 @@ extern Blade blade;
 extern const float bulletShootCooldown[10];
 } // namespace bullet
 
+
+class Boss;
+
 class Bullet {
 public:
   glm::vec3 position;
@@ -156,7 +155,6 @@ public:
              float explodeTimerIn);
 
   void update(float timeSlow) override;
-  void killBullet() override;
   void explode();
 
 private:

@@ -1,12 +1,12 @@
-#include "../include/glad/glad.h"
-#include "../include/glm/glm.hpp"
-#include "../include/glm/gtc/matrix_transform.hpp"
+#include <typeinfo>
 
-#include "../include/boss.h"
+#include "../include/glad/glad.h"
+
 #include "../include/bullet.h"
 #include "../include/config.h"
 #include "../include/display.h"
-#include "../include/geomety.h"
+#include "../include/geometry.h"
+#include "../include/boss.h"
 #include "../include/glm/gtc/type_ptr.hpp"
 #include "../include/textures.h"
 
@@ -37,7 +37,7 @@ int main() {
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-  unsigned int weapons[2] = {player::machineGun, player::laserCannon};
+  unsigned int weapons[2] = {player::flameThrower, player::bombLauncher};
   GLFWwindow *window =
       glfwCreateWindow(config::gameConfig.width, config::gameConfig.height,
                        "Learn Opengl", NULL, NULL);
@@ -48,6 +48,9 @@ int main() {
 
   Cube boss(glm::vec3(0.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f),
             glm::vec3(50.0f), boss::cube.health);
+
+  player.boss = &boss;
+  boss.player = &player;
 
   if (window == NULL) {
     std::cout << "Failed to create GLFW window" << std::endl;
@@ -225,7 +228,7 @@ int main() {
     shader::shader.normal->setFloat("uTime", timePassed);
 
     glm::mat4 view = glm::mat4(1.0f);
-    view = player.getViewMatrix(boss.position);
+    view = player.getViewMatrix();
 
     glm::mat4 projection;
     projection = glm::perspective(glm::radians(player.fov),
@@ -235,13 +238,9 @@ int main() {
 
     glm::mat4 textProjection =
         glm::ortho(0.0f, float(fbWidth), 0.0f, float(fbHeight));
-    player::DisplayContext playerDisplayContext = {
-        .projection = projection,
-        .view = view,
-        .bossPos = bossPos,
-        .textProjection = textProjection,
-    };
 
+
+    player.updateDisplayContext(projection,view,textProjection);
 
     glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4),
@@ -264,8 +263,8 @@ int main() {
 
     displayScreen(textureColorBuffer);
 
-    player.displayScreen(playerDisplayContext);
-    boss.displayScreen(playerDisplayContext);
+    player.displayScreen();
+    boss.displayScreen(player.displayContext);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
@@ -307,6 +306,7 @@ void update(Player *player, Boss *boss) {
   boss->update(player);
   boss::bossPosition = boss->position;
 
+  // std::cout << projectiles.size() <<std::endl;
   for (auto it = projectiles.begin(); it != projectiles.end();) {
     Projectile &projectile = *it;
     if (projectile.bullet) {
@@ -325,6 +325,10 @@ void update(Player *player, Boss *boss) {
 
       projectile.bullet->outOfBoundsBullet(player->position);
       if (!projectile.bullet->alive) {
+        if (auto c = dynamic_cast<BombBullet*>(projectile.bullet.get())){
+          c->explode();
+        }
+
         it = projectiles.erase(it);
       } else {
         ++it;

@@ -1,4 +1,5 @@
 #include "../include/text.h"
+#include "../include/glad/glad.h"
 
 namespace text {
 void getFont(std::string fontPath) {

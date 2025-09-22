@@ -1,15 +1,8 @@
 #ifndef DISPLAY_H
 #define DISPLAY_H
 
-#include "../include/bullet.h"
-#include "../include/geomety.h"
+#include <string>
 #include "../include/player.h"
-#include "../include/shader.h"
-#include "../include/text.h"
-#include "../include/textures.h"
-
-
-
 
 void displayCubeMap(glm::mat4 view, glm::mat4 projection);
 

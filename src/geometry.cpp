@@ -1,4 +1,6 @@
-#include "../include/geomety.h"
+#include "../include/glad/glad.h"
+#include "../include/geometry.h"
+#include "../include/bullet.h"
 
 float CUBE_VERTICES[120] = {
     // front back

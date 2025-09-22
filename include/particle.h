@@ -4,8 +4,6 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include "../include/glm/gtx/quaternion.hpp"
 
-#include "../include/shader.h"
-#include <GLFW/glfw3.h>
 #include <memory>
 
 namespace particle {
@@ -23,7 +21,6 @@ struct DamageText {
 extern Explosion explosion;
 extern DamageText damageText;
 } // namespace particle
-
 
 class Particle {
 public:

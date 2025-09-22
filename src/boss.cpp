@@ -1,7 +1,11 @@
 #include "../include/display.h"
 #include "../include/boss.h"
+#include "../include/geometry.h"
 #include "../include/collision.h"
-#include <iostream>
+#include "../include/shader.h"
+#include "../include/textures.h"
+#include "../include/particle.h"
+#include "../include/bullet.h"
 
 namespace boss {
 Cube cube;
@@ -26,7 +30,7 @@ void Boss::update(Player *player) {}
 
 void Boss::display() {}
 
-void Boss::displayScreen(player::DisplayContext displayContext) {
+void Boss::displayScreen(config::DisplayContext displayContext) {
   if (!alive) return;
 
   glDisable(GL_DEPTH_TEST);
@@ -35,7 +39,7 @@ void Boss::displayScreen(player::DisplayContext displayContext) {
   glEnable(GL_DEPTH_TEST);
 }
 
-void Boss::displayBossName(player::DisplayContext displayContext) {
+void Boss::displayBossName(config::DisplayContext displayContext) {
   float x = config::gameConfig.width / 2.0f;
   float y = config::gameConfig.height - config::gameConfig.height / 24.0f;
 
@@ -44,7 +48,7 @@ void Boss::displayBossName(player::DisplayContext displayContext) {
 }
 
 
-void Boss::displayHealth(player::DisplayContext displayContext) {
+void Boss::displayHealth(config::DisplayContext displayContext) {
   glBindVertexArray(geometry::geometry.screen.vao);
 
   shader::shader.health->use();
@@ -69,16 +73,13 @@ void Boss::collisionUpdate(Player *player) {
 
 float Boss::bulletCollisionUpdate(){
   float damage = 0;
-  for (auto it = projectiles.begin();it != projectiles.end();) {
-    if (checkBulletCollsion(*it->bullet)){
-      takeDamage(it->bullet->damage);
-      damage += it->bullet->damage;
 
+  for (auto& p : projectiles){
+    if (checkBulletCollsion(*p.bullet)){
+      takeDamage(p.bullet->damage);
+      damage += p.bullet->damage;
 
-      it->bullet->killBullet();
-      it = projectiles.erase(it);
-    }else{
-      ++it;
+      p.bullet->killBullet();
     }
   }
 
@@ -175,20 +176,24 @@ void Cube::update(Player *player) {
   // orientation = glm::normalize(
   //     glm::mix(orientation, targetOrientation, boss::cube.turnSpeed));
 
-  shootCounter += 1.0f * player->timeSlowAmount;
-  if (shootCounter >= boss::cube.shootCooldown) {
-    glm::vec3 toPlayer = glm::normalize(player->position - position);
-    toPlayer.x += ((float(rand() % 100) / 100.0) - 0.5) / 5.0;
-    toPlayer.y += ((float(rand() % 100) / 100.0) - 0.5) / 5.0;
-    toPlayer.z += ((float(rand() % 100) / 100.0) - 0.5) / 5.0;
 
-    Projectile projectile;
-    projectile.bullet = std::make_unique<Bullet>(
-        position, toPlayer, toPlayer, global::cameraOrientation,
-        glm::vec3(5.0f), glm::vec3(1.0f, 0.0f, 0.0f), 3.0f, 10.0f, true);
-    projectiles.push_back(std::move(projectile));
-    shootCounter = 0.0f;
-  }
+  
+
+
+  // shootCounter += 1.0f * player->timeSlowAmount;
+  // if (shootCounter >= boss::cube.shootCooldown) {
+  //   glm::vec3 toPlayer = glm::normalize(player->position - position);
+  //   toPlayer.x += ((float(rand() % 100) / 100.0) - 0.5) / 5.0;
+  //   toPlayer.y += ((float(rand() % 100) / 100.0) - 0.5) / 5.0;
+  //   toPlayer.z += ((float(rand() % 100) / 100.0) - 0.5) / 5.0;
+  //
+  //   Projectile projectile;
+  //   projectile.bullet = std::make_unique<Bullet>(
+  //       position, toPlayer, toPlayer, global::cameraOrientation,
+  //       glm::vec3(5.0f), glm::vec3(1.0f, 0.0f, 0.0f), 3.0f, 10.0f, true);
+  //   projectiles.push_back(std::move(projectile));
+  //   shootCounter = 0.0f;
+  // }
 
   collisionUpdate(player);
 }
