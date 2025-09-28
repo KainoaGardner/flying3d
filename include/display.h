@@ -8,7 +8,7 @@ void displayCubeMap(glm::mat4 view, glm::mat4 projection);
 
 void displayBullets(Player *player, float timePassed);
 
-void displayParticles();
+void displayParticles(Player *player);
 
 void displayScreen(unsigned int colorTexture);
 void renderText(glm::mat4 projection, std::string text, float x, float y,

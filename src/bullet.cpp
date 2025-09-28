@@ -9,6 +9,8 @@
 
 #include "../include/boss.h"
 
+#include "../include/collision.h"
+
 namespace bullet {
 MachineGun machineGun;
 FlameThrower flameThrower;
@@ -116,6 +118,29 @@ void BombBullet::explode() {
   particles.push_back(std::move(particle));
 }
 
+
+void BombBullet::explodeDamage(Boss *boss){
+  if (boss != nullptr && boss->alive){
+    glm::vec2 errorSize(0.0f,0.25f);
+    if (setupOBBCollision(
+      orientation,
+      boss->orientation,
+      position,
+      boss->position,
+      glm::vec3(particle::explosion.size),
+      boss->scale,
+      errorSize)){
+
+      boss->takeDamage(damage * bullet::bombLauncher.explosionDamageBoost);
+
+      DamageText damageTextParticle(position, orientation,glm::vec3(1.0f), 
+                                                       particle::explosion.size,particle::damageText.timer,damage * bullet::bombLauncher.explosionDamageBoost);
+      damageTextParticles.push_back(std::move(damageTextParticle));
+
+    }
+  }
+}
+
 FlameBullet::FlameBullet(glm::vec3 positionIn, glm::vec3 rotationIn,
                        glm::vec3 directionIn, glm::quat orientationIn,
                        glm::vec3 scaleIn, glm::vec3 colorIn, float speedIn,
@@ -161,18 +186,32 @@ ZapBullet::ZapBullet(glm::vec3 positionIn, glm::vec3 rotationIn,
 
 void ZapBullet::update(float timeSlow) {
   zapCounter += 1.0f;
-
-  bool zap = false;
-  if (zapCounter > bullet::zapRifle.cooldown) {
-    // for close zap
-    // if ZAP_RIFLE_ZAP_RANGE
-    // zap = true;
-  }
-  if (zap) {
-    zapCounter = 0.0f;
-  }
-
   Bullet::update(timeSlow);
+}
+
+void ZapBullet::zapDamage(Boss *boss){
+  if (boss != nullptr && boss->alive){
+    float errorSize = 0.25f;
+
+    if (zapCounter > bullet::zapRifle.cooldown && 
+      checkSphereCubeCollsion(
+      position,
+      bullet::zapRifle.zapRange,
+      boss->orientation,
+      boss->position,
+      boss->scale,
+      errorSize)){
+        zapCounter = 0.0f;
+        boss->takeDamage(damage * bullet::zapRifle.zapDamageBoost);
+
+        ZapLine zapLine(position,boss->position,25.0f); 
+        zapLineParticles.push_back(std::move(zapLine));
+
+        DamageText damageTextParticle(position, orientation,glm::vec3(1.0f), 
+                                                         particle::explosion.size,particle::damageText.timer,damage * bullet::zapRifle.zapDamageBoost);
+        damageTextParticles.push_back(std::move(damageTextParticle));
+    }
+  }
 }
 
 
@@ -255,7 +294,7 @@ void Blade::draw(float timePassed) {
     return;
   }
 
-  glBindVertexArray(geometry::geometry.cube.vao);
+  glBindVertexArray(geometry::geometry.beam.vao);
 
   // glm::vec3 cameraUp =
   //     glm::normalize(orientation * glm::vec3(0.0f, 1.0f, 0.0f));

@@ -15,12 +15,22 @@ struct Explosion {
 struct DamageText {
   const float timer = 25.0f;
   const float size = 5.0f;
+  const float speed = 0.3f;
+};
+
+struct ZapLine {
+  const float timer = 25.0f;
+  const float size = 5.0f;
 };
 
 
 extern Explosion explosion;
 extern DamageText damageText;
+extern ZapLine zapLine;
 } // namespace particle
+
+
+class Player;
 
 class Particle {
 public:
@@ -55,10 +65,10 @@ private:
 
 class DamageText : public Particle {
 public:
-
   float maxScale;
   float disappearTime;
   float damage;
+  glm::vec3 dir;
 
   DamageText(glm::vec3 positionIn, glm::quat orientationIn, glm::vec3 scaleIn,float maxScaleIn,
             float disappearTime,float damageIn);
@@ -66,9 +76,27 @@ public:
   void update() override;
   void drawText(glm::mat4 view,glm::mat4 projection,glm::mat4 textProjection);
 
+
 private:
   float disappearCounter = 0.0f;
 };
+
+class ZapLine {
+public:
+  float disappearTime;
+  glm::vec3 start;
+  glm::vec3 end;
+
+  bool alive = true;
+  ZapLine(glm::vec3 startIn, glm::vec3 endIn, float disappearTime);
+
+  void update();
+  void draw(Player *player);
+
+private:
+  float disappearCounter = 0.0f;
+};
+
 
 struct ParticleList {
   std::unique_ptr<Particle> particle;
@@ -76,5 +104,6 @@ struct ParticleList {
 
 extern std::vector<ParticleList> particles;
 extern std::vector<DamageText> damageTextParticles;
+extern std::vector<ZapLine> zapLineParticles;
 
 #endif

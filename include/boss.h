@@ -29,6 +29,7 @@ extern Cube cube;
 
 
 class Bullet;
+class Blade;
 class Player;
 
 class Boss {
@@ -50,6 +51,8 @@ public:
   virtual void display();
   void displayScreen(config::DisplayContext);
 
+  void takeDamage(float damage);
+
 private:
 
 protected:
@@ -59,8 +62,7 @@ protected:
   void collisionUpdate(Player *player);
   float bulletCollisionUpdate();
   float laserCollisionUpdate(Player *player);
-  bool checkBulletCollsion(Bullet& bullet); 
-  void takeDamage(float damage);
+  float bladeCollisionUpdate(Player *player);
 
 };
 

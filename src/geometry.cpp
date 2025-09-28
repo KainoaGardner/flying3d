@@ -144,6 +144,14 @@ float SCREEN_VERTICES[20] = {
     -1.0f, 1.0f,  0.0f, 0.0f, 1.0f  // top left
 };
 
+float FACE_VERTICES[20] = {
+    // positions                     // texture coords
+    0.5f,  0.5f,  0.0f, 0.5f, 0.5f, // top right
+    0.5f,  -0.5f, 0.0f, 0.5f, 0.0f, // bottom right
+    -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, // bottom left
+    -0.5f, 0.5f,  0.0f, 0.0f, 0.5f  // top left
+};
+
 unsigned int SCREEN_INDICES[6] = {
     0, 1, 3, // first tri
     1, 2, 3, // second tri
@@ -212,6 +220,36 @@ Geometry createScreen() {
 
   glBindBuffer(GL_ARRAY_BUFFER, geometry.vbo);
   glBufferData(GL_ARRAY_BUFFER, sizeof(SCREEN_VERTICES), SCREEN_VERTICES,
+               GL_STATIC_DRAW);
+
+  glGenBuffers(1, &geometry.ebo);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, geometry.ebo);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(SCREEN_INDICES), SCREEN_INDICES,
+               GL_STATIC_DRAW);
+
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
+  glEnableVertexAttribArray(0);
+
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+                        (void *)(3 * sizeof(float)));
+  glEnableVertexAttribArray(1);
+
+  glBindVertexArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+  return geometry;
+}
+
+Geometry createFace() {
+  Geometry geometry;
+  glGenVertexArrays(1, &geometry.vao);
+  glBindVertexArray(geometry.vao);
+
+  glGenBuffers(1, &geometry.vbo);
+
+  glBindBuffer(GL_ARRAY_BUFFER, geometry.vbo);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(FACE_VERTICES), FACE_VERTICES,
                GL_STATIC_DRAW);
 
   glGenBuffers(1, &geometry.ebo);

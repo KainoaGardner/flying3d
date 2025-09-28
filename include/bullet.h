@@ -11,7 +11,7 @@ struct MachineGun {
   const float speed = 10.0f;
   const float spread = 50.0f;
   const float bulletSize = 0.5f;
-  const float damage = 1.0f;
+  const float damage = 2.0f;
 };
 
 struct Shotgun {
@@ -37,8 +37,8 @@ struct HomingMissile {
   const float speed = 3.0f;
   const float turnSpeed = 0.06f;
   const float spread = 10.0f;
-  const float bulletSize = 0.75f;
-  const float damage = 5.0f;
+  const float bulletSize = 0.5f;
+  const float damage = 2.0f;
 };
 
 struct BombLauncher {
@@ -48,6 +48,7 @@ struct BombLauncher {
   const float bulletSize = 3.0f;
   const float damage = 10.0f;
   const float explosionTimer = 200.0f;
+  const float explosionDamageBoost = 2.5f;
 };
 
 struct ChargeRifle {
@@ -65,9 +66,10 @@ struct ZapRifle {
   const float speed = 1.5f;
   const float spread = 30.0f;
   const float bulletSize = 1.0f;
-  const float damage = 1.0f;
-  const float zapCooldown = 50.0f;
-  const float zapRange = 10.0f;
+  const float damage = 3.0f;
+  const float zapCooldown = 25.0f;
+  const float zapRange = 100.0f;
+  const float zapDamageBoost = 3.0f;
 };
 
 struct Cannon {
@@ -92,8 +94,8 @@ struct Laser {
 struct Blade {
   const float spinTime = 50.0f;
   const float size = 0.05f;
-  const float length = 100.0f;
-  const float damage = 30.0f;
+  const float length = 200.0f;
+  const float damage = 5.0f;
 };
 
 extern MachineGun machineGun;
@@ -156,6 +158,7 @@ public:
 
   void update(float timeSlow) override;
   void explode();
+  void explodeDamage(Boss *boss);
 
 private:
 };
@@ -194,9 +197,10 @@ public:
             float speedIn, float damageIn, bool enemyBulletIn);
 
   void update(float timeSlow) override;
+  void zapDamage(Boss *boss);
 
 private:
-  float zapCounter = 0.0f;
+  float zapCounter = bullet::zapRifle.zapCooldown;
 };
 
 // struct Projectile {

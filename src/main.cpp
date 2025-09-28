@@ -1,13 +1,13 @@
 #include <typeinfo>
 
 #include "../include/glad/glad.h"
+#include "../include/glm/gtc/type_ptr.hpp"
 
 #include "../include/bullet.h"
 #include "../include/config.h"
 #include "../include/display.h"
 #include "../include/geometry.h"
 #include "../include/boss.h"
-#include "../include/glm/gtc/type_ptr.hpp"
 #include "../include/textures.h"
 
 #include "../include/key.h"
@@ -17,6 +17,7 @@
 #include "../include/stb_image.h"
 #include "../include/text.h"
 #include "../include/utils.h"
+
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <vector>
@@ -37,7 +38,7 @@ int main() {
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-  unsigned int weapons[2] = {player::flameThrower, player::bombLauncher};
+  unsigned int weapons[2] = {player::bombLauncher, player::zapRifle};
   GLFWwindow *window =
       glfwCreateWindow(config::gameConfig.width, config::gameConfig.height,
                        "Learn Opengl", NULL, NULL);
@@ -142,6 +143,7 @@ int main() {
   Geometry skyboxGeometry = createCubemap();
   Geometry screenGeometry = createScreen();
   Geometry textGeometry = createText();
+  Geometry faceGeometry = createFace();
 
   geometry::geometry = {
       .cube = cubeGeometry,
@@ -149,6 +151,7 @@ int main() {
       .skybox = skyboxGeometry,
       .screen = screenGeometry,
       .text = textGeometry,
+      .face = faceGeometry,
   };
 
   unsigned int matrixUniformBlockMain =
@@ -259,7 +262,7 @@ int main() {
     // display enemies
 
     displayBullets(&player, timePassed);
-    displayParticles();
+    displayParticles(&player);
 
     displayScreen(textureColorBuffer);
 
@@ -323,10 +326,16 @@ void update(Player *player, Boss *boss) {
         projectile.bullet->update(1.0f);
       }
 
+      if (auto c = dynamic_cast<ZapBullet*>(projectile.bullet.get())){
+        c->zapDamage(boss);
+      }
+
+
       projectile.bullet->outOfBoundsBullet(player->position);
       if (!projectile.bullet->alive) {
         if (auto c = dynamic_cast<BombBullet*>(projectile.bullet.get())){
           c->explode();
+          c->explodeDamage(boss);
         }
 
         it = projectiles.erase(it);
@@ -356,4 +365,12 @@ void update(Player *player, Boss *boss) {
     };
   }
 
+  for (unsigned int i = 0; i < zapLineParticles.size(); i++) {
+    ZapLine &zapLine = zapLineParticles[i];
+    zapLine.update();
+    if (!zapLine.alive) {
+      zapLineParticles.erase(zapLineParticles.begin() + i);
+      continue;
+    };
+  }
 };

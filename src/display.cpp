@@ -44,7 +44,7 @@ void displayBullets(Player *player, float timePassed) {
   }
 }
 
-void displayParticles() {
+void displayParticles(Player *player) {
   for (unsigned int i = 0; i < particles.size(); i++) {
     ParticleList &particle = particles[i];
     if (particle.particle) {
@@ -52,7 +52,10 @@ void displayParticles() {
     }
   }
 
-
+  for (unsigned int i = 0; i < zapLineParticles.size(); i++) {
+    ZapLine &zapLine = zapLineParticles[i];
+      zapLine.draw(player);
+  }
 }
 
 void displayScreen(unsigned int colorTexture) {
@@ -66,7 +69,7 @@ void displayScreen(unsigned int colorTexture) {
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, colorTexture);
 
-  glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+  glDrawElements(GL_TRIANGLES, 20, GL_UNSIGNED_INT, 0);
 }
 
 void renderText(glm::mat4 projection, std::string text, float x, float y,

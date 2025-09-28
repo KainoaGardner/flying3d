@@ -67,85 +67,99 @@ void Boss::displayHealth(config::DisplayContext displayContext) {
 void Boss::collisionUpdate(Player *player) {
   float damage = bulletCollisionUpdate();
   damage += laserCollisionUpdate(player);
+  damage += bladeCollisionUpdate(player);
   player->vampireLifeSteal(damage);
 }
-
 
 float Boss::bulletCollisionUpdate(){
   float damage = 0;
 
+  glm::vec2 errorSize(0.25f,0.0f);
   for (auto& p : projectiles){
-    if (checkBulletCollsion(*p.bullet)){
+    if (p.bullet->enemyBullet){continue;}
+
+    if (setupOBBCollision(
+      orientation,
+      p.bullet->orientation,
+      position,
+      p.bullet->position,
+      scale,
+      p.bullet->scale,
+      errorSize)){
+
       takeDamage(p.bullet->damage);
       damage += p.bullet->damage;
 
       p.bullet->killBullet();
+
     }
   }
 
   return damage;
 }
 
+
+
 float Boss::laserCollisionUpdate(Player *player){
-  if (player->weapons[player->weaponIndex] != player::laserCannon || !player->laser->on){
+  if (player->weapons[player->weaponIndex] != player::laserCannon){
     return 0;
   } 
 
+  if (player->laser == nullptr || !player->laser->on || player->laser->spinSpeed < 15.0f){
+    return 0;
+  }
+
+  glm::mat4 model = glm::translate(glm::mat4(1.0f),position);
+  model *= glm::toMat4(orientation);
+  model *= glm::scale(glm::mat4(1.0f),scale);
+
+  glm::vec3 rayOrigin = player->position;
+  glm::vec3 rayDir = glm::normalize(player->orientation * global::cameraFront);
+  glm::vec3 worldHit;
+
+  bool hit = checkRayOBBCollision(rayOrigin,rayDir,model,worldHit);
+
   float damage = 0;
-  glm::vec3 cameraFront = glm::normalize(player->orientation * global::cameraFront);
-  glm::vec3 toBoss = glm::normalize(position - player->position);
-
-  float dist = glm::length2(player->position - position);
-  float distToleranceIncrease = dist / 10000.f;
-
-  float dot = glm::dot(cameraFront,toBoss);
-  float tolerance = cos(glm::radians(bullet::laser.toleranceDegrees));
-  tolerance = glm::min(tolerance,tolerance * distToleranceIncrease);
   float speed = player->laser->spinSpeed / bullet::laser.maxSpinSpeed;
 
-
-  if (dot > tolerance) {
+  if (hit) {
     takeDamage(bullet::laser.damage * speed * speed);
     damage += bullet::laser.damage * speed * speed;
 
-    DamageText damageTextParticle(position, orientation,glm::vec3(1.0f), 
+    DamageText damageTextParticle(worldHit, orientation,glm::vec3(1.0f), 
                                                      bullet::laser.size,particle::damageText.timer,damage);
     damageTextParticles.push_back(std::move(damageTextParticle));
-
   }
 
 
   return damage;
 }
 
-bool Boss::checkBulletCollsion(Bullet& bullet) {
-  if (bullet.enemyBullet) return false;
+float Boss::bladeCollisionUpdate(Player *player){
+  if (player->weapons[player->weaponIndex] != player::swingBlade || player->blade == nullptr || player->blade->spinCounter < 0.0f){
+    return 0;
+  } 
+  float damage = 0;
 
-  collision::OBB a;
-  collision::OBB b;
+  glm::vec2 errorSize(0.25f,0.25f);
 
-  glm::vec3 bossRight = glm::normalize(orientation * global::localRight);
-  glm::vec3 bossUp = glm::normalize(orientation * global::localUp);
-  glm::vec3 bossFront = glm::normalize(orientation * global::localFront);
+  if (setupOBBCollision(
+    orientation,
+    player->blade->orientation,
+    position,
+    player->blade->position,
+    scale,
+    player->blade->scale,
+    errorSize)){
+    takeDamage(player->blade->damage);
+    damage += player->blade->damage;
 
-  glm::vec3 bulletRight = glm::normalize(bullet.orientation * global::localRight);
-  glm::vec3 bulletUp = glm::normalize(bullet.orientation * global::localUp);
-  glm::vec3 bulletFront = glm::normalize(bullet.orientation * global::localFront);
+    DamageText damageTextParticle(player->blade->position, orientation,glm::vec3(1.0f), 
+                                                     bullet::blade.size,particle::damageText.timer,damage);
+    damageTextParticles.push_back(std::move(damageTextParticle));
+  }
 
-  a.axes[0] = bossRight;
-  a.axes[1] = bossUp;
-  a.axes[2] = bossFront;
-  a.center = position;
-  a.halfSize = scale * 0.75f;
-
-  b.axes[0] = bulletRight;
-  b.axes[1] = bulletUp;
-  b.axes[2] = bulletFront;
-
-  b.center = bullet.position;
-  b.halfSize = bullet.scale * 0.5f;
-
-  return checkOBBCollision(a,b);
+  return damage;
 }
 
 void Boss::takeDamage(float damage) {
@@ -175,10 +189,6 @@ void Cube::update(Player *player) {
   //
   // orientation = glm::normalize(
   //     glm::mix(orientation, targetOrientation, boss::cube.turnSpeed));
-
-
-  
-
 
   // shootCounter += 1.0f * player->timeSlowAmount;
   // if (shootCounter >= boss::cube.shootCooldown) {

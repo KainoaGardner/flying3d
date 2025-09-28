@@ -137,11 +137,13 @@ void Player::handleKeyboardInput() {
 
     if (laser != nullptr){
       laser->on = false;
+      laser->spinSpeed = 0;
     }
   }
 
   if (weapons[weaponIndex] != player::laserCannon && laser != nullptr) {
     laser->on = false;
+    laser->spinSpeed = 0;
   }
 
   if (keys::actionPressed[keys::backCamera]) {
@@ -509,15 +511,18 @@ void Player::shootChargeRifle() {
   bulletPosition = position + cameraUp * -2.0f;
 
   glm::vec3 scale = glm::vec3(bullet::chargeRifle.bulletSize) * charge;
-  if (full) {
-    scale *= 2.0f;
-  }
   glm::vec3 color = glm::vec3(1.0f);
 
   float speed =
       glm::clamp(bullet::chargeRifle.speed * charge,
                  bullet::chargeRifle.speed / 2.0f, bullet::chargeRifle.speed);
   float damage = bullet::chargeRifle.damage * charge * damageBoost;
+
+  if (full) {
+    scale *= 2.0f;
+    damage *= 1.5;
+  }
+
 
   Projectile projectile;
   projectile.bullet =

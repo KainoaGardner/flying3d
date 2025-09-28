@@ -8,6 +8,7 @@ extern float CUBE_MAP_VERTICES[72];
 extern float BEAM_VERTICES[120];
 
 extern float SCREEN_VERTICES[20];
+extern float FACE_VERTICES[20];
 
 extern unsigned int CUBE_INDICES[36];
 extern unsigned int SCREEN_INDICES[6];
@@ -25,14 +26,17 @@ struct Geometries {
   Geometry skybox;
   Geometry screen;
   Geometry text;
+  Geometry face;
 };
 
 extern Geometries geometry;
 } // namespace geometry
 
+
 Geometry createCube();
 Geometry createCubemap();
 Geometry createScreen();
+Geometry createFace();
 Geometry createBeam();
 Geometry createText();
 
